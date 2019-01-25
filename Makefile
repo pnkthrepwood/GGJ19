@@ -1,14 +1,11 @@
-EXEC	= haxoria
+EXEC	= slavery_resort
 
-SRC_DIR = .
-IMGUI_DIR = imgui
+SRC_DIR = GGJ2k18
 
-SRC	  = $(wildcard $(SRC_DIR)/*.cpp)
-IMGUI_SRC = $(wildcard $(IMGUI_DIR)/*.cpp)
+SRC	= $(wildcard $(SRC_DIR)/*.cpp)
+OBJ	= $(patsubst $(SRC_DIR)/%, obj/%.o, $(SRC))
 
-OBJ	  = $(patsubst $(SRC_DIR)/%, obj/%.o, $(SRC)) $(patsubst $(IMGUI_DIR)/%, obj/imgui/%.o, $(IMGUI_SRC))
-
-OPTIM	= 0 #(0 to 3)
+OPTIM	= 0 #(0 - 3)
 DEBUG	= 1 #(0 or 1)
 PROFILE	= 0 #(0 or 1)
 
@@ -16,12 +13,10 @@ PROFILE	= 0 #(0 or 1)
 SHELL = bash
 CXX	= g++
 
-CURRENT_DIR = $(shell pwd)
+LIBS = -lsfml-window -lsfml-system -lsfml-graphics -lsfml-audio -lGL
+INCLUDES = -I
 
-LIBS = -lsfml-window -lsfml-system -lsfml-graphics -lsfml-audio -lsfml-network -lGL
-INCLUDES = -I $(CURRENT_DIR)/imgui
-
-CFLAGS	= -std=c++1y -pipe -Wall -Wno-unknown-pragmas -Wno-unused-parameter $(PROFILEFLAGS) $(DEBUGFLAGS) -O$(strip $(OPTIM)) $(INCLUDES)
+CFLAGS	= -std=c++1y -pipe -Wall -Wno-unknown-pragmas -Wno-unused-parameter $(PROFILEFLAGS) $(DEBUGFLAGS) -O$(strip $(OPTIM))
 LDFLAGS	= -pipe $(LIBS) $(PROFILEFLAGS) $(DEBUGFLAGS) -O$(strip $(OPTIM))
 
 ifeq ($(strip $(PROFILE)),1)
@@ -31,14 +26,10 @@ ifeq ($(strip $(DEBUG)),1)
 	DEBUGFLAGS=-D_DEBUG -ggdb3
 endif
 
-$(EXEC): directories $(OBJ)
-	echo $(OBJ)
+$(EXEC): $(OBJ)
 	$(CXX) $(LDFLAGS) $(OBJ) -o $(EXEC)
 
-obj/Haxoria.cpp.o: $(SRC_DIR)/Haxoria.cpp
-	$(CXX) $(CFLAGS) -c $< -o $@
-
-obj/imgui/%.cpp.o: $(IMGUI_DIR)/%.cpp
+obj/main.cpp.o: $(SRC_DIR)/main.cpp $(SRC_DIR)/animation.h $(SRC_DIR)/gaem_constants.h $(SRC_DIR)/minion.h
 	$(CXX) $(CFLAGS) -c $< -o $@
 
 obj/%.cpp.o: $(SRC_DIR)/%.cpp
@@ -50,6 +41,3 @@ clean:
 world:
 	make clean && make
 
-directories:
-	mkdir -p obj
-	mkdir -p obj/imgui
