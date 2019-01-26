@@ -5,6 +5,7 @@
 #include <queue>
 #include <SFML/Graphics.hpp>
 #pragma warning( disable : 4244 )
+#pragma warning( disable : 4267 )
 
 GameObject go_collection[MAX_OBJ_SIZE];
 
@@ -14,15 +15,13 @@ sf::IntRect SelectSprite(GameObjectType type)
 	{
 	case GameObjectType::NONE:
 		return sf::IntRect(0, 0, 0, 0);
-		break;
 	case GameObjectType::CASA:
 		return sf::IntRect(0, 0, 16, 16);
-		break;
 	case GameObjectType::TREE:
 		return sf::IntRect(0, 2 * 16, 16, 16);
-		break;
 	default:
-		break;
+		std::cout << "Sprite type not handled madafaca" << std::endl;
+		return sf::IntRect(0, 0, 0, 0);
 	}
 }
 
@@ -244,7 +243,7 @@ void ObjManager::DestroyObject(GameObject* obj, bool canDelete)
 		parent->SE != NULL && parent->SE->isLeaf &&
 		parent->SW != NULL && parent->SW->isLeaf) {
 
-		int total = 0;
+		unsigned int total = 0;
 		total += parent->NE->bucket.size();
 		total += parent->NW->bucket.size();
 		total += parent->SE->bucket.size();

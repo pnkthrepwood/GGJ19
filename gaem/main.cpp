@@ -17,7 +17,6 @@
 #include <array>
 
 #include "ObjectManager.h"
-#include "main.h"
 
 #pragma warning( disable : 4244 )
 
@@ -283,7 +282,7 @@ sf::Glsl::Vec3 pSetHSV(float h, float s, float v ) {
     		break;
     		case 5: return sf::Glsl::Vec3(v, p, q);
     	}
-        return sf::Glsl::Vec3(0.2, 0.2, 0.2);
+        return sf::Glsl::Vec3(0.2f, 0.2f, 0.2f);
     }
 
 void RenderWithShader(sf::RenderWindow& window, const sf::RenderTexture& renderTexture) {
@@ -292,8 +291,8 @@ void RenderWithShader(sf::RenderWindow& window, const sf::RenderTexture& renderT
 	nightLight->setUniform("texture", sf::Shader::CurrentTexture);
 	nightLight->setUniform("dayTime", (clockDay.getElapsedTime().asSeconds())/60);
 	nightLight->setUniform("day_color", sf::Glsl::Vec3(1,1,1));
-	nightLight->setUniform("sun_set_color", sf::Glsl::Vec3(1,0.5,0));
-	nightLight->setUniform("night_color", sf::Glsl::Vec3(0.2,0,1));
+	nightLight->setUniform("sun_set_color", sf::Glsl::Vec3(1,0.5f,0));
+	nightLight->setUniform("night_color", sf::Glsl::Vec3(0.2f,0,1));
 
 	states.shader = nightLight;
 	states.texture = &renderTexture.getTexture();
