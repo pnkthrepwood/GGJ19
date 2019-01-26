@@ -5,6 +5,9 @@
 
 #define MAX_OBJ_IN_QTREE 200
 
+const int MAX_OBJ_SIZE = 4096;
+
+
 enum class GameObjectType
 {
 	NONE,
@@ -40,7 +43,8 @@ public:
 	void AddObject(GameObject* obj);
 	void DestroyObject(GameObject* obj);
 	void DestroyObject(GameObject* obj, bool canDelete);
-	void Draw(const sf::View& Camera);
+	void Draw(const sf::View& Camera, sf::RenderTarget& rt, sf::Sprite& spr);
+	void camDraw(sf::RenderTarget& rt, const sf::Vector2f& Position, sf::Sprite& spr);
 
 	bool isColliding(const sf::FloatRect& rect);
 	bool isColliding(const sf::Vector2f& point);
@@ -64,11 +68,15 @@ public:
 						std::vector<GameObject*>& vec, quadNode* node, sf::FloatRect& bounds);
 	void getObjectsAux(std::set<GameObject*>& set, sf::Vector2f pos);
 
-	void camDraw(const sf::Vector2f& Position);
+	
 	quadNode* searchLeaf(const sf::Vector2f& p);
 	
 
 	GameObject* lastObjCollided;
 
 	int nObjects;
+
+
+
+	void Create(GameObjectType type, int x, int y);
 };

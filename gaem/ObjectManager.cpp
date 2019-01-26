@@ -5,21 +5,21 @@
 #include <queue>
 #include <SFML/Graphics.hpp>
 
-GameObject go_collection[4096];
+GameObject go_collection[MAX_OBJ_SIZE];
 
 sf::Vector2f getObjSize(GameObjectType type)
 {
 	switch (type)
 	{
-	case GameObjectType::NONE:
-	{
-		return sf::Vector2f(0, 0);
-	} break;
+		case GameObjectType::NONE:
+		{
+			return sf::Vector2f(0, 0);
+		} break;
 
-	case GameObjectType::CASA:
-	{
-		return sf::Vector2f(16, 16);
-	} break;
+		case GameObjectType::CASA:
+		{
+			return sf::Vector2f(16, 16);
+		} break;
 	}
 
 	return sf::Vector2f(-1, -1);
@@ -255,36 +255,38 @@ void ObjManager::DestroyObject(GameObject* obj, bool canDelete)
 	--nObjects;
 }
 
-void ObjManager::Draw(const sf::View& Camera)
+void ObjManager::Draw(const sf::View& Camera, sf::RenderTarget& rt, sf::Sprite& spr)
 {
 	float size_x, size_y;
 	size_x = Camera.getSize().x*0.5f;
 	size_y = Camera.getSize().y*0.5f;
 	sf::Vector2f center = Camera.getCenter();
 
-	camDraw(center + sf::Vector2f(-size_x*0.5f*2.f, -size_y*0.5f*2.f));
-	camDraw(center + sf::Vector2f(0, -size_y*0.5f*1.5f));
-	camDraw(center + sf::Vector2f(+size_x*0.5f*2.f, -size_y*0.5f*2.f));
+	camDraw(rt, center + sf::Vector2f(-size_x*0.5f*2.f, -size_y*0.5f*2.f), spr);
+	camDraw(rt, center + sf::Vector2f(0, -size_y*0.5f*1.5f), spr);
+	camDraw(rt, center + sf::Vector2f(+size_x*0.5f*2.f, -size_y*0.5f*2.f), spr);
 
-	camDraw(center + sf::Vector2f(-size_x*0.5f*2.f, 0));
-	camDraw(center);
-	camDraw(center + sf::Vector2f(+size_x*0.5f*2.f, 0));
+	camDraw(rt, center + sf::Vector2f(-size_x*0.5f*2.f, 0), spr);
+	camDraw(rt, center, spr);
+	camDraw(rt, center + sf::Vector2f(+size_x*0.5f*2.f, 0), spr);
 	
-	camDraw(center + sf::Vector2f(-size_x*0.5f*2.f, +size_y*0.5f*2.f));
-	camDraw(center + sf::Vector2f(0, +size_y*0.5f*1.5f));
-	camDraw(center + sf::Vector2f(+size_x*0.5f*2.f, +size_y*0.5f*2.f));
+	camDraw(rt, center + sf::Vector2f(-size_x*0.5f*2.f, +size_y*0.5f*2.f), spr);
+	camDraw(rt, center + sf::Vector2f(0, +size_y*0.5f*1.5f), spr);
+	camDraw(rt, center + sf::Vector2f(+size_x*0.5f*2.f, +size_y*0.5f*2.f), spr);
 }
 
-void ObjManager::camDraw(const sf::Vector2f& Position)
+void ObjManager::camDraw(sf::RenderTarget& rt, const sf::Vector2f& Position, sf::Sprite& spr)
 {
-	
 	quadNode* node = searchLeaf(Position);
 	std::list<GameObject*>::iterator it;
 	for (it = node->bucket.begin(); it != node->bucket.end(); ++it)
 	{
+		spr.setTextureRect(sf::IntRect(0, 0, 16, 16));
+		spr.setPosition((*it)->x, (*it)->y);
+		
+		rt.draw(spr);
 		//(*it)->Draw();
 	}
-	
 }
 
 bool ObjManager::isColliding(const sf::Vector2f& point) 
@@ -650,4 +652,25 @@ void ObjManager::getObjects(std::vector<GameObject*>& vec, const sf::View& camer
 					}
 			}
 	}
+
+}
+
+
+void ObjManager::Create(GameObjectType type, int x, int y)
+{
+	for (int i = 0; i < MAX_OBJ_SIZE; ++i)
+	{
+		if (go_collection[i].type == GameObjectType::NONE)
+		{
+			go_collection[i].x = x;
+			go_collection[i].y = y;
+			go_collection[i].type = type;
+
+			AddObject(&go_collection[i]);
+
+			return;
+		}
+	}
+
+	//Error: si llega aqui, todo mal
 }
