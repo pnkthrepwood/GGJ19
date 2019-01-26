@@ -27,7 +27,7 @@ float RES_Y = 720.0f;
 
 const int TILE_SIZE = 16;
 
-const int NUM_PLAYERS = 4;
+const int NUM_PLAYERS = 1;
 const float PLAYER_SPEED = 400;
 const float BULLET_SPEED = 700;
 const float BULLET_COOLDOWN = 0.5; //seconds
@@ -120,6 +120,26 @@ std::vector<Bullet*> bullets;
 std::vector<Particle*> particles;
 
 
+
+void SpawnCosasScenario()
+{
+
+	int area_left = -4000;
+	int area_right = 4000;
+	int area_top = -4000;
+	int area_bottom = 4000;
+
+	for (int i = 0; i < 100; ++i)
+	{
+		int x = std::rand() % (area_right - area_left) + area_left;
+		int y = std::rand() % (area_bottom - area_top) + area_top;
+
+		obj_manager.Spawn(GameObjectType::TREE, x, y);
+	}
+
+}
+
+
 struct ProgressShape : public sf::CircleShape
 {
 	int progress;
@@ -154,12 +174,14 @@ void InitPlayers() {
 	const int PLAYER_INITIAL_POS_OFFSET = 90;
 	players[0].x -= PLAYER_INITIAL_POS_OFFSET / 2;
 	players[0].y -= PLAYER_INITIAL_POS_OFFSET;
+	/*
 	players[1].x -= PLAYER_INITIAL_POS_OFFSET;
 	players[1].y += PLAYER_INITIAL_POS_OFFSET / 2;
 	players[2].x += PLAYER_INITIAL_POS_OFFSET;
 	players[2].y -= PLAYER_INITIAL_POS_OFFSET / 2;
 	players[3].x += PLAYER_INITIAL_POS_OFFSET / 2;
 	players[3].y += PLAYER_INITIAL_POS_OFFSET;
+	*/
 }
 
 bool UpdateBullet(Bullet *b, float dt, sf::View& cam)
@@ -421,6 +443,7 @@ int main()
 	obj_manager.Spawn(GameObjectType::CASA, 0, 0);
 
 	obj_manager.Spawn(GameObjectType::TREE, 50, 50);
+	SpawnCosasScenario();
 
 	sf::Clock clk_running;
 	sf::Clock clk_delta;
@@ -482,7 +505,7 @@ int main()
 
 
 		ImGui::Begin("finester");
-		ImGui::Text("Joy: %f, %f", 1337.f, 42.f);
+		ImGui::Text("Cam: %f, %f", cam.getCenter().x, cam.getCenter().y);
 		ImGui::End();
 
 		renderTexture.setView(cam);
