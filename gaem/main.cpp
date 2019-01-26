@@ -32,8 +32,8 @@ sf::Sprite spr_cursor;
 
 const int CURSOR_AMOUNT = 4;
 struct {
-	std::array<int,CURSOR_AMOUNT> x;
-	std::array<int,CURSOR_AMOUNT> y;
+	std::array<sf::Vector2i,CURSOR_AMOUNT> pos;
+	std::array<sf::Vector2i,CURSOR_AMOUNT> prev_pos;
 	std::array<float,CURSOR_AMOUNT> anim_elapsed;
 	std::array<unsigned short, CURSOR_AMOUNT> anim_state;
 	std::array<sf::Color, CURSOR_AMOUNT> color;
@@ -47,7 +47,7 @@ enum class SpriteType
 {
 	IMPOSSIBLE,
 	EMPTY,
-	
+
 	FARM,
 	TREE_1,
 	TREE_2,
@@ -165,7 +165,7 @@ const std::array<sf::Vector2i, 4> DIRECTION_OFFSETS = {{ {-1, 0}, {0, -1}, {1, 0
 void InitJuego()
 {
 	InitTilePassable();
-	
+
 	for (int x = 0; x < MAP_WIDTH; ++x)
 	{
 		for (int y = 0; y < MAP_HEIGHT; ++y)
@@ -206,14 +206,14 @@ int main()
 		dineros[i] = START_DINEROS;
 	}
 
-	cursor.x[0] = 2;
-	cursor.y[0] = 2;
-	cursor.x[1] = 2;
-	cursor.y[1] = MAP_HEIGHT - 2;
-	cursor.x[2] = MAP_WIDTH - 2;
-	cursor.y[2] = 2;
-	cursor.x[3] = MAP_WIDTH -2;
-	cursor.y[3] = MAP_HEIGHT-2;
+	cursor.pos[0].x = 2;
+	cursor.pos[0].y = 2;
+	cursor.pos[1].x = 2;
+	cursor.pos[1].y = MAP_HEIGHT - 2;
+	cursor.pos[2].x = MAP_WIDTH - 2;
+	cursor.pos[2].y = 2;
+	cursor.pos[3].x = MAP_WIDTH -2;
+	cursor.pos[3].y = MAP_HEIGHT-2;
 
 	sf::Font font;
 	font.loadFromFile("8bitmadness.ttf");
@@ -280,6 +280,7 @@ int main()
 
 		GamePad::UpdateInputState();
 
+		std::array<sf::Vector2i, CURSOR_AMOUNT> newPlayerPos = cursor.pos;
 		//Update cursorsito en modo clack
 		for (int i = 0; i < CURSOR_AMOUNT; ++i)
 		{
@@ -289,25 +290,26 @@ int main()
 
 			sf::Vector2f& joy_left_before = cursor.joy_left_before[i];
 			sf::Vector2f joy_left = GamePad::AnalogStick::Left.get(i);
+
 			if (joy_left.x < -50 && joy_left_before.x > -50)
 			{
 				timer = clack_first_timer;
-				cursor.x[i]--;
+				newPlayerPos[i].x--;
 			}
 			if (joy_left.x > 50 && joy_left_before.x < 50)
 			{
 				timer = clack_first_timer;
-				cursor.x[i]++;
+				newPlayerPos[i].x++;
 			}
 			if (joy_left.y < -50 && joy_left_before.y > -50)
 			{
 				timer = clack_first_timer;
-				cursor.y[i]--;
+				newPlayerPos[i].y--;
 			}
 			if (joy_left.y > 50 && joy_left_before.y < 50)
 			{
 				timer = clack_first_timer;
-				cursor.y[i]++;
+				newPlayerPos[i].y++;
 			}
 		}
 
@@ -325,7 +327,7 @@ int main()
 				timer += dt_time.asSeconds();
 				if (timer > walking_cooldown)
 				{
-					cursor.x[i]--;
+					newPlayerPos[i].x--;
 					timer -= walking_cooldown;
 					cursor.anim_elapsed[i] = 0;
 					cursor.anim_elapsed[i] = 0;
@@ -336,7 +338,7 @@ int main()
 				timer += dt_time.asSeconds();
 				if (timer > walking_cooldown)
 				{
-					cursor.x[i]++;
+					newPlayerPos[i].x++;
 					timer -= walking_cooldown;
 					cursor.anim_elapsed[i] = 0;
 				}
@@ -346,7 +348,7 @@ int main()
 				timer += dt_time.asSeconds();
 				if (timer > walking_cooldown)
 				{
-					cursor.y[i]--;
+					newPlayerPos[i].y--;
 					timer -= walking_cooldown;
 					cursor.anim_elapsed[i] = 0;
 				}
@@ -356,7 +358,7 @@ int main()
 				timer += dt_time.asSeconds();
 				if (timer > walking_cooldown)
 				{
-					cursor.y[i]++;
+					newPlayerPos[i].y++;
 					timer -= walking_cooldown;
 					cursor.anim_elapsed[i] = 0;
 				}
@@ -365,16 +367,28 @@ int main()
 			joy_left_before = joy_left;
 		}
 
+		for (int i = 0; i < CURSOR_AMOUNT; ++i) {
+			bool canMove = true;
+			for (int j = 0; j < CURSOR_AMOUNT; ++j)
+			{
+				canMove &= cursor.pos[j] != newPlayerPos[i];
+			}
+
+			if (canMove)
+			{
+				cursor.pos[i] = newPlayerPos[i];
+			}
+		}
 
 		// Comprar
 		for (int i = 0; i < CURSOR_AMOUNT; ++i)
 		{
-			int x = cursor.x[i];
-			int y = cursor.y[i];
+			int x = cursor.pos[i].x;
+			int y = cursor.pos[i].y;
 
-			if (GamePad::IsButtonJustPressed(i, GamePad::Button::A)) 
+			if (GamePad::IsButtonJustPressed(i, GamePad::Button::A))
 			{
-				if (tileMap[x][y] == SpriteType::HOUSE && tileOwner[x][y] == -1 && dineros[i] >= 250) 
+				if (tileMap[x][y] == SpriteType::HOUSE && tileOwner[x][y] == -1 && dineros[i] >= 250)
 				{
 					tileOwner[x][y] = i;
 					dineros[i] -= 250;
@@ -474,7 +488,7 @@ int main()
 
 			//Draw el cursorsito
 			spr_cursor.setColor(cursor.color[i]);
-			spr_cursor.setPosition(cursor.x[i] * TILE_SIZE + TILE_SIZE * 0.5f, cursor.y[i] * TILE_SIZE + TILE_SIZE * 0.5f);
+			spr_cursor.setPosition(cursor.pos[i].x * TILE_SIZE + TILE_SIZE * 0.5f, cursor.pos[i].y * TILE_SIZE + TILE_SIZE * 0.5f);
 			window.draw(spr_cursor);
 		}
 
