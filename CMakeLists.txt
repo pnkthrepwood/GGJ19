@@ -12,4 +12,8 @@ add_executable(game ${SOURCES})
 
 target_link_libraries(game sfml-window sfml-system sfml-graphics sfml-audio GL)
 
-file(COPY ${CMAKE_SOURCE_DIR}/data DESTINATION ${CMAKE_BINARY_DIR})
+
+file(GLOB DATA_FILES
+  "data/*"
+)
+file(COPY ${DATA_FILES} DESTINATION ${CMAKE_BINARY_DIR})
