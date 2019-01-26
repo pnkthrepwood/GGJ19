@@ -17,6 +17,7 @@
       <Filter>imgui</Filter>
     </ClCompile>
     <ClCompile Include="ObjectManager.cpp" />
+    <ClCompile Include="DayManager.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="rand.h" />
@@ -39,6 +40,7 @@
     </ClInclude>
     <ClInclude Include="math.h" />
     <ClInclude Include="ObjectManager.h" />
+    <ClInclude Include="DayManager.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="imgui">

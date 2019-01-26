@@ -329,6 +329,22 @@ void DrawPlayer(int num_player, sf::RenderTarget& renderTexture)
 
 }
 
+
+void SpawnOasis(int x, int y)
+{
+
+	for (int i = 0; i < 5; ++i)
+	{
+		for (int j = 0; j < 5; ++j)
+		{
+			obj_manager.Spawn(GameObjectType::WATER, x + i*16, y + j*16);
+		}
+	}
+		
+
+
+}
+
 int main()
 {
 	srand(time(NULL));
@@ -388,6 +404,8 @@ int main()
 	obj_manager.Spawn(GameObjectType::CASA, 0, 0);
 	obj_manager.Spawn(GameObjectType::TREE, 50, 50);
 	SpawnCosasScenario();
+
+	SpawnOasis(0, 0);
 
 	sf::Clock clk_running;
 	sf::Clock clk_delta;

@@ -20,6 +20,8 @@ sf::IntRect SelectSprite(GameObjectType type)
 		return sf::IntRect(0, 0, 16, 16);
 	case GameObjectType::TREE:
 		return sf::IntRect(0, 2 * 16, 16, 16);
+	case GameObjectType::WATER:
+		return sf::IntRect(3 * 16, 0 * 16, 16, 16);
 	default:
 		std::cout << "Sprite type not handled madafaca" << std::endl;
 		return sf::IntRect(0, 0, 0, 0);
@@ -301,7 +303,6 @@ void ObjManager::camDraw(sf::RenderTarget& rt, const sf::Vector2f& Position, sf:
 	for (it = node->bucket.begin(); it != node->bucket.end(); ++it)
 	{
 		spr.setTextureRect( SelectSprite((*it)->type));
-
 
 		spr.setPosition((*it)->x, (*it)->y);
 		

@@ -13,7 +13,8 @@ enum class GameObjectType
 {
 	NONE,
 	CASA,
-	TREE
+	TREE,
+	WATER
 	//...
 };
 struct GameObject
