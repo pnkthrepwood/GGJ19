@@ -140,6 +140,7 @@
     <ClCompile Include="rand.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="math.h" />
     <ClInclude Include="rand.h" />
     <ClInclude Include="imconfig-SFML.h" />
     <ClInclude Include="imconfig.h" />

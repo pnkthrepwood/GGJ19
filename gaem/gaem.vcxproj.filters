@@ -36,6 +36,7 @@
     <ClInclude Include="imgui-SFML.h">
       <Filter>imgui</Filter>
     </ClInclude>
+    <ClInclude Include="math.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="imgui">
