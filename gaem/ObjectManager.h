@@ -49,8 +49,8 @@ public:
 	void AddObject(GameObject* obj);
 	void DestroyObject(GameObject* obj);
 	void DestroyObject(GameObject* obj, bool canDelete);
-	void Draw(const sf::View& Camera, sf::RenderTarget& rt, sf::Sprite& spr);
-	void camDraw(sf::RenderTarget& rt, const sf::Vector2f& Position, sf::Sprite& spr);
+	void Draw(const sf::View& Camera, std::vector<sf::Sprite>& toDraw, sf::Sprite& spr);
+	void camDraw(std::vector<sf::Sprite>& toDraw, const sf::Vector2f& Position, sf::Sprite& spr);
 
 	bool isColliding(const sf::FloatRect& rect);
 	bool isColliding(const sf::Vector2f& point);
