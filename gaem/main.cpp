@@ -11,6 +11,7 @@
 #include <unordered_set>
 #include <unordered_map>
 #include "rand.h"
+#include <array>
 
 using namespace std;
 
@@ -34,6 +35,7 @@ struct {
 	std::array<float,CURSOR_AMOUNT> elapsed;
 	std::array<unsigned short, CURSOR_AMOUNT> icon_id;
 	std::array<sf::Color, CURSOR_AMOUNT> color;
+	std::array<sf::Vector2f, CURSOR_AMOUNT> joy_left_before;
 } cursor;
 
 enum SpriteType
@@ -110,7 +112,7 @@ int main()
 	spr_cursor.setOrigin(TILE_SIZE/2.f, TILE_SIZE/2.f);
 
 	cursor.color[0] = sf::Color::Cyan;
-	cursor.color[1] = sf::Color::Green;
+	cursor.color[1] = sf::Color::Magenta;
 	cursor.color[2] = sf::Color::Red;
 	cursor.color[3] = sf::Color::Blue;
 
@@ -150,6 +152,36 @@ int main()
 
 		//ImGui gives the position in window positions. (0, 0) is left corner.
 		ImVec2 mpos = ImGui::GetMousePos();
+
+
+
+		GamePad::UpdateInputState();
+
+
+		for (int i = 0; i < CURSOR_AMOUNT; ++i)
+		{
+			sf::Vector2f& joy_left_before = cursor.joy_left_before[i];
+			sf::Vector2f joy_left = GamePad::AnalogStick::Left.get(i);
+			if (joy_left.x < -50 && joy_left_before.x > -50)
+			{
+				cursor.x[i]--;
+			}
+			if (joy_left.x > 50 && joy_left_before.x < 50)
+			{
+				cursor.x[i]++;
+			}
+			if (joy_left.y < -50 && joy_left_before.y > -50)
+			{
+				cursor.y[i]--;
+			}
+			if (joy_left.y > 50 && joy_left_before.y < 50)
+			{
+				cursor.y[i]++;
+			}
+			joy_left_before = joy_left;
+		}
+
+		
 
 		window.clear();
 
