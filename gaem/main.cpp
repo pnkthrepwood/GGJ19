@@ -14,6 +14,8 @@
 #include "mates.h"
 #include <array>
 
+#include "ObjectManager.h"
+
 using namespace std;
 
 float RES_X = 1280.0f;
@@ -23,13 +25,9 @@ const int TILE_SIZE = 16;
 
 const int NUM_PLAYERS = 4;
 const float PLAYER_SPEED = 500;
-
-sf::Color playerColors[] = {
-	sf::Color::Cyan,
-	sf::Color::Magenta,
-	sf::Color::Red,
-	sf::Color::Blue,
-};
+const float BULLET_SPEED = 700;
+const float BULLET_COOLDOWN = 0.5; //seconds
+const float MADERA_GATHER_TIME = 3; //seconds
 
 enum PlayerState {
 	IDLE = 0,
@@ -42,8 +40,85 @@ struct Player {
 	float vel_x, vel_y;
 	int hp;
 	PlayerState state;
+	sf::Vector2f facing_vector;
+	float bullet_cooldown;
+	float madera_progress;
 };
 
+struct Bullet {
+	float x, y;
+	float vel_x, vel_y;
+	int player;
+
+	Bullet(float px, float py, sf::Vector2f facing_vector, int num_player)
+		: x(px)
+		, y(py)
+		, vel_x(facing_vector.x*BULLET_SPEED) 
+		, vel_y(facing_vector.y*BULLET_SPEED)
+		, player(num_player)
+	{ }
+};
+
+
+void SpriteCenterOrigin(sf::Sprite& spr)
+{
+	spr.setOrigin(spr.getTexture()->getSize().x / 2.f, spr.getTexture()->getSize().y / 2.f);
+}
+
+struct Particle {
+	float x, y;
+	float vel_x, vel_y;
+	sf::Sprite sprite;
+	float life;
+
+	Particle(sf::Texture& texture, float px,float py, float vx, float vy, float mlife)
+		: x(px)
+		, y(py)
+		, vel_x(vx)
+		, vel_y(vy)
+		, life(mlife)
+	{ 
+		sprite.setTexture(texture);
+		SpriteCenterOrigin(sprite);
+	}
+
+	bool Update(float dt) 
+	{
+		x += vel_x * dt;
+		y += vel_y * dt;
+		life -= dt;
+		if (life < 0) {
+			return true;
+		}
+		sprite.setPosition(x, y);
+		return false;
+	}
+
+};
+
+
+struct ProgressShape : public sf::CircleShape
+{
+	int progress;
+
+	ProgressShape() : sf::CircleShape(46, 120) { };
+	sf::Vector2f getPoint(std::size_t index) const
+	{
+		if (index > progress) index = 0;
+		if (index > progress / 2) index = progress - index;
+
+		static const float pi = 3.141592654f;
+
+		float angle = index * 2 * pi / this->getPointCount() * 2 - pi / 2;
+		float x = std::cos(angle) * getRadius();
+		float y = std::sin(angle) * getRadius();
+
+		return sf::Vector2f(getRadius() + x, getRadius() + y);
+	}
+
+};
+
+int madera = 0;
 
 sf::Texture* tex_spritesheet;
 sf::Sprite spr_tile_dessert;
@@ -54,6 +129,8 @@ sf::VertexArray quad(sf::Quads, 4);
 sf::Clock clockDay;
 
 std::array<Player, NUM_PLAYERS> players;
+std::vector<Bullet*> bullets;
+std::vector<Particle*> particles;
 
 void InitPlayers() {
 	for (int i = 0; i < NUM_PLAYERS; i++) {
@@ -61,8 +138,8 @@ void InitPlayers() {
 		players[i].hp = 100;
 		players[i].x = RES_X / 2;
 		players[i].y = RES_Y / 2;
+		players[i].facing_vector = sf::Vector2f(1, 0);
 	}
-	std::cout << players[0].x << std::endl;
 	const int PLAYER_INITIAL_POS_OFFSET = 90;
 	players[0].x -= PLAYER_INITIAL_POS_OFFSET / 2;
 	players[0].y -= PLAYER_INITIAL_POS_OFFSET;
@@ -74,7 +151,30 @@ void InitPlayers() {
 	players[3].y += PLAYER_INITIAL_POS_OFFSET;
 }
 
-void UpdatePlayer(float dt, int num_player)
+bool UpdateBullet(Bullet *b, float dt, sf::View& cam)
+{
+
+	b->x += b->vel_x * dt;
+	b->y += b->vel_y * dt;
+
+	//Out of view
+	if (b->x > cam.getCenter().x + cam.getSize().x / 2 ||
+		b->x < cam.getCenter().x - cam.getSize().x / 2 ||
+		b->y > cam.getCenter().y + cam.getSize().y / 2 ||
+		b->y < cam.getCenter().y - cam.getSize().y / 2) {
+		return true;
+	}
+
+	//TODO: Collisions with enemies
+
+
+	return false;
+	
+}
+
+sf::Texture* madera_texture;
+
+void UpdatePlayer(float dt, int num_player, sf::View& cam)
 {
 	Player* p = &(players[num_player]);
 
@@ -88,25 +188,58 @@ void UpdatePlayer(float dt, int num_player)
 	}
 
 	// Update speed
-	sf::Vector2f stick = Mates::Normalize(sf::Vector2f(stick_L.x, stick_L.y));
-	p->vel_x = stick.x * PLAYER_SPEED;
-	p->vel_y = stick.y * PLAYER_SPEED;
-
+	sf::Vector2f direction = Mates::Normalize(sf::Vector2f(stick_L.x, stick_L.y));
+	if (p->madera_progress > 0) {
+		p->vel_x = p->vel_y = 0;
+	} else {
+		p->vel_x = direction.x * PLAYER_SPEED;
+		p->vel_y = direction.y * PLAYER_SPEED;
+	}
 	// Update pos
 	p->x = p->x + p->vel_x * dt;
 	p->y = p->y + p->vel_y * dt;
 
-	//Out of camera (TODO: Use camera instead of res)
-	p->x = Mates::Clamp(p->x, 0, RES_X);
-	p->y = Mates::Clamp(p->y, 0, RES_Y);
+	// Keep inside view
+	p->x = Mates::Clamp(p->x, cam.getCenter().x - cam.getSize().x / 2 + 50, cam.getCenter().x + cam.getSize().x / 2 - 50);
+	p->y = Mates::Clamp(p->y, cam.getCenter().y - cam.getSize().y / 2 + 50, cam.getCenter().y + cam.getSize().y / 2 - 50);
 
+	// Update facing vector
+	sf::Vector2f stick_R = GamePad::AnalogStick::Left.get(num_player);
+	float length_R = Mates::Length(stick_L);
+	if (length_R > 30)
+	{
+		p->facing_vector = stick_R;
+	}
+	else if (length_L > 30)
+	{
+		p->facing_vector = stick_R;
+	}
+	p->facing_vector = Mates::Normalize(sf::Vector2f(p->facing_vector.x, p->facing_vector.y));
+
+	//Shot
+	if (p->bullet_cooldown > 0) {
+		p->bullet_cooldown -= dt;
+	}
+	if (GamePad::IsButtonJustPressed(num_player, GamePad::Button::A) && p->bullet_cooldown <= 0 && p->madera_progress <= 0) {
+		bullets.push_back(new Bullet(p->x, p->y, p->facing_vector, num_player));
+		p->bullet_cooldown = BULLET_COOLDOWN;
+	}
+
+
+	// Gather wood
+	// TODO: CHECK THERE IS A TREE
+	if (GamePad::IsButtonJustReleased(num_player, GamePad::Button::B)) {
+		p->madera_progress = 0;
+	}
+	if (GamePad::IsButtonPressed(num_player, GamePad::Button::B)) {
+		p->madera_progress += dt;
+		if (p->madera_progress >= MADERA_GATHER_TIME) {
+			madera += 1;
+			p->madera_progress = 0;
+			particles.push_back(new Particle(*madera_texture, p->x, p->y - 50, 0, -200, 0.2));
+		}
+	}
 }
-
-void SpriteCenterOrigin(sf::Sprite& spr)
-{
-	spr.setOrigin(spr.getTexture()->getSize().x / 2.f, spr.getTexture()->getSize().y / 2.f);
-}
-
 
 void InitNightShader(sf::RenderTarget& renderTarget) {
 	nightLight = new sf::Shader();
@@ -162,13 +295,23 @@ void RenderWithShader(sf::RenderWindow& window, const sf::RenderTexture& renderT
 	window.draw(quad, states);
 }
 
+ObjManager obj_manager;
+
 int main()
 {
 	srand(time(NULL));
 
-	sf::RenderWindow window(sf::VideoMode(RES_X, RES_Y), "SFML works!");
+	sf::ContextSettings settings;
+	sf::RenderWindow window(sf::VideoMode(RES_X, RES_Y), "SFML works!", sf::Style::Default, settings);
 	sf::RenderTexture renderTexture;
 	renderTexture.create(RES_X, RES_Y);
+
+	sf::Color playerColors[] = {
+		sf::Color::Cyan,
+		sf::Color::Magenta,
+		sf::Color::Red,
+		sf::Color::Blue,
+	};
 
 	window.setFramerateLimit(60);
 	ImGui::SFML::Init(window);
@@ -177,16 +320,28 @@ int main()
 	sf::View ui_view(sf::FloatRect(0.0f, 0.f, RES_X, RES_Y));
 
 	sf::Font font;
-	font.loadFromFile("8bitmadness.ttf");
+	font.loadFromFile("8bitwonder.ttf");
 
-	sf::Texture texture;
-	texture.loadFromFile("player.png");
+	sf::Texture player_texture;
+	player_texture.loadFromFile("player.png");
 	sf::Sprite spr_player[NUM_PLAYERS];
 	for (int i = 0; i < NUM_PLAYERS; i++) {
-		spr_player[i].setTexture(texture);
+		spr_player[i].setTexture(player_texture);
 		SpriteCenterOrigin(spr_player[i]);
-		//spr_player[i].setColor(playerColors[i]);
+		spr_player[i].setColor(playerColors[i]);
 	}
+
+	sf::Texture bullet_texture;
+	bullet_texture.loadFromFile("bullet.png");
+	sf::Sprite spr_bullet;
+	spr_bullet.setTexture(bullet_texture);
+	SpriteCenterOrigin(spr_bullet);
+	
+	madera_texture = new sf::Texture();
+	madera_texture->loadFromFile("madera.png");
+	sf::Sprite spr_madera;
+	spr_madera.setTexture(*madera_texture);
+	SpriteCenterOrigin(spr_madera);
 
 	tex_spritesheet = new sf::Texture();
 	tex_spritesheet->loadFromFile("sprite_sheet.png");
@@ -196,6 +351,8 @@ int main()
 	InitNightShader(window);
 
 	InitPlayers();
+
+	obj_manager.Create(GameObjectType::CASA, 0, 0);
 
 	sf::Clock clk_running;
 	sf::Clock clk_delta;
@@ -220,36 +377,46 @@ int main()
 
 		GamePad::UpdateInputState();
 
-
 		//UPDATE
 		for (int i = 0; i < NUM_PLAYERS; i++) {
-			UpdatePlayer(dt_time.asSeconds(), i);
+			UpdatePlayer(dt_time.asSeconds(), i, cam);
+		}
+		for (int i = 0; i < bullets.size();) {
+			bool cale_destruir = UpdateBullet(bullets[i], dt_time.asSeconds(), cam);
+			if (cale_destruir) {
+				bullets.erase(bullets.begin() + i);
+			} else {
+				i++;
+			}
+		}
+		for (int i = 0; i < particles.size();) {
+			bool cale_destruir = particles[i]->Update(dt_time.asSeconds());
+			if (cale_destruir) {
+				particles.erase(particles.begin() + i);
+			}
+			else {
+				i++;
+			}
 		}
 
-
-
-
 		//DRAW
-		window.clear();
+		//window.clear();
 		renderTexture.setView(cam);
-		renderTexture.clear();
+		renderTexture.clear(sf::Color(255, 216, 0));
 
 
-		static sf::Vector2f joy = GamePad::AnalogStick::Left.get(0);
-		joy = GamePad::AnalogStick::Left.get(0);
-		sf::Vector2f cam_offset(0, 0);
-		if (joy.x < -50) cam_offset.x = -100 * dt_time.asSeconds();
-		else if (joy.x > 50) cam_offset.x = 100 * dt_time.asSeconds();
-		if (joy.y < -50) cam_offset.y = -100 * dt_time.asSeconds();
-		else if (joy.y > 50) cam_offset.y = 100 * dt_time.asSeconds();
-		cam.move(cam_offset);
+		//static sf::Vector2f joy = GamePad::AnalogStick::Left.get(0);
+		//joy = GamePad::AnalogStick::Left.get(0);
+		//sf::Vector2f cam_offset(0, 0);
+		//if (joy.x < -50) cam_offset.x = -100 * dt_time.asSeconds();
+		//else if (joy.x > 50) cam_offset.x = 100 * dt_time.asSeconds();
+		//if (joy.y < -50) cam_offset.y = -100 * dt_time.asSeconds();
+		//else if (joy.y > 50) cam_offset.y = 100 * dt_time.asSeconds();
+		//cam.move(cam_offset);
 
 
 		ImGui::Begin("finester");
-
-		ImGui::Text("Joy: %f, %f", joy.x, joy.y);
-		ImGui::Text("Cam offset: %f, %f", cam_offset.x, cam_offset.y);
-
+		ImGui::Text("Joy: %f, %f", 1337, 42);
 		ImGui::End();
 
 		renderTexture.setView(cam);
@@ -263,19 +430,70 @@ int main()
 		int TILES_CAM_WIDTH = 100;
 		int TILES_CAM_HEIGHT = 100;
 
+		//Draw tilesitos del suelo
 		for (int x = start_x; x < start_x + TILES_CAM_WIDTH*TILE_SIZE; x += TILE_SIZE)
 		{
 			for (int y = start_y; y < start_y + TILES_CAM_HEIGHT * TILE_SIZE; y += TILE_SIZE)
 			{
+				spr_tile_dessert.setTextureRect(sf::IntRect(1 * TILE_SIZE, 0, TILE_SIZE, TILE_SIZE));
 				spr_tile_dessert.setPosition(x, y);
 				renderTexture.draw(spr_tile_dessert);
 			}
 		}
 
-		for (int i = 0; i < NUM_PLAYERS; i++) {
+		//Draw objetesitos
+		obj_manager.Draw(cam, renderTexture, spr_tile_dessert);
+
+		//Draw Playersitos
+		for (int i = 0; i < NUM_PLAYERS; i++) 
+		{
 			spr_player[i].setPosition(players[i].x, players[i].y);
 			renderTexture.draw(spr_player[i]);
+
+			Player* p = &players[i];
+			static ProgressShape sprite;
+			sprite.progress = sprite.getPointCount() - (sprite.getPointCount()*(p->madera_progress / MADERA_GATHER_TIME));
+			if (sprite.progress < 120 && sprite.progress > 3) {
+				sprite.setFillColor(sf::Color::Transparent);
+				sprite.setOrigin(47, 47);
+				sprite.setPosition(p->x, p->y);
+				sprite.setScale(-1, 1);
+
+				sprite.setOutlineThickness(11);
+				sprite.setOutlineColor(sf::Color(250,20,20,100));
+				renderTexture.draw(sprite);
+			}
+
 		}
+
+		for (int i = 0; i < bullets.size(); i++) {
+			spr_bullet.setPosition(bullets[i]->x, bullets[i]->y);
+			spr_bullet.setColor(playerColors[bullets[i]->player]);
+			renderTexture.draw(spr_bullet);
+		}
+
+		for (Particle* particle : particles) {
+			
+			renderTexture.draw(particle->sprite);
+		}
+
+		sf::Text txt_money;
+		txt_money.setFont(font);
+		sf::String str = std::to_string((int)madera);
+		txt_money.setString(str);
+		txt_money.setFillColor(sf::Color::White);
+		txt_money.setOutlineColor(sf::Color::Black);
+		txt_money.setOutlineThickness(2);
+		txt_money.setCharacterSize(32);
+		txt_money.setPosition(40 + spr_madera.getTexture()->getSize().x, 40);
+		sf::FloatRect textRect = txt_money.getLocalBounds();
+		txt_money.setOrigin(0, textRect.top + textRect.height / 2.0f);
+		renderTexture.draw(txt_money);
+		spr_madera.setPosition(40, 40);
+		renderTexture.draw(spr_madera);
+		
+
+
 		renderTexture.display();
 
 
