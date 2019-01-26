@@ -49,7 +49,7 @@ sf::Texture* tex_spritesheet;
 sf::Sprite spr_tile_dessert;
 
 
-sf::Shader nightLight;
+sf::Shader* nightLight;
 sf::VertexArray quad(sf::Quads, 4);
 sf::Clock clockDay;
 
@@ -109,7 +109,8 @@ void SpriteCenterOrigin(sf::Sprite& spr)
 
 
 void InitNightShader(sf::RenderTarget& renderTarget) {
-	nightLight.loadFromFile("nightLight.frag", sf::Shader::Type::Fragment);
+	nightLight = new sf::Shader();
+	nightLight->loadFromFile("nightLight.frag", sf::Shader::Type::Fragment);
 
 	auto size = renderTarget.getSize();
 	quad[0].position = sf::Vector2f(0,0);
@@ -126,9 +127,10 @@ void InitNightShader(sf::RenderTarget& renderTarget) {
 void RenderWithShader(sf::RenderWindow& window, const sf::RenderTexture& renderTexture) {
 	sf::RenderStates states;
 	window.clear();
-	nightLight.setUniform("texture", sf::Shader::CurrentTexture);
-	nightLight.setUniform("dayTime", clockDay.getElapsedTime().asSeconds());
-	states.shader = &nightLight;
+	nightLight->setUniform("texture", sf::Shader::CurrentTexture);
+	nightLight->setUniform("dayTime", clockDay.getElapsedTime().asSeconds());
+	nightLight->setUniform("texture", sf::Shader::CurrentTexture);
+	states.shader = nightLight;
 	states.texture = &renderTexture.getTexture();
 	window.draw(quad, states);
 	window.display();
@@ -173,7 +175,6 @@ int main()
 	sf::Clock clk_delta;
 	while (window.isOpen())
 	{
-		renderTexture.setView(cam);
 
 
 		sf::Event event;
@@ -204,22 +205,8 @@ int main()
 
 		//DRAW
 		window.clear();
+		renderTexture.setView(cam);
 		renderTexture.clear();
-
-		for (int i = 0; i < NUM_PLAYERS; i++) {
-			spr_player[i].setPosition(players[i].x, players[i].y);
-			window.draw(spr_player[i]);
-		}
-
-
-		ImGui::Begin("ASDASD");
-		ImGui::Text("%f", players[0].y);
-		ImGui::End();
-
-		//window.setView(ui_view);
-		//Todo UI
-		//window.setView(view);
-		renderTexture.setView(ui_view);
 
 
 		static sf::Vector2f joy = GamePad::AnalogStick::Left.get(0);
@@ -259,6 +246,10 @@ int main()
 			}
 		}
 
+		for (int i = 0; i < NUM_PLAYERS; i++) {
+			spr_player[i].setPosition(players[i].x, players[i].y);
+			renderTexture.draw(spr_player[i]);
+		}
 		renderTexture.display();
 
 		ImGui::SFML::Render(window);
