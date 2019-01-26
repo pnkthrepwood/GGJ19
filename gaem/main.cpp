@@ -97,6 +97,7 @@ int main()
 	spr_background.setTexture(*background);
 
 	spr_cursor.setTexture(*spriteSheet);
+	spr_cursor.setOrigin(TILE_SIZE/2.f, TILE_SIZE/2.f);
 
 	for (int x = 0; x < MAP_WIDTH; x++)
 	{
@@ -133,7 +134,7 @@ int main()
 
 		window.clear();
 
-		
+
 
 		//Draw el fondo
 		spr_background.setTexture(*background);
@@ -153,14 +154,26 @@ int main()
 		}
 
 
-		static int cursor_x = 0;
-		static int cursor_y = 0;
+		static int cursor_x = 1;
+		static int cursor_y = 1;
+		static float cursor_elapsed = 0;
+		static unsigned short cursor_icon_id = 0;
+
+		cursor_elapsed -= dt_time.asSeconds();
+		if (cursor_elapsed < 0.f)
+		{
+			cursor_elapsed = 0.5f;
+			cursor_icon_id = (cursor_icon_id + 1) % 2;
+			float scale = 1.f + 0.25f * cursor_icon_id;
+			spr_cursor.setScale(scale, scale);
+		}
+
 		//Draw el cursorsito
 		selectSprite(SpriteType::CURSOR, spr_cursor);
 		spr_cursor.setColor(sf::Color(255, 0, 0, 255));
-		spr_cursor.setPosition(cursor_x * TILE_SIZE, cursor_y * TILE_SIZE);
+		spr_cursor.setPosition(cursor_x * TILE_SIZE + TILE_SIZE * 0.5f, cursor_y * TILE_SIZE + TILE_SIZE * 0.5f);
 		window.draw(spr_cursor);
-		
+
 
 		//ImGui::ShowDemoWindow();
 		ImGui::SFML::Render(window);
@@ -170,4 +183,3 @@ int main()
 
 	return 0;
 }
-
