@@ -43,14 +43,17 @@ struct {
 
 int dineros[CURSOR_AMOUNT];
 
-enum SpriteType
+enum class SpriteType
 {
 	IMPOSSIBLE,
 	EMPTY,
-	HOUSE,
+	
 	FARM,
 	TREE_1,
 	TREE_2,
+
+	HOUSE_BEING_BUILT,
+	HOUSE,
 
 	CURSOR
 };
@@ -104,6 +107,7 @@ void selectSprite(SpriteType type)
 SpriteType tileMap[MAP_WIDTH][MAP_HEIGHT];
 int tileOwner[MAP_WIDTH][MAP_HEIGHT];
 bool tilePassable[MAP_WIDTH][MAP_HEIGHT];
+float tileBuildingTime[MAP_WIDTH][MAP_HEIGHT];
 
 void InitTilePassable()
 {
@@ -121,6 +125,14 @@ void InitTilePassable()
 
 bool IsInsideMap(int x, int y) {
 	return x >= 0 && x <= MAP_WIDTH && y >= 0 && y <= MAP_HEIGHT;
+}
+
+bool CanBeBuilt(SpriteType type)
+{
+	return
+		type == SpriteType::EMPTY  ||
+		type == SpriteType::TREE_1 ||
+		type == SpriteType::TREE_2;
 }
 
 void draw_dineros(sf::RenderWindow& window, sf::Font &font, int dineros, sf::Color color, int x, int y) {
@@ -148,6 +160,20 @@ float RES_Y = 720.0f;
 
 enum class EDirection {LEFT = 0, UP = 1, RIGHT = 2, DOWN = 3, COUNT = 4};
 const std::array<sf::Vector2i, 4> DIRECTION_OFFSETS = {{ {-1, 0}, {0, -1}, {1, 0}, {0, 1} }};
+
+
+void InitJuego()
+{
+	InitTilePassable();
+	
+	for (int x = 0; x < MAP_WIDTH; ++x)
+	{
+		for (int y = 0; y < MAP_HEIGHT; ++y)
+		{
+			tileBuildingTime[x][y] = 0;
+		}
+	}
+}
 
 int main()
 {
@@ -192,7 +218,10 @@ int main()
 	sf::Font font;
 	font.loadFromFile("8bitmadness.ttf");
 
-	InitTilePassable();
+	InitJuego();
+
+
+
 
 	for (int x = 0; x < MAP_WIDTH; x++)
 	{
@@ -340,14 +369,32 @@ int main()
 		// Comprar
 		for (int i = 0; i < CURSOR_AMOUNT; ++i)
 		{
-			if (GamePad::IsButtonJustPressed(i, GamePad::Button::A)) {
-				int x = cursor.x[i];
-				int y = cursor.y[i];
-				if (tileMap[x][y] == SpriteType::HOUSE && tileOwner[x][y] == -1 && dineros[i] >= 250) {
+			int x = cursor.x[i];
+			int y = cursor.y[i];
+
+			if (GamePad::IsButtonJustPressed(i, GamePad::Button::A)) 
+			{
+				if (tileMap[x][y] == SpriteType::HOUSE && tileOwner[x][y] == -1 && dineros[i] >= 250) 
+				{
 					tileOwner[x][y] = i;
 					dineros[i] -= 250;
 				}
 			}
+
+			if (GamePad::IsButtonJustPressed(i, GamePad::Button::X) && CanBeBuilt(tileMap[x][y]))
+			{
+				tileBuildingTime[x][y] = 0.0f;
+			}
+
+			if (GamePad::IsButtonPressed(i, GamePad::Button::X) && CanBeBuilt(tileMap[x][y]))
+			{
+				tileBuildingTime[x][y] += dt_time.asSeconds();
+				if (tileBuildingTime[x][y] > 1.0f)
+				{
+					tileMap[x][y] = SpriteType::HOUSE;
+				}
+			}
+
 		}
 
 		// Update bosquecico
