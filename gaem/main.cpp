@@ -248,7 +248,9 @@ int main()
 
 	InitPlayers();
 
-	obj_manager.Create(GameObjectType::CASA, 0, 0);
+	obj_manager.Spawn(GameObjectType::CASA, 0, 0);
+
+	obj_manager.Spawn(GameObjectType::TREE, 50, 50);
 
 	sf::Clock clk_running;
 	sf::Clock clk_delta;

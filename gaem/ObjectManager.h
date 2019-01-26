@@ -8,10 +8,12 @@
 const int MAX_OBJ_SIZE = 4096;
 
 
+
 enum class GameObjectType
 {
 	NONE,
 	CASA,
+	TREE
 	//...
 };
 struct GameObject
@@ -20,6 +22,9 @@ struct GameObject
 	int y;
 	GameObjectType type;
 };
+
+
+sf::IntRect SelectSprite(GameObjectType type);
 
 extern GameObject go_collection[4096];
 sf::Vector2f getObjSize(GameObjectType type);
@@ -78,5 +83,5 @@ public:
 
 
 
-	void Create(GameObjectType type, int x, int y);
+	void Spawn(GameObjectType type, int x, int y);
 };

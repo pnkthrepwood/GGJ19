@@ -7,6 +7,24 @@
 
 GameObject go_collection[MAX_OBJ_SIZE];
 
+sf::IntRect SelectSprite(GameObjectType type)
+{
+	switch (type)
+	{
+	case GameObjectType::NONE:
+		return sf::IntRect(0, 0, 0, 0);
+		break;
+	case GameObjectType::CASA:
+		return sf::IntRect(0, 0, 16, 16);
+		break;
+	case GameObjectType::TREE:
+		return sf::IntRect(0, 2 * 16, 16, 16);
+		break;
+	default:
+		break;
+	}
+}
+
 sf::Vector2f getObjSize(GameObjectType type)
 {
 	switch (type)
@@ -281,7 +299,9 @@ void ObjManager::camDraw(sf::RenderTarget& rt, const sf::Vector2f& Position, sf:
 	std::list<GameObject*>::iterator it;
 	for (it = node->bucket.begin(); it != node->bucket.end(); ++it)
 	{
-		spr.setTextureRect(sf::IntRect(0, 0, 16, 16));
+		spr.setTextureRect( SelectSprite((*it)->type));
+
+
 		spr.setPosition((*it)->x, (*it)->y);
 		
 		rt.draw(spr);
@@ -656,7 +676,7 @@ void ObjManager::getObjects(std::vector<GameObject*>& vec, const sf::View& camer
 }
 
 
-void ObjManager::Create(GameObjectType type, int x, int y)
+void ObjManager::Spawn(GameObjectType type, int x, int y)
 {
 	for (int i = 0; i < MAX_OBJ_SIZE; ++i)
 	{
