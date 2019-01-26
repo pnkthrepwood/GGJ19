@@ -137,10 +137,12 @@
     <ClCompile Include="imgui_draw.cpp" />
     <ClCompile Include="InputManager.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="ObjectManager.cpp" />
     <ClCompile Include="rand.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="math.h" />
+    <ClInclude Include="ObjectManager.h" />
     <ClInclude Include="rand.h" />
     <ClInclude Include="imconfig-SFML.h" />
     <ClInclude Include="imconfig.h" />

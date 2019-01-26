@@ -14,6 +14,8 @@
 #include "mates.h"
 #include <array>
 
+#include "ObjectManager.h"
+
 using namespace std;
 
 float RES_X = 1280.0f;
@@ -25,7 +27,6 @@ const int NUM_PLAYERS = 4;
 const float PLAYER_SPEED = 500;
 const float BULLET_SPEED = 700;
 const float BULLET_COOLDOWN = 0.5; //seconds
-
 
 enum PlayerState {
 	IDLE = 0,

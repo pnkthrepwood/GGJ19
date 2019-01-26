@@ -16,6 +16,7 @@
     <ClCompile Include="imgui-SFML.cpp">
       <Filter>imgui</Filter>
     </ClCompile>
+    <ClCompile Include="ObjectManager.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="rand.h" />
@@ -37,6 +38,7 @@
       <Filter>imgui</Filter>
     </ClInclude>
     <ClInclude Include="math.h" />
+    <ClInclude Include="ObjectManager.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="imgui">
