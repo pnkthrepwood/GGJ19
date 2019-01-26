@@ -116,7 +116,7 @@ struct Player
 	{
 		sprite.setTexture(*player_texture);
 		sprite.setOrigin(16, 32);
-		sprite.setColor(playerColors[n_player]);
+		//sprite.setColor(playerColors[n_player]);
 
 		progress.setFillColor(sf::Color::Transparent);
 		progress.setOrigin(47, 47);
@@ -163,19 +163,19 @@ struct Player
 
 		if (facing == FacingDirection::DOWN)
 		{
-			texrect = (sf::IntRect(0, 0, 32, 64));
+			texrect = (sf::IntRect(0, 0, 10, 16));
 		}
 		if (facing == FacingDirection::RIGHT)
 		{
-			texrect = (sf::IntRect(0, 64, 32, 64));
+			texrect = (sf::IntRect(0, 16*1, 10, 16));
 		}
 		if (facing == FacingDirection::LEFT)
 		{
-			texrect = (sf::IntRect(0, 64*2, 32, 64));
+			texrect = (sf::IntRect(0, 16*2, 10, 16));
 		}
 		if (facing == FacingDirection::UP)
 		{
-			texrect = (sf::IntRect(0, 64*3, 32, 64));
+			texrect = (sf::IntRect(0, 16*3, 10, 16));
 		}
 
 		if (state == PlayerState::IDLE)
@@ -184,7 +184,7 @@ struct Player
 		}
 		else if (state == PlayerState::WALKING)
 		{
-			texrect.left += (static_cast<int>(anim_timer / 0.2f) % 5) * 32;
+			texrect.left += (static_cast<int>(anim_timer / 0.1f) % 3) * 10;
 		}
 
 		sprite.setTextureRect(texrect);
@@ -513,7 +513,7 @@ int main()
 	window.setFramerateLimit(60);
 	ImGui::SFML::Init(window);
 
-	sf::View cam(sf::FloatRect(0.0f, 0.0f, RES_X, RES_Y));
+	sf::View cam(sf::FloatRect(0.0f, 0.0f, RES_X*0.5f, RES_Y*0.5f));
 	sf::View ui_view(sf::FloatRect(0.0f, 0.f, RES_X, RES_Y));
 
 	DayManager dayManager;
