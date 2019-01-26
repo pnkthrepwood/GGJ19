@@ -53,7 +53,7 @@ struct Bullet {
 	Bullet(float px, float py, sf::Vector2f facing_vector, int num_player)
 		: x(px)
 		, y(py)
-		, vel_x(facing_vector.x*BULLET_SPEED) 
+		, vel_x(facing_vector.x*BULLET_SPEED)
 		, vel_y(facing_vector.y*BULLET_SPEED)
 		, player(num_player)
 	{ }
@@ -77,12 +77,12 @@ struct Particle {
 		, vel_x(vx)
 		, vel_y(vy)
 		, life(mlife)
-	{ 
+	{
 		sprite.setTexture(texture);
 		SpriteCenterOrigin(sprite);
 	}
 
-	bool Update(float dt) 
+	bool Update(float dt)
 	{
 		x += vel_x * dt;
 		y += vel_y * dt;
@@ -169,7 +169,7 @@ bool UpdateBullet(Bullet *b, float dt, sf::View& cam)
 
 
 	return false;
-	
+
 }
 
 sf::Texture* madera_texture;
@@ -336,7 +336,7 @@ int main()
 	sf::Sprite spr_bullet;
 	spr_bullet.setTexture(bullet_texture);
 	SpriteCenterOrigin(spr_bullet);
-	
+
 	madera_texture = new sf::Texture();
 	madera_texture->loadFromFile("madera.png");
 	sf::Sprite spr_madera;
@@ -400,19 +400,17 @@ int main()
 		}
 
 		//DRAW
-		//window.clear();
-		renderTexture.setView(cam);
 		renderTexture.clear(sf::Color(255, 216, 0));
 
 
-		//static sf::Vector2f joy = GamePad::AnalogStick::Left.get(0);
-		//joy = GamePad::AnalogStick::Left.get(0);
-		//sf::Vector2f cam_offset(0, 0);
-		//if (joy.x < -50) cam_offset.x = -100 * dt_time.asSeconds();
-		//else if (joy.x > 50) cam_offset.x = 100 * dt_time.asSeconds();
-		//if (joy.y < -50) cam_offset.y = -100 * dt_time.asSeconds();
-		//else if (joy.y > 50) cam_offset.y = 100 * dt_time.asSeconds();
-		//cam.move(cam_offset);
+		{ // UpdateCamera(cam);
+			sf::Vector2f centroid;
+			for (int i = 0; i < NUM_PLAYERS; ++i) {
+					centroid += sf::Vector2f(players[i].x, players[i].y);
+			}
+			centroid = centroid / static_cast<float>(NUM_PLAYERS);
+			cam.setCenter(centroid);
+		}
 
 
 		ImGui::Begin("finester");
@@ -445,7 +443,7 @@ int main()
 		obj_manager.Draw(cam, renderTexture, spr_tile_dessert);
 
 		//Draw Playersitos
-		for (int i = 0; i < NUM_PLAYERS; i++) 
+		for (int i = 0; i < NUM_PLAYERS; i++)
 		{
 			spr_player[i].setPosition(players[i].x, players[i].y);
 			renderTexture.draw(spr_player[i]);
@@ -473,7 +471,7 @@ int main()
 		}
 
 		for (Particle* particle : particles) {
-			
+
 			renderTexture.draw(particle->sprite);
 		}
 
@@ -491,7 +489,7 @@ int main()
 		renderTexture.draw(txt_money);
 		spr_madera.setPosition(40, 40);
 		renderTexture.draw(spr_madera);
-		
+
 
 
 		renderTexture.display();
