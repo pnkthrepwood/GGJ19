@@ -15,6 +15,7 @@
 #include <array>
 
 #include "ObjectManager.h"
+#include "DayManager.h"
 
 using namespace std;
 
@@ -122,11 +123,6 @@ int madera = 0;
 
 sf::Texture* tex_spritesheet;
 sf::Sprite spr_tile_dessert;
-
-
-sf::Shader* nightLight;
-sf::VertexArray quad(sf::Quads, 4);
-sf::Clock clockDay;
 
 std::array<Player, NUM_PLAYERS> players;
 std::vector<Bullet*> bullets;
@@ -241,60 +237,6 @@ void UpdatePlayer(float dt, int num_player, sf::View& cam)
 	}
 }
 
-void InitNightShader(sf::RenderTarget& renderTarget) {
-	nightLight = new sf::Shader();
-	nightLight->loadFromFile("nightLight.frag", sf::Shader::Type::Fragment);
-
-	auto size = renderTarget.getSize();
-	quad[0].position = sf::Vector2f(0,0);
-	quad[1].position = sf::Vector2f(0,size.y);
-	quad[2].position = sf::Vector2f(size.x,size.y);
-	quad[3].position = sf::Vector2f(size.x,0);
-
-	quad[0].texCoords = sf::Vector2f(0,0);
-	quad[1].texCoords = sf::Vector2f(0,size.y);
-	quad[2].texCoords = sf::Vector2f(size.x,size.y);
-	quad[3].texCoords = sf::Vector2f(size.x,0);
-}
-
-sf::Glsl::Vec3 pSetHSV(float h, float s, float v ) {
-    	// H [0, 360] S and V [0.0, 1.0].
-    	int i = (int)floor(h/60.0f) % 6;
-    	float f = h/60.0f - floor(h/60.0f);
-    	float p = v * (1.f - s);
-    	float q = v * (1.f - s * f);
-    	float t = v * (1.f - (1.f - f) * s);
-
-    	switch (i) {
-    		case 0: return sf::Glsl::Vec3(v, t, p);
-    		break;
-    		case 1: return sf::Glsl::Vec3(q, v, p);
-    		break;
-    		case 2: return sf::Glsl::Vec3(p, v, t);
-    		break;
-    		case 3: return sf::Glsl::Vec3(p, q, v);
-    		break;
-    		case 4: return sf::Glsl::Vec3(t, p, v);
-    		break;
-    		case 5: return sf::Glsl::Vec3(v, p, q);
-    	}
-        return sf::Glsl::Vec3(0.2, 0.2, 0.2);
-    }
-
-void RenderWithShader(sf::RenderWindow& window, const sf::RenderTexture& renderTexture) {
-	sf::RenderStates states;
-
-	nightLight->setUniform("texture", sf::Shader::CurrentTexture);
-	nightLight->setUniform("dayTime", (clockDay.getElapsedTime().asSeconds())/60);
-	nightLight->setUniform("day_color", sf::Glsl::Vec3(1,1,1));
-	nightLight->setUniform("sun_set_color", sf::Glsl::Vec3(1,0.5,0));
-	nightLight->setUniform("night_color", sf::Glsl::Vec3(0.2,0,1));
-
-	states.shader = nightLight;
-	states.texture = &renderTexture.getTexture();
-	window.draw(quad, states);
-}
-
 ObjManager obj_manager;
 
 int main()
@@ -318,6 +260,9 @@ int main()
 
 	sf::View cam(sf::FloatRect(0.0f, 0.0f, RES_X, RES_Y));
 	sf::View ui_view(sf::FloatRect(0.0f, 0.f, RES_X, RES_Y));
+
+	DayManager dayManager;
+	dayManager.InitNightShader(window);
 
 	sf::Font font;
 	font.loadFromFile("8bitwonder.ttf");
@@ -348,8 +293,6 @@ int main()
 	spr_tile_dessert.setTexture(*tex_spritesheet);
 	spr_tile_dessert.setTextureRect(sf::IntRect(1 * TILE_SIZE, 0, TILE_SIZE, TILE_SIZE));
 
-	InitNightShader(window);
-
 	InitPlayers();
 
 	obj_manager.Create(GameObjectType::CASA, 0, 0);
@@ -376,6 +319,7 @@ int main()
 		ImGui::SFML::Update(window, dt_time);
 
 		GamePad::UpdateInputState();
+		dayManager.Update(dt_time.asSeconds());
 
 		//UPDATE
 		for (int i = 0; i < NUM_PLAYERS; i++) {
@@ -481,7 +425,8 @@ int main()
 
 
 		window.clear();
-		RenderWithShader(window, renderTexture);
+		dayManager.RenderWithShader(window, renderTexture);
+		dayManager.ImGuiRender();
 		ImGui::SFML::Render(window);
 
 		sf::Text txt_money;
