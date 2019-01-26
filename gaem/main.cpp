@@ -559,8 +559,39 @@ void RenderWithShader(sf::RenderWindow& window, const sf::RenderTexture& renderT
 	window.draw(quad, states);
 }
 
-void SpawnAndUnspawnEnemies() {
-	//TODO: Mario 
+void SpawnAndUnspawnEnemies(sf::Time dt_time, sf::View& cam) 
+{
+
+	static float timer_spawn_next = 0.0f;
+	timer_spawn_next += dt_time.asSeconds();
+
+	if (timer_spawn_next > 5.0f)
+	{
+		int x = cam.getCenter().x;
+		int y = cam.getCenter().y;
+
+		float x_enemy = x + std::rand() % static_cast<int>(cam.getSize().x * 3) - cam.getSize().x;
+		float y_enemy = y + std::rand() % static_cast<int>(cam.getSize().y * 3) - cam.getSize().y;
+
+		if (x_enemy > (cam.getCenter().x - cam.getSize().x*0.5f) &&
+			x_enemy < (cam.getCenter().x + cam.getSize().x*0.5f) &&
+			y_enemy >(cam.getCenter().y - cam.getSize().y*0.5f) &&
+			y_enemy < (cam.getCenter().y + cam.getSize().y*0.5f))
+		{
+
+		}
+		else
+		{
+			enemies.push_back(new Enemy(x_enemy, y_enemy));
+		}
+
+		timer_spawn_next = 0.0f;
+
+	}
+
+	
+
+
 }
 
 void SpawnOasis(int x, int y)
@@ -664,14 +695,18 @@ int main()
 			UpdatePlayer(dt_time.asSeconds(), i, cam);
 		}
 		//Enemies
-		SpawnAndUnspawnEnemies();
+		SpawnAndUnspawnEnemies(dt_time, cam);
 		for (int i = 0; i < enemies.size(); i++)
 		{
 			bool cale_destruir = enemies[i]->Update(dt_time.asSeconds());
-			if (cale_destruir) {
+			bool esta_lejos = (Mates::Distance(cam.getCenter(), sf::Vector2f(enemies[i]->x, enemies[i]->y))) > cam.getSize().x*8;
+
+			if (cale_destruir || esta_lejos) 
+			{
 				enemies.erase(enemies.begin() + i);
 			}
-			else {
+			else 
+			{
 				i++;
 			}
 		}
