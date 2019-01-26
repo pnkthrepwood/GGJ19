@@ -154,6 +154,24 @@ struct Player
 	void Draw(std::vector<sf::Sprite>& toDraw)
 	{
 		sprite.setPosition(x, y);
+
+		if (facing == FacingDirection::DOWN)
+		{
+			sprite.setTextureRect(sf::IntRect(0, 0, 32, 64));
+		}
+		if (facing == FacingDirection::RIGHT)
+		{
+			sprite.setTextureRect(sf::IntRect(0, 64, 32, 64));
+		}
+		if (facing == FacingDirection::LEFT)
+		{
+			sprite.setTextureRect(sf::IntRect(0, 64*2, 32, 64));
+		}
+		if (facing == FacingDirection::UP)
+		{
+			sprite.setTextureRect(sf::IntRect(0, 64*3, 32, 64));
+		}
+
 		sprite.setTextureRect(sf::IntRect(0, 0, 32, 64));
 		toDraw.push_back(sprite);
 	}
