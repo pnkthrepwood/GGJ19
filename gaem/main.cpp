@@ -32,10 +32,11 @@ const int CURSOR_AMOUNT = 4;
 struct {
 	std::array<int,CURSOR_AMOUNT> x;
 	std::array<int,CURSOR_AMOUNT> y;
-	std::array<float,CURSOR_AMOUNT> elapsed;
-	std::array<unsigned short, CURSOR_AMOUNT> icon_id;
+	std::array<float,CURSOR_AMOUNT> anim_elapsed;
+	std::array<unsigned short, CURSOR_AMOUNT> anim_state;
 	std::array<sf::Color, CURSOR_AMOUNT> color;
 	std::array<sf::Vector2f, CURSOR_AMOUNT> joy_left_before;
+	std::array<float, CURSOR_AMOUNT> timer_joy_dir;
 } cursor;
 
 enum SpriteType
@@ -157,30 +158,85 @@ int main()
 
 		GamePad::UpdateInputState();
 
-
+		//Update cursorsito en modo clack
 		for (int i = 0; i < CURSOR_AMOUNT; ++i)
 		{
+			float& timer = cursor.timer_joy_dir[i];
+
+			const float clack_first_timer = -0.1f;
+
 			sf::Vector2f& joy_left_before = cursor.joy_left_before[i];
 			sf::Vector2f joy_left = GamePad::AnalogStick::Left.get(i);
 			if (joy_left.x < -50 && joy_left_before.x > -50)
 			{
+				timer = clack_first_timer;
 				cursor.x[i]--;
 			}
 			if (joy_left.x > 50 && joy_left_before.x < 50)
 			{
+				timer = clack_first_timer;
 				cursor.x[i]++;
 			}
 			if (joy_left.y < -50 && joy_left_before.y > -50)
 			{
+				timer = clack_first_timer;
 				cursor.y[i]--;
 			}
 			if (joy_left.y > 50 && joy_left_before.y < 50)
 			{
+				timer = clack_first_timer;
 				cursor.y[i]++;
 			}
-			joy_left_before = joy_left;
 		}
 
+		//Update cursorsito en modo dandole
+		for (int i = 0; i < CURSOR_AMOUNT; ++i)
+		{
+			sf::Vector2f& joy_left_before = cursor.joy_left_before[i];
+			sf::Vector2f joy_left = GamePad::AnalogStick::Left.get(i);
+
+			float& timer = cursor.timer_joy_dir[i];
+			const float walking_cooldown = 0.15f;
+
+			if (joy_left.x < -50)
+			{
+				timer += dt_time.asSeconds();
+				if (timer > walking_cooldown)
+				{
+					cursor.x[i]--;
+					timer -= walking_cooldown;
+				}
+			}
+			else if (joy_left.x > 50)
+			{
+				timer += dt_time.asSeconds();
+				if (timer > walking_cooldown)
+				{
+					cursor.x[i]++;
+					timer -= walking_cooldown;
+				}
+			}
+			else if (joy_left.y < -50)
+			{
+				timer += dt_time.asSeconds();
+				if (timer > walking_cooldown)
+				{
+					cursor.y[i]--;
+					timer -= walking_cooldown;
+				}
+			}
+			else if (joy_left.y > 50)
+			{
+				timer += dt_time.asSeconds();
+				if (timer > walking_cooldown)
+				{
+					cursor.y[i]++;
+					timer -= walking_cooldown;
+				}
+			}
+
+			joy_left_before = joy_left;
+		}
 
 
 		window.clear();
@@ -207,15 +263,16 @@ int main()
 
 
 
-		for (int i = 0; i < CURSOR_AMOUNT; ++i) {
+		for (int i = 0; i < CURSOR_AMOUNT; ++i) 
+		{
 			{ // Cursorsito animation
-				cursor.elapsed[i] -= dt_time.asSeconds();
-				if (cursor.elapsed[i] < 0.f)
+				cursor.anim_elapsed[i] -= dt_time.asSeconds();
+				if (cursor.anim_elapsed[i] < 0.f)
 				{
-					cursor.elapsed[i] = 0.3f;
-					cursor.icon_id[i] = (cursor.icon_id[i] + 1) % 2;
+					cursor.anim_elapsed[i] = 0.3f;
+					cursor.anim_state[i] = (cursor.anim_state[i] + 1) % 2;
 				}
-				float scale = 1.f + 0.3f * cursor.icon_id[i];
+				float scale = 1.f + 0.3f * cursor.anim_state[i];
 				spr_cursor.setScale(scale, scale);
 			}
 
