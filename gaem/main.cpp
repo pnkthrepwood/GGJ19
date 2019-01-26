@@ -16,7 +16,9 @@
 using namespace std;
 
 const int MAP_HEIGHT = 20;
-const int MAP_WIDTH =  1280 / 16;
+const int MAP_WIDTH =  39;
+
+const int START_DINEROS = 1000;
 
 const int TILE_SIZE = 16;
 
@@ -38,6 +40,8 @@ struct {
 	std::array<sf::Vector2f, CURSOR_AMOUNT> joy_left_before;
 	std::array<float, CURSOR_AMOUNT> timer_joy_dir;
 } cursor;
+
+int dineros[CURSOR_AMOUNT];
 
 enum SpriteType
 {
@@ -87,6 +91,7 @@ void selectSprite(SpriteType type)
 }
 
 SpriteType tileMap[MAP_WIDTH][MAP_HEIGHT];
+int tileOwner[MAP_WIDTH][MAP_HEIGHT];
 bool tilePassable[MAP_WIDTH][MAP_HEIGHT];
 
 void InitTilePassable()
@@ -103,6 +108,26 @@ void InitTilePassable()
 	}
 }
 
+void draw_dineros(sf::RenderWindow& window, sf::Font &font, int dineros, sf::Color color, int x, int y) {
+
+	sf::Text txt_money;
+	txt_money.setFont(font);
+	sf::String str;
+	str = "$";
+	int mm = dineros;
+	for (int i = 0; i < 5; ++i)
+	{
+		str += std::to_string(mm % 10);
+		mm = mm / 10;
+	}
+	std::reverse(str.begin(), str.end());
+	txt_money.setString(str);
+	txt_money.setPosition(x, y);
+	txt_money.setFillColor(color);
+	txt_money.setCharacterSize(38);
+	window.draw(txt_money);
+}
+
 float RES_X = 1280.0f;
 float RES_Y = 720.0f;
 
@@ -114,7 +139,7 @@ int main()
 	ImGui::SFML::Init(window);
 
 	sf::View view(sf::FloatRect(0.0f, -TILE_SIZE*2.5f, RES_X*0.5f, RES_Y*0.5f));
-	window.setView(view);
+	sf::View ui_view(sf::FloatRect(0.0f, 0.f, RES_X, RES_Y));
 
 	spriteSheet = new sf::Texture();
 	spriteSheet->loadFromFile("sprite_sheet.png");
@@ -134,8 +159,20 @@ int main()
 	cursor.color[3] = sf::Color::Blue;
 
 	for (int i = 0; i < CURSOR_AMOUNT; ++i) {
-		cursor.x[i] = cursor.y[i] = i * 2;
+		dineros[i] = START_DINEROS;
 	}
+	
+	cursor.x[0] = 2;
+	cursor.y[0] = 2;
+	cursor.x[1] = 2;
+	cursor.y[1] = MAP_HEIGHT - 2;
+	cursor.x[2] = MAP_WIDTH - 2;
+	cursor.y[2] = 2;
+	cursor.x[3] = MAP_WIDTH -2;
+	cursor.y[3] = MAP_HEIGHT-2;
+
+	sf::Font font;
+	font.loadFromFile("8bitmadness.ttf");
 
 	InitTilePassable();
 
@@ -143,9 +180,21 @@ int main()
 	{
 		for (int y = 0; y < MAP_HEIGHT; y++)
 		{
-			//if (tileMap[x][y] != TileType::IMPOSSIBLE)
+			tileOwner[x][y] = -1;
+		}
+	}
+
+	for (int x = 0; x < MAP_WIDTH; x++)
+	{
+		for (int y = 0; y < MAP_HEIGHT; y++)
+		{
+			if (tilePassable[x][y])
 			{
 				tileMap[x][y] = (std::rand() % 12 == 0 && tilePassable[x][y]) ? SpriteType::HOUSE : SpriteType::EMPTY;
+			}
+			else
+			{
+				tileMap[x][y] = SpriteType::IMPOSSIBLE;
 			}
 		}
 	}
@@ -154,6 +203,9 @@ int main()
 	sf::Clock clk_delta;
 	while (window.isOpen())
 	{
+		window.setView(view);
+
+
 		sf::Event event;
 		while (window.pollEvent(event))
 		{
@@ -262,9 +314,20 @@ int main()
 		}
 
 
+		// Comprar
+		for (int i = 0; i < CURSOR_AMOUNT; ++i)
+		{
+			if (GamePad::IsButtonJustPressed(i, GamePad::Button::A)) {
+				int x = cursor.x[i];
+				int y = cursor.y[i];
+				if (tileMap[x][y] == SpriteType::HOUSE && tileOwner[x][y] == -1 && dineros[i] >= 250) {
+					tileOwner[x][y] = i;
+					dineros[i] -= 250;
+				}
+			}
+		}
+
 		window.clear();
-
-
 
 		//Draw el fondo
 		spr_background.setTexture(*background);
@@ -279,11 +342,16 @@ int main()
 			{
 				selectSprite(tileMap[x][y]);
 				spr_stamp.setPosition(x*TILE_SIZE, y*TILE_SIZE);
+				int owner = tileOwner[x][y];
+				if (owner == -1) {
+					spr_stamp.setColor(sf::Color::White);
+				}
+				else {
+					spr_stamp.setColor(cursor.color[owner]);
+				}
 				window.draw(spr_stamp);
 			}
 		}
-
-
 
 
 		for (int i = 0; i < CURSOR_AMOUNT; ++i)
@@ -305,7 +373,12 @@ int main()
 			window.draw(spr_cursor);
 		}
 
-
+		window.setView(ui_view);
+		draw_dineros(window, font, dineros[0], cursor.color[0], 10, 10);
+		draw_dineros(window, font, dineros[1], cursor.color[1], 210, 10);
+		draw_dineros(window, font, dineros[2], cursor.color[2], 410, 10);
+		draw_dineros(window, font, dineros[3], cursor.color[3], 610, 10);
+		window.setView(view);
 
 		//ImGui::ShowDemoWindow();
 		ImGui::SFML::Render(window);
