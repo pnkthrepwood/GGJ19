@@ -49,6 +49,8 @@ enum SpriteType
 	EMPTY,
 	HOUSE,
 	FARM,
+	TREE_1,
+	TREE_2,
 
 	CURSOR
 };
@@ -80,6 +82,15 @@ void selectSprite(SpriteType type, sf::Sprite& spr)
 		case SpriteType::CURSOR:
 		{
 			spr.setTextureRect(sf::IntRect(0, 3 * TILE_SIZE, TILE_SIZE, TILE_SIZE));
+		} break;
+
+		case SpriteType::TREE_1:
+		{
+			spr.setTextureRect(sf::IntRect(0, 2 * TILE_SIZE, TILE_SIZE, TILE_SIZE));
+		} break;
+		case SpriteType::TREE_2:
+		{
+			spr.setTextureRect(sf::IntRect(TILE_SIZE, 2 * TILE_SIZE, TILE_SIZE, TILE_SIZE));
 		} break;
 
 	}
@@ -161,7 +172,7 @@ int main()
 	for (int i = 0; i < CURSOR_AMOUNT; ++i) {
 		dineros[i] = START_DINEROS;
 	}
-	
+
 	cursor.x[0] = 2;
 	cursor.y[0] = 2;
 	cursor.x[1] = 2;
@@ -190,7 +201,12 @@ int main()
 		{
 			if (tilePassable[x][y])
 			{
-				tileMap[x][y] = (std::rand() % 12 == 0 && tilePassable[x][y]) ? SpriteType::HOUSE : SpriteType::EMPTY;
+				SpriteType spriteType = SpriteType::EMPTY;
+				if (std::rand() % 32 == 0) {
+					spriteType = std::rand() % 3 == 0 ? SpriteType::TREE_2 : SpriteType::TREE_1;
+				}
+
+				tileMap[x][y] = spriteType;
 			}
 			else
 			{
