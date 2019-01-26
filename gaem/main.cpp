@@ -33,8 +33,8 @@ const float PLAYER_SPEED = 300;
 
 const float BULLET_SPEED = 700;
 const float ENEMY_TRIGGER_DISTANCE = 400;
-const float ENEMY_ACCEL = 2000;
-const float ENEMY_MAX_SPEED = 700;
+const float ENEMY_ACCEL = 1000;
+const float ENEMY_MAX_SPEED = 350;
 const float BULLET_COOLDOWN = 0.3; //seconds
 const float MADERA_GATHER_TIME = 3; //seconds
 
@@ -495,9 +495,11 @@ void UpdatePlayer(float dt, int num_player, sf::View& cam)
 	GameObject* touching_arbol = NULL;
 	for (GameObject* obj : objs_near)
 	{
-		if (getBoundBox(obj).intersects(p->boundBox()))
-		{
-			touching_arbol = obj;
+		if (obj->type == GameObjectType::TREE) {
+			if (getBoundBox(obj).intersects(p->boundBox()))
+			{
+				touching_arbol = obj;
+			}
 		}
 	}
 
@@ -613,18 +615,9 @@ void SpawnAndUnspawnEnemies(sf::Time dt_time, sf::View& cam)
 
 void SpawnOasis(int x, int y)
 {
-
-	for (int i = 0; i < 5; ++i)
-	{
-		for (int j = 0; j < 5; ++j)
-		{
-			obj_manager.Spawn(GameObjectType::WATER, x + i*16, y + j*16);
-		}
-	}
-		
-
-
+	obj_manager.Spawn(GameObjectType::WATER, x, y);
 }
+
 int main()
 {
 	srand(time(NULL));
