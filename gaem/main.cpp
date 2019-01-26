@@ -60,6 +60,8 @@ int main()
 	sf::RenderWindow window(sf::VideoMode(RES_X, RES_Y), "SFML works!");
 	sf::RenderTexture renderTexture;
 	renderTexture.create(RES_X, RES_Y);
+
+	window.setFramerateLimit(60);
 	ImGui::SFML::Init(window);
 
 	sf::View cam(sf::FloatRect(0.0f, 0.0f, RES_X*0.5f, RES_Y*0.5f));
@@ -107,20 +109,40 @@ int main()
 		renderTexture.setView(ui_view);
 		//Todo UI
 
+
+		static sf::Vector2f joy = GamePad::AnalogStick::Left.get(0);
+		joy = GamePad::AnalogStick::Left.get(0);
+		sf::Vector2f cam_offset(0, 0);
+		if (joy.x < -50) cam_offset.x = -100 * dt_time.asSeconds();
+		else if (joy.x > 50) cam_offset.x = 100 * dt_time.asSeconds();
+		if (joy.y < -50) cam_offset.y = -100 * dt_time.asSeconds();
+		else if (joy.y > 50) cam_offset.y = 100 * dt_time.asSeconds();
+		cam.move(cam_offset);
+
+
+		ImGui::Begin("finester");
+
+		ImGui::Text("Joy: %f, %f", joy.x, joy.y);
+		ImGui::Text("Cam offset: %f, %f", cam_offset.x, cam_offset.y);
+
+		ImGui::End();
+
 		renderTexture.setView(cam);
 
 		//Draw fondo del Mapita
 		int start_x = cam.getCenter().x - cam.getSize().x*0.5f - TILE_SIZE;
+		start_x = (start_x / TILE_SIZE) * TILE_SIZE;
 		int start_y = cam.getCenter().y - cam.getSize().y*0.5f - TILE_SIZE;
+		start_y = (start_y / TILE_SIZE) * TILE_SIZE;
 
 		int TILES_CAM_WIDTH = 100;
 		int TILES_CAM_HEIGHT = 100;
 
-		for (int x = start_x; x < start_x + TILES_CAM_WIDTH; ++x)
+		for (int x = start_x; x < start_x + TILES_CAM_WIDTH*TILE_SIZE; x += TILE_SIZE)
 		{
-			for (int y = start_y; y < start_y + TILES_CAM_HEIGHT; ++y)
+			for (int y = start_y; y < start_y + TILES_CAM_HEIGHT * TILE_SIZE; y += TILE_SIZE)
 			{
-				spr_tile_dessert.setPosition(x*TILE_SIZE, y*TILE_SIZE);
+				spr_tile_dessert.setPosition(x, y);
 				renderTexture.draw(spr_tile_dessert);
 			}
 		}
