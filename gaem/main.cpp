@@ -128,7 +128,7 @@ void draw_dineros(sf::RenderWindow& window, sf::Font &font, int dineros, sf::Col
 	sf::Text txt_money;
 	txt_money.setFont(font);
 	sf::String str;
-	str = "$";
+	str = "€";
 	int mm = dineros;
 	for (int i = 0; i < 5; ++i)
 	{
