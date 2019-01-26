@@ -73,6 +73,17 @@ struct ProgressShape : public sf::CircleShape
 
 };
 
+enum FacingDirection
+{
+	UP, DOWN, LEFT, RIGHT
+};
+
+enum PlayerState
+{
+	IDLE,
+	WALKING
+};
+
 struct Player
 {
 	float x, y;
@@ -82,6 +93,9 @@ struct Player
 	float bullet_cooldown;
 	float madera_progress;
 	int num_player;
+
+	FacingDirection facing;
+	PlayerState state;
 
 	sf::Sprite sprite;
 	ProgressShape progress;
@@ -284,16 +298,21 @@ void UpdatePlayer(float dt, int num_player, sf::View& cam)
 	if (length_L < 30)
 	{
 		stick_L = sf::Vector2f(0, 0);
+
 	}
 
 	// Update speed
 	sf::Vector2f direction = Mates::Normalize(sf::Vector2f(stick_L.x, stick_L.y));
-	if (p->madera_progress > 0) {
+	if (p->madera_progress > 0) 
+	{
 		p->vel_x = p->vel_y = 0;
-	} else {
+	} 
+	else 
+	{
 		p->vel_x = direction.x * PLAYER_SPEED;
 		p->vel_y = direction.y * PLAYER_SPEED;
 	}
+
 	// Update pos
 	p->x = p->x + p->vel_x * dt;
 	p->y = p->y + p->vel_y * dt;
