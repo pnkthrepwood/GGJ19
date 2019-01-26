@@ -33,13 +33,36 @@ const float BULLET_SPEED = 700;
 const float BULLET_COOLDOWN = 0.5; //seconds
 const float MADERA_GATHER_TIME = 3; //seconds
 
-struct Player {
+ObjManager obj_manager;
+int madera = 0;
+
+
+sf::Texture* tex_spritesheet;
+sf::Sprite spr_tile_dessert;
+sf::Sprite* spr_player[NUM_PLAYERS];
+
+
+
+sf::Shader* nightLight;
+sf::VertexArray quad(sf::Quads, 4);
+sf::Clock clockDay;
+
+
+struct Player
+{
 	float x, y;
 	float vel_x, vel_y;
 	int hp;
 	sf::Vector2f facing_vector;
 	float bullet_cooldown;
 	float madera_progress;
+
+	sf::FloatRect boundBox()
+	{
+		return sf::FloatRect(x - 32, y - 32, 64, 64);
+
+	}
+
 };
 
 struct Bullet {
@@ -92,6 +115,9 @@ struct Particle {
 	}
 
 };
+std::array<Player, NUM_PLAYERS> players;
+std::vector<Bullet*> bullets;
+std::vector<Particle*> particles;
 
 
 struct ProgressShape : public sf::CircleShape
@@ -115,19 +141,7 @@ struct ProgressShape : public sf::CircleShape
 
 };
 
-int madera = 0;
 
-sf::Texture* tex_spritesheet;
-sf::Sprite spr_tile_dessert;
-sf::Sprite* spr_player[NUM_PLAYERS];
-
-sf::Shader* nightLight;
-sf::VertexArray quad(sf::Quads, 4);
-sf::Clock clockDay;
-
-std::array<Player, NUM_PLAYERS> players;
-std::vector<Bullet*> bullets;
-std::vector<Particle*> particles;
 
 void InitPlayers() {
 	for (int i = 0; i < NUM_PLAYERS; i++) {
@@ -225,15 +239,30 @@ void UpdatePlayer(float dt, int num_player, sf::View& cam)
 
 	// Gather wood
 	// TODO: CHECK THERE IS A TREE
+
+	static std::vector<GameObject*> objs_near;
+	objs_near.clear();
+	obj_manager.getObjects(objs_near, cam);
+
+	GameObject* touching_arbol = NULL;
+	for (GameObject* obj : objs_near)
+	{
+		if (getBoundBox(obj).intersects(p->boundBox()))
+		{
+			touching_arbol = obj;
+		}
+	}
+
 	if (GamePad::IsButtonJustReleased(num_player, GamePad::Button::B)) {
 		p->madera_progress = 0;
 	}
-	if (GamePad::IsButtonPressed(num_player, GamePad::Button::B)) {
+	if (touching_arbol && GamePad::IsButtonPressed(num_player, GamePad::Button::B)) {
 		p->madera_progress += dt;
 		if (p->madera_progress >= MADERA_GATHER_TIME) {
 			madera += 1;
 			p->madera_progress = 0;
 			particles.push_back(new Particle(*madera_texture, p->x, p->y - 50, 0, -200, 0.2f));
+			obj_manager.DestroyObject(touching_arbol);;
 		}
 	}
 
@@ -299,7 +328,7 @@ void RenderWithShader(sf::RenderWindow& window, const sf::RenderTexture& renderT
 	window.draw(quad, states);
 }
 
-ObjManager obj_manager;
+
 
 
 void DrawPlayer(int num_player, sf::RenderTarget& renderTexture)

@@ -4,6 +4,7 @@
 #include <cmath>
 #include <queue>
 #include <SFML/Graphics.hpp>
+#include <unordered_set>
 #pragma warning( disable : 4244 )
 #pragma warning( disable : 4267 )
 
@@ -645,16 +646,27 @@ int ObjManager::Count()
 
 void ObjManager::getObjects(std::vector<GameObject*>& vec, const sf::View& camera)
 {
+	//Asumimos cosas de la camara
 
-	std::set<quadNode*> set;
+	quadNode* node = searchLeaf(camera.getCenter());
+	std::list<GameObject*>::iterator it;
+	for (it = node->bucket.begin(); it != node->bucket.end(); ++it) 
+	{
+		vec.push_back(*it);
+	}
+	
+
+
+	/*
+	std::unordered_set<quadNode*> set;
 
 	for (int i = camera.getCenter().x - camera.getSize().x*2.0f;
 		i < camera.getCenter().x + camera.getSize().x*2.0f;
-		i += 16/*TILE_SIZE*/ *2) 
+		i += 16*2) 
 	{
 			for (int j = camera.getCenter().y - camera.getSize().y*2.0f;
 				j < camera.getCenter().y + camera.getSize().y*2.0f;
-				j += 16/*TILE_SIZE*/ *2)
+				j += 16 *2)
 			{
 					//std::cerr << i << ",,," << j << std::endl;
 
@@ -672,6 +684,7 @@ void ObjManager::getObjects(std::vector<GameObject*>& vec, const sf::View& camer
 					}
 			}
 	}
+*/
 
 }
 
