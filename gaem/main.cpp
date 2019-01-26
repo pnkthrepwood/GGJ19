@@ -29,7 +29,7 @@ float RES_Y = 720.0f;
 const int TILE_SIZE = 16;
 
 const int NUM_PLAYERS = 1;
-const float PLAYER_SPEED = 400;
+const float PLAYER_SPEED = 300;
 const float BULLET_SPEED = 700;
 const float BULLET_COOLDOWN = 0.5; //seconds
 const float MADERA_GATHER_TIME = 3; //seconds
@@ -159,29 +159,41 @@ struct Player
 	{
 		sprite.setPosition(x, y);
 
+		sf::IntRect texrect;
+
 		if (facing == FacingDirection::DOWN)
 		{
-			sprite.setTextureRect(sf::IntRect(0, 0, 32, 64));
+			texrect = (sf::IntRect(0, 0, 32, 64));
 		}
 		if (facing == FacingDirection::RIGHT)
 		{
-			sprite.setTextureRect(sf::IntRect(0, 64, 32, 64));
+			texrect = (sf::IntRect(0, 64, 32, 64));
 		}
 		if (facing == FacingDirection::LEFT)
 		{
-			sprite.setTextureRect(sf::IntRect(0, 64*2, 32, 64));
+			texrect = (sf::IntRect(0, 64*2, 32, 64));
 		}
 		if (facing == FacingDirection::UP)
 		{
-			sprite.setTextureRect(sf::IntRect(0, 64*3, 32, 64));
+			texrect = (sf::IntRect(0, 64*3, 32, 64));
 		}
 
-		sprite.setTextureRect(sf::IntRect(0, 0, 32, 64));
+		if (state == PlayerState::IDLE)
+		{
+			texrect.left = 0;
+		}
+		else if (state == PlayerState::WALKING)
+		{
+			texrect.left += (static_cast<int>(anim_timer / 0.2f) % 5) * 32;
+		}
+
+		sprite.setTextureRect(texrect);
 		toDraw.push_back(sprite);
 	}
 
 	void DrawUI(sf::RenderTarget& rt)
 	{
+		progress.setOutlineThickness(11); //Force redraw shape
 		progress.progress = progress.getPointCount() - (progress.getPointCount()*(madera_progress / MADERA_GATHER_TIME));
 		if (progress.progress < 120 && progress.progress > 3) {
 			progress.setPosition(x, y);
@@ -315,28 +327,28 @@ void UpdatePlayer(float dt, int num_player, sf::View& cam)
 	sf::Vector2f stick_L = GamePad::AnalogStick::Left.get(num_player);
 	float length_L = Mates::Length(stick_L);
 
-	// Dead zone
-	if (length_L < 30)
+	if (length_L < 30) // Dead zone -> quieto
 	{
 		stick_L = sf::Vector2f(0, 0);
-
-	}
-
-	// Update speed
-	sf::Vector2f direction = Mates::Normalize(sf::Vector2f(stick_L.x, stick_L.y));
-	if (p->madera_progress > 0) 
-	{
-		p->vel_x = p->vel_y = 0;
 		p->state = PlayerState::IDLE;
 		p->anim_timer = 0;
-	} 
-	else 
+	}
+	else if (p->madera_progress > 0) //gathering -> quieto
 	{
-		p->vel_x = direction.x * PLAYER_SPEED;
-		p->vel_y = direction.y * PLAYER_SPEED;
+		stick_L = sf::Vector2f(0, 0);
+		p->state = PlayerState::GATHERING;
+		p->anim_timer += dt;
+	}
+	else // else -> walking
+	{
 		p->state = PlayerState::WALKING;
 		p->anim_timer += dt;
 	}
+	
+	// Update speed
+	sf::Vector2f direction = Mates::Normalize(sf::Vector2f(stick_L.x, stick_L.y));
+	p->vel_x = direction.x * PLAYER_SPEED;
+	p->vel_y = direction.y * PLAYER_SPEED;
 
 	// Update pos
 	p->x = p->x + p->vel_x * dt;
@@ -399,8 +411,6 @@ void UpdatePlayer(float dt, int num_player, sf::View& cam)
 	}
 	if (touching_arbol && GamePad::IsButtonPressed(num_player, GamePad::Button::B)) {
 		p->madera_progress += dt;
-		p->state = PlayerState::GATHERING;
-		p->anim_timer += dt;
 		if (p->madera_progress >= MADERA_GATHER_TIME) {
 			madera += 1;
 			p->madera_progress = 0;
