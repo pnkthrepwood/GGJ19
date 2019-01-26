@@ -8,6 +8,8 @@
 #include "InputManager.h"
 #include <algorithm>
 #include <queue>
+#include <algorithm>
+
 #include <unordered_set>
 #include <unordered_map>
 #include "rand.h"
@@ -17,6 +19,8 @@
 #include "ObjectManager.h"
 #include "DayManager.h"
 
+#pragma warning( disable : 4244 )
+
 using namespace std;
 
 float RES_X = 1280.0f;
@@ -25,25 +29,42 @@ float RES_Y = 720.0f;
 const int TILE_SIZE = 16;
 
 const int NUM_PLAYERS = 4;
-const float PLAYER_SPEED = 500;
+const float PLAYER_SPEED = 400;
 const float BULLET_SPEED = 700;
 const float BULLET_COOLDOWN = 0.5; //seconds
 const float MADERA_GATHER_TIME = 3; //seconds
 
-enum PlayerState {
-	IDLE = 0,
-	WALKING,
-	GATHERING,
-};
+ObjManager obj_manager;
+int madera;
 
-struct Player {
+sf::Texture* tex_spritesheet;
+sf::Sprite spr_tile_dessert;
+sf::Sprite* spr_player[NUM_PLAYERS];
+
+sf::Shader* nightLight;
+sf::VertexArray quad(sf::Quads, 4);
+sf::Clock clockDay;
+
+void SpriteCenterOrigin(sf::Sprite& spr)
+{
+	spr.setOrigin(spr.getTexture()->getSize().x / 2.f, spr.getTexture()->getSize().y / 2.f);
+}
+
+struct Player
+{
 	float x, y;
 	float vel_x, vel_y;
 	int hp;
-	PlayerState state;
 	sf::Vector2f facing_vector;
 	float bullet_cooldown;
 	float madera_progress;
+
+	sf::FloatRect boundBox()
+	{
+		return sf::FloatRect(x - 32, y - 32, 64, 64);
+
+	}
+
 };
 
 struct Bullet {
@@ -61,10 +82,6 @@ struct Bullet {
 };
 
 
-void SpriteCenterOrigin(sf::Sprite& spr)
-{
-	spr.setOrigin(spr.getTexture()->getSize().x / 2.f, spr.getTexture()->getSize().y / 2.f);
-}
 
 struct Particle {
 	float x, y;
@@ -96,6 +113,10 @@ struct Particle {
 	}
 
 };
+std::array<Player, NUM_PLAYERS> players;
+std::vector<Bullet*> bullets;
+std::vector<Particle*> particles;
+std::vector<Enemy*> enemies;
 
 
 struct ProgressShape : public sf::CircleShape
@@ -119,16 +140,8 @@ struct ProgressShape : public sf::CircleShape
 
 };
 
-int madera = 0;
-
-sf::Texture* tex_spritesheet;
-sf::Sprite spr_tile_dessert;
-
-std::array<Player, NUM_PLAYERS> players;
-std::vector<Bullet*> bullets;
-std::vector<Particle*> particles;
-
 void InitPlayers() {
+	int madera = 0;
 	for (int i = 0; i < NUM_PLAYERS; i++) {
 		memset(&(players[i]), 0, sizeof(Player));
 		players[i].hp = 100;
@@ -223,21 +236,71 @@ void UpdatePlayer(float dt, int num_player, sf::View& cam)
 
 
 	// Gather wood
-	// TODO: CHECK THERE IS A TREE
+	static std::vector<GameObject*> objs_near;
+	objs_near.clear();
+	obj_manager.getObjects(objs_near, cam);
+
+	GameObject* touching_arbol = NULL;
+	for (GameObject* obj : objs_near)
+	{
+		if (getBoundBox(obj).intersects(p->boundBox()))
+		{
+			touching_arbol = obj;
+		}
+	}
+
 	if (GamePad::IsButtonJustReleased(num_player, GamePad::Button::B)) {
 		p->madera_progress = 0;
 	}
-	if (GamePad::IsButtonPressed(num_player, GamePad::Button::B)) {
+	if (touching_arbol && GamePad::IsButtonPressed(num_player, GamePad::Button::B)) {
 		p->madera_progress += dt;
 		if (p->madera_progress >= MADERA_GATHER_TIME) {
 			madera += 1;
 			p->madera_progress = 0;
-			particles.push_back(new Particle(*madera_texture, p->x, p->y - 50, 0, -200, 0.2));
+			particles.push_back(new Particle(*madera_texture, p->x, p->y - 50, 0, -200, 0.2f));
+			obj_manager.DestroyObject(touching_arbol);;
+		}
+	}
+
+	if (p->hp < 100) {
+		p->hp += dt;
+		if (p->hp > 100) {
+			p->hp = 100;
 		}
 	}
 }
 
-ObjManager obj_manager;
+void DrawPlayer(int num_player, sf::RenderTarget& renderTexture)
+{
+
+	spr_player[num_player]->setPosition(players[num_player].x, players[num_player].y);
+	renderTexture.draw(*spr_player[num_player]);
+
+	Player* p = &players[num_player];
+	static ProgressShape sprite;
+	sprite.progress = sprite.getPointCount() - (sprite.getPointCount()*(p->madera_progress / MADERA_GATHER_TIME));
+	if (sprite.progress < 120 && sprite.progress > 3) {
+		sprite.setFillColor(sf::Color::Transparent);
+		sprite.setOrigin(47, 47);
+		sprite.setPosition(p->x, p->y);
+		sprite.setScale(-1, 1);
+
+		sprite.setOutlineThickness(11);
+		sprite.setOutlineColor(sf::Color(20, 250, 20, 90));
+		renderTexture.draw(sprite);
+	}
+
+	static sf::RectangleShape lifeBar;
+	const float health_bar_width = 50;
+	if (p->hp < 100)
+	{
+		lifeBar.setFillColor(sf::Color(250, 20, 20));
+		lifeBar.setPosition(p->x - health_bar_width/2, p->y + 40);
+		lifeBar.setSize(sf::Vector2f(p->hp / 100.f * health_bar_width, 5));
+		renderTexture.draw(lifeBar);
+	}
+
+}
 
 int main()
 {
@@ -269,11 +332,11 @@ int main()
 
 	sf::Texture player_texture;
 	player_texture.loadFromFile("player.png");
-	sf::Sprite spr_player[NUM_PLAYERS];
 	for (int i = 0; i < NUM_PLAYERS; i++) {
-		spr_player[i].setTexture(player_texture);
-		SpriteCenterOrigin(spr_player[i]);
-		spr_player[i].setColor(playerColors[i]);
+		spr_player[i] = new sf::Sprite();
+		spr_player[i]->setTexture(player_texture);
+		SpriteCenterOrigin(*(spr_player[i]));
+		spr_player[i]->setColor(playerColors[i]);
 	}
 
 	sf::Texture bullet_texture;
@@ -295,14 +358,13 @@ int main()
 
 	InitPlayers();
 
-	obj_manager.Create(GameObjectType::CASA, 0, 0);
+	obj_manager.Spawn(GameObjectType::CASA, 0, 0);
+	obj_manager.Spawn(GameObjectType::TREE, 50, 50);
 
 	sf::Clock clk_running;
 	sf::Clock clk_delta;
 	while (window.isOpen())
 	{
-
-
 		sf::Event event;
 		while (window.pollEvent(event))
 		{
@@ -312,7 +374,6 @@ int main()
 			{
 				window.close();
 			}
-
 		}
 
 		sf::Time dt_time = clk_delta.restart();
@@ -344,7 +405,7 @@ int main()
 		}
 
 		//DRAW
-		renderTexture.clear(sf::Color(255, 216, 0));
+		renderTexture.clear(sf::Color(255, 216, 0)); //Hack to hide black lines between tiles
 
 
 		{ // UpdateCamera(cam);
@@ -364,9 +425,9 @@ int main()
 		renderTexture.setView(cam);
 
 		//Draw fondo del Mapita
-		int start_x = cam.getCenter().x - cam.getSize().x*0.5f - TILE_SIZE;
+		float start_x = cam.getCenter().x - cam.getSize().x*0.5f - TILE_SIZE;
 		start_x = (start_x / TILE_SIZE) * TILE_SIZE;
-		int start_y = cam.getCenter().y - cam.getSize().y*0.5f - TILE_SIZE;
+		float start_y = cam.getCenter().y - cam.getSize().y*0.5f - TILE_SIZE;
 		start_y = (start_y / TILE_SIZE) * TILE_SIZE;
 
 		int TILES_CAM_WIDTH = 100;
@@ -386,26 +447,18 @@ int main()
 		//Draw objetesitos
 		obj_manager.Draw(cam, renderTexture, spr_tile_dessert);
 
+
 		//Draw Playersitos
+		std::vector<pair<int, int> > draw_order;
 		for (int i = 0; i < NUM_PLAYERS; i++)
 		{
-			spr_player[i].setPosition(players[i].x, players[i].y);
-			renderTexture.draw(spr_player[i]);
+			draw_order.push_back(make_pair(players[i].y, i));
+		}
+		std::sort(draw_order.begin(), draw_order.end());
 
-			Player* p = &players[i];
-			static ProgressShape sprite;
-			sprite.progress = sprite.getPointCount() - (sprite.getPointCount()*(p->madera_progress / MADERA_GATHER_TIME));
-			if (sprite.progress < 120 && sprite.progress > 3) {
-				sprite.setFillColor(sf::Color::Transparent);
-				sprite.setOrigin(47, 47);
-				sprite.setPosition(p->x, p->y);
-				sprite.setScale(-1, 1);
-
-				sprite.setOutlineThickness(11);
-				sprite.setOutlineColor(sf::Color(250,20,20,100));
-				renderTexture.draw(sprite);
-			}
-
+		for (int j = 0; j < NUM_PLAYERS; j++) {
+			int num_player = draw_order[j].second;
+			DrawPlayer(num_player, renderTexture);
 		}
 
 		for (int i = 0; i < bullets.size(); i++) {
@@ -437,7 +490,7 @@ int main()
 		txt_money.setOutlineColor(sf::Color::Black);
 		txt_money.setOutlineThickness(2);
 		txt_money.setCharacterSize(32);
-		txt_money.setPosition(40 + spr_madera.getTexture()->getSize().x, 40);
+		txt_money.setPosition(40.f + spr_madera.getTexture()->getSize().x, 40.f);
 		sf::FloatRect textRect = txt_money.getLocalBounds();
 		txt_money.setOrigin(0, textRect.top + textRect.height / 2.0f);
 		window.draw(txt_money);

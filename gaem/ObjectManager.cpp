@@ -4,8 +4,27 @@
 #include <cmath>
 #include <queue>
 #include <SFML/Graphics.hpp>
+#include <unordered_set>
+#pragma warning( disable : 4244 )
+#pragma warning( disable : 4267 )
 
 GameObject go_collection[MAX_OBJ_SIZE];
+
+sf::IntRect SelectSprite(GameObjectType type)
+{
+	switch (type)
+	{
+	case GameObjectType::NONE:
+		return sf::IntRect(0, 0, 0, 0);
+	case GameObjectType::CASA:
+		return sf::IntRect(0, 0, 16, 16);
+	case GameObjectType::TREE:
+		return sf::IntRect(0, 2 * 16, 16, 16);
+	default:
+		std::cout << "Sprite type not handled madafaca" << std::endl;
+		return sf::IntRect(0, 0, 0, 0);
+	}
+}
 
 sf::Vector2f getObjSize(GameObjectType type)
 {
@@ -225,7 +244,7 @@ void ObjManager::DestroyObject(GameObject* obj, bool canDelete)
 		parent->SE != NULL && parent->SE->isLeaf &&
 		parent->SW != NULL && parent->SW->isLeaf) {
 
-		int total = 0;
+		unsigned int total = 0;
 		total += parent->NE->bucket.size();
 		total += parent->NW->bucket.size();
 		total += parent->SE->bucket.size();
@@ -281,7 +300,9 @@ void ObjManager::camDraw(sf::RenderTarget& rt, const sf::Vector2f& Position, sf:
 	std::list<GameObject*>::iterator it;
 	for (it = node->bucket.begin(); it != node->bucket.end(); ++it)
 	{
-		spr.setTextureRect(sf::IntRect(0, 0, 16, 16));
+		spr.setTextureRect( SelectSprite((*it)->type));
+
+
 		spr.setPosition((*it)->x, (*it)->y);
 		
 		rt.draw(spr);
@@ -625,16 +646,27 @@ int ObjManager::Count()
 
 void ObjManager::getObjects(std::vector<GameObject*>& vec, const sf::View& camera)
 {
+	//Asumimos cosas de la camara
 
-	std::set<quadNode*> set;
+	quadNode* node = searchLeaf(camera.getCenter());
+	std::list<GameObject*>::iterator it;
+	for (it = node->bucket.begin(); it != node->bucket.end(); ++it) 
+	{
+		vec.push_back(*it);
+	}
+	
+
+
+	/*
+	std::unordered_set<quadNode*> set;
 
 	for (int i = camera.getCenter().x - camera.getSize().x*2.0f;
 		i < camera.getCenter().x + camera.getSize().x*2.0f;
-		i += 16/*TILE_SIZE*/ *2) 
+		i += 16*2) 
 	{
 			for (int j = camera.getCenter().y - camera.getSize().y*2.0f;
 				j < camera.getCenter().y + camera.getSize().y*2.0f;
-				j += 16/*TILE_SIZE*/ *2)
+				j += 16 *2)
 			{
 					//std::cerr << i << ",,," << j << std::endl;
 
@@ -652,11 +684,12 @@ void ObjManager::getObjects(std::vector<GameObject*>& vec, const sf::View& camer
 					}
 			}
 	}
+*/
 
 }
 
 
-void ObjManager::Create(GameObjectType type, int x, int y)
+void ObjManager::Spawn(GameObjectType type, int x, int y)
 {
 	for (int i = 0; i < MAX_OBJ_SIZE; ++i)
 	{
