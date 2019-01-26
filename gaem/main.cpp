@@ -372,6 +372,7 @@ int main()
 			int x = cursor.x[i];
 			int y = cursor.y[i];
 
+			/*
 			if (GamePad::IsButtonJustPressed(i, GamePad::Button::A)) 
 			{
 				if (tileMap[x][y] == SpriteType::HOUSE && tileOwner[x][y] == -1 && dineros[i] >= 250) 
@@ -380,6 +381,7 @@ int main()
 					dineros[i] -= 250;
 				}
 			}
+			*/
 
 			if (GamePad::IsButtonJustPressed(i, GamePad::Button::X) && CanBeBuilt(tileMap[x][y]))
 			{
@@ -392,6 +394,7 @@ int main()
 				if (tileBuildingTime[x][y] > 1.0f)
 				{
 					tileMap[x][y] = SpriteType::HOUSE;
+					dineros[i] -= 250;
 				}
 			}
 
