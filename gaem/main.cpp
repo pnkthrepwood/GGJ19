@@ -279,9 +279,9 @@ int main()
 
 
 		//DRAW
-		window.clear();
+		//window.clear();
 		renderTexture.setView(cam);
-		renderTexture.clear();
+		renderTexture.clear(sf::Color(255, 216, 0));
 
 
 		static sf::Vector2f joy = GamePad::AnalogStick::Left.get(0);
