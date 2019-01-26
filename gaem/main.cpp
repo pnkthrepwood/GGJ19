@@ -37,6 +37,7 @@ ObjManager obj_manager;
 int madera;
 
 sf::Texture* tex_spritesheet;
+sf::Texture* player_texture;
 sf::Sprite spr_tile_dessert;
 sf::Sprite* spr_player[NUM_PLAYERS];
 
@@ -44,10 +45,33 @@ sf::Shader* nightLight;
 sf::VertexArray quad(sf::Quads, 4);
 sf::Clock clockDay;
 
+sf::Color playerColors[4];
+
 void SpriteCenterOrigin(sf::Sprite& spr)
 {
 	spr.setOrigin(spr.getTexture()->getSize().x / 2.f, spr.getTexture()->getSize().y / 2.f);
 }
+
+struct ProgressShape : public sf::CircleShape
+{
+	int progress;
+
+	ProgressShape() : sf::CircleShape(46, 120) { };
+	sf::Vector2f getPoint(std::size_t index) const
+	{
+		if (index > progress) index = 0;
+		if (index > progress / 2) index = progress - index;
+
+		static const float pi = 3.141592654f;
+
+		float angle = index * 2 * pi / this->getPointCount() * 2 - pi / 2;
+		float x = std::cos(angle) * getRadius();
+		float y = std::sin(angle) * getRadius();
+
+		return sf::Vector2f(getRadius() + x, getRadius() + y);
+	}
+
+};
 
 struct Player
 {
@@ -57,12 +81,86 @@ struct Player
 	sf::Vector2f facing_vector;
 	float bullet_cooldown;
 	float madera_progress;
+	int num_player;
+
+	sf::Sprite sprite;
+	ProgressShape progress;
+	sf::RectangleShape lifeBar;
+
+	Player(int n_player) 
+		: num_player(n_player) 
+		, hp(100)
+		, vel_x(0)
+		, vel_y(0)
+		, madera_progress(0)
+		, bullet_cooldown(0)
+		, facing_vector(1, 0)
+	{
+		sprite.setTexture(*player_texture);
+		SpriteCenterOrigin(sprite);
+		sprite.setColor(playerColors[n_player]);
+
+		progress.setFillColor(sf::Color::Transparent);
+		progress.setOrigin(47, 47);
+		progress.setScale(-1, 1);
+		progress.setOutlineThickness(11);
+		progress.setOutlineColor(sf::Color(20, 250, 20, 90));
+		lifeBar.setFillColor(sf::Color(250, 20, 20));
+
+		const int PLAYER_INITIAL_POS_OFFSET = 90;
+		x = RES_X / 2;
+		y = RES_Y / 2;
+		switch (n_player) {
+			case 0:
+				x -= PLAYER_INITIAL_POS_OFFSET / 2;
+				y -= PLAYER_INITIAL_POS_OFFSET;
+				break;
+			case 1:
+				x -= PLAYER_INITIAL_POS_OFFSET;
+				y += PLAYER_INITIAL_POS_OFFSET / 2;
+				break;
+			case 2:
+				x += PLAYER_INITIAL_POS_OFFSET;
+				y -= PLAYER_INITIAL_POS_OFFSET / 2;
+				break;
+			case 3:
+				x += PLAYER_INITIAL_POS_OFFSET / 2;
+				y += PLAYER_INITIAL_POS_OFFSET;
+		}
+	}
 
 	sf::FloatRect boundBox()
 	{
-		return sf::FloatRect(x - 32, y - 32, 64, 64);
+		return sf::FloatRect(x - sprite.getTexture()->getSize().x/2, 
+			y - sprite.getTexture()->getSize().y/2,
+			sprite.getTexture()->getSize().x,
+			sprite.getTexture()->getSize().y);
+	}
+
+	void Draw(std::vector<sf::Sprite>& toDraw)
+	{
+		sprite.setPosition(x, y);
+		toDraw.push_back(sprite);
+	}
+
+	void DrawUI(sf::RenderTarget& rt)
+	{
+		progress.progress = progress.getPointCount() - (progress.getPointCount()*(madera_progress / MADERA_GATHER_TIME));
+		if (progress.progress < 120 && progress.progress > 3) {
+			progress.setPosition(x, y);
+			rt.draw(progress);
+		}
+
+		const float health_bar_width = 50;
+		if (hp < 100)
+		{
+			lifeBar.setPosition(x - health_bar_width / 2, y + 40);
+			lifeBar.setSize(sf::Vector2f(hp / 100.f * health_bar_width, 5));
+			rt.draw(lifeBar);
+		}
 
 	}
+
 
 };
 
@@ -117,53 +215,20 @@ struct Enemy {
 
 };
 
-std::array<Player, NUM_PLAYERS> players;
+std::array<Player*, NUM_PLAYERS> players;
 std::vector<Bullet*> bullets;
 std::vector<Particle*> particles;
 std::vector<Enemy*> enemies;
 
-
-struct ProgressShape : public sf::CircleShape
-{
-	int progress;
-
-	ProgressShape() : sf::CircleShape(46, 120) { };
-	sf::Vector2f getPoint(std::size_t index) const
-	{
-		if (index > progress) index = 0;
-		if (index > progress / 2) index = progress - index;
-
-		static const float pi = 3.141592654f;
-
-		float angle = index * 2 * pi / this->getPointCount() * 2 - pi / 2;
-		float x = std::cos(angle) * getRadius();
-		float y = std::sin(angle) * getRadius();
-
-		return sf::Vector2f(getRadius() + x, getRadius() + y);
-	}
-
-};
 
 
 
 void InitPlayers() {
 	int madera = 0;
 	for (int i = 0; i < NUM_PLAYERS; i++) {
-		memset(&(players[i]), 0, sizeof(Player));
-		players[i].hp = 100;
-		players[i].x = RES_X / 2;
-		players[i].y = RES_Y / 2;
-		players[i].facing_vector = sf::Vector2f(1, 0);
+		players[i] = new Player(i);
+
 	}
-	const int PLAYER_INITIAL_POS_OFFSET = 90;
-	players[0].x -= PLAYER_INITIAL_POS_OFFSET / 2;
-	players[0].y -= PLAYER_INITIAL_POS_OFFSET;
-	players[1].x -= PLAYER_INITIAL_POS_OFFSET;
-	players[1].y += PLAYER_INITIAL_POS_OFFSET / 2;
-	players[2].x += PLAYER_INITIAL_POS_OFFSET;
-	players[2].y -= PLAYER_INITIAL_POS_OFFSET / 2;
-	players[3].x += PLAYER_INITIAL_POS_OFFSET / 2;
-	players[3].y += PLAYER_INITIAL_POS_OFFSET;
 }
 
 bool UpdateBullet(Bullet *b, float dt, sf::View& cam)
@@ -191,7 +256,7 @@ sf::Texture* madera_texture;
 
 void UpdatePlayer(float dt, int num_player, sf::View& cam)
 {
-	Player* p = &(players[num_player]);
+	Player* p = players[num_player];
 
 	sf::Vector2f stick_L = GamePad::AnalogStick::Left.get(num_player);
 	float length_L = Mates::Length(stick_L);
@@ -333,38 +398,6 @@ void RenderWithShader(sf::RenderWindow& window, const sf::RenderTexture& renderT
 
 
 
-void DrawPlayer(int num_player, sf::RenderTarget& renderTexture)
-{
-
-	spr_player[num_player]->setPosition(players[num_player].x, players[num_player].y);
-	renderTexture.draw(*spr_player[num_player]);
-
-	Player* p = &players[num_player];
-	static ProgressShape sprite;
-	sprite.progress = sprite.getPointCount() - (sprite.getPointCount()*(p->madera_progress / MADERA_GATHER_TIME));
-	if (sprite.progress < 120 && sprite.progress > 3) {
-		sprite.setFillColor(sf::Color::Transparent);
-		sprite.setOrigin(47, 47);
-		sprite.setPosition(p->x, p->y);
-		sprite.setScale(-1, 1);
-
-		sprite.setOutlineThickness(11);
-		sprite.setOutlineColor(sf::Color(20, 250, 20, 90));
-		renderTexture.draw(sprite);
-	}
-
-	static sf::RectangleShape lifeBar;
-	const float health_bar_width = 50;
-	if (p->hp < 100)
-	{
-		lifeBar.setFillColor(sf::Color(250, 20, 20));
-		lifeBar.setPosition(p->x - health_bar_width/2, p->y + 40);
-		lifeBar.setSize(sf::Vector2f(p->hp / 100.f * health_bar_width, 5));
-		renderTexture.draw(lifeBar);
-	}
-
-}
-
 int main()
 {
 	srand(time(NULL));
@@ -374,12 +407,10 @@ int main()
 	sf::RenderTexture renderTexture;
 	renderTexture.create(RES_X, RES_Y);
 
-	sf::Color playerColors[] = {
-		sf::Color::Cyan,
-		sf::Color::Magenta,
-		sf::Color::Red,
-		sf::Color::Blue,
-	};
+	playerColors[0] = sf::Color::Cyan;
+	playerColors[1] = sf::Color::Magenta;
+	playerColors[2] = sf::Color::Red;
+	playerColors[3] = sf::Color::Blue;
 
 	window.setFramerateLimit(60);
 	ImGui::SFML::Init(window);
@@ -390,14 +421,8 @@ int main()
 	sf::Font font;
 	font.loadFromFile("8bitwonder.ttf");
 
-	sf::Texture player_texture;
-	player_texture.loadFromFile("player.png");
-	for (int i = 0; i < NUM_PLAYERS; i++) {
-		spr_player[i] = new sf::Sprite();
-		spr_player[i]->setTexture(player_texture);
-		SpriteCenterOrigin(*(spr_player[i]));
-		spr_player[i]->setColor(playerColors[i]);
-	}
+	player_texture = new sf::Texture();
+	player_texture->loadFromFile("player.png");
 
 	sf::Texture bullet_texture;
 	bullet_texture.loadFromFile("bullet.png");
@@ -472,16 +497,16 @@ int main()
 		{ // UpdateCamera(cam);
 			sf::Vector2f centroid;
 			for (int i = 0; i < NUM_PLAYERS; ++i) {
-					centroid += sf::Vector2f(players[i].x, players[i].y);
+					centroid += sf::Vector2f(players[i]->x, players[i]->y);
 			}
 			centroid = centroid / static_cast<float>(NUM_PLAYERS);
 			cam.setCenter(centroid);
 		}
 
 
-		ImGui::Begin("finester");
-		ImGui::Text("Joy: %f, %f", 1337.f, 42.f);
-		ImGui::End();
+//		ImGui::Begin("finester");
+//		ImGui::Text("Joy: %f, %f", 1337.f, 42.f);
+//		ImGui::End();
 
 		renderTexture.setView(cam);
 
@@ -505,34 +530,44 @@ int main()
 			}
 		}
 
-		//Draw objetesitos
-		obj_manager.Draw(cam, renderTexture, spr_tile_dessert);
+		//Draw cosas que se ordenan
+		static std::vector<sf::Sprite> toDraw;
+		toDraw.clear();
+
+		//Objetesitos
+		obj_manager.Draw(cam, toDraw, spr_tile_dessert);
 
 		
-		//Draw Playersitos
-		std::vector<pair<int, int> > draw_order;
 		for (int i = 0; i < NUM_PLAYERS; i++)
 		{
-			draw_order.push_back(make_pair(players[i].y, i));
-		}
-		std::sort(draw_order.begin(), draw_order.end());
-
-		for (int j = 0; j < NUM_PLAYERS; j++) {
-			int num_player = draw_order[j].second;
-			DrawPlayer(num_player, renderTexture);
+			players[i]->Draw(toDraw);
 		}
 
 		for (int i = 0; i < bullets.size(); i++) {
 			spr_bullet.setPosition(bullets[i]->x, bullets[i]->y);
 			spr_bullet.setColor(playerColors[bullets[i]->player]);
-			renderTexture.draw(spr_bullet);
+			toDraw.push_back(spr_bullet);
 		}
+
+		sort(toDraw.begin(), toDraw.end(), [](sf::Sprite& a, sf::Sprite& b) {
+			return a.getPosition().y + a.getTextureRect().height/2 < b.getPosition().y + b.getTextureRect().height / 2;
+		});
+
+		for (sf::Sprite& d : toDraw) {
+			renderTexture.draw(d);
+		}
+
 
 		for (Particle* particle : particles) {
 
 			renderTexture.draw(particle->sprite);
 		}
 
+
+		for (int i = 0; i < NUM_PLAYERS; i++)
+		{
+			players[i]->DrawUI(renderTexture);
+		}
 
 		renderTexture.display();
 
@@ -544,7 +579,7 @@ int main()
 
 		sf::Text txt_money;
 		txt_money.setFont(font);
-		sf::String str = std::to_string((int)madera);
+		sf::String str = std::to_string(madera);
 		txt_money.setString(str);
 		txt_money.setFillColor(sf::Color::White);
 		txt_money.setOutlineColor(sf::Color::Black);

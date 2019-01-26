@@ -274,27 +274,27 @@ void ObjManager::DestroyObject(GameObject* obj, bool canDelete)
 	--nObjects;
 }
 
-void ObjManager::Draw(const sf::View& Camera, sf::RenderTarget& rt, sf::Sprite& spr)
+void ObjManager::Draw(const sf::View& Camera, std::vector<sf::Sprite>& toDraw, sf::Sprite& spr)
 {
 	float size_x, size_y;
 	size_x = Camera.getSize().x*0.5f;
 	size_y = Camera.getSize().y*0.5f;
 	sf::Vector2f center = Camera.getCenter();
 
-	camDraw(rt, center + sf::Vector2f(-size_x*0.5f*2.f, -size_y*0.5f*2.f), spr);
-	camDraw(rt, center + sf::Vector2f(0, -size_y*0.5f*1.5f), spr);
-	camDraw(rt, center + sf::Vector2f(+size_x*0.5f*2.f, -size_y*0.5f*2.f), spr);
+	camDraw(toDraw, center + sf::Vector2f(-size_x*0.5f*2.f, -size_y*0.5f*2.f), spr);
+	camDraw(toDraw, center + sf::Vector2f(0, -size_y*0.5f*1.5f), spr);
+	camDraw(toDraw, center + sf::Vector2f(+size_x*0.5f*2.f, -size_y*0.5f*2.f), spr);
 
-	camDraw(rt, center + sf::Vector2f(-size_x*0.5f*2.f, 0), spr);
-	camDraw(rt, center, spr);
-	camDraw(rt, center + sf::Vector2f(+size_x*0.5f*2.f, 0), spr);
+	camDraw(toDraw, center + sf::Vector2f(-size_x*0.5f*2.f, 0), spr);
+	camDraw(toDraw, center, spr);
+	camDraw(toDraw, center + sf::Vector2f(+size_x*0.5f*2.f, 0), spr);
 	
-	camDraw(rt, center + sf::Vector2f(-size_x*0.5f*2.f, +size_y*0.5f*2.f), spr);
-	camDraw(rt, center + sf::Vector2f(0, +size_y*0.5f*1.5f), spr);
-	camDraw(rt, center + sf::Vector2f(+size_x*0.5f*2.f, +size_y*0.5f*2.f), spr);
+	camDraw(toDraw, center + sf::Vector2f(-size_x*0.5f*2.f, +size_y*0.5f*2.f), spr);
+	camDraw(toDraw, center + sf::Vector2f(0, +size_y*0.5f*1.5f), spr);
+	camDraw(toDraw, center + sf::Vector2f(+size_x*0.5f*2.f, +size_y*0.5f*2.f), spr);
 }
 
-void ObjManager::camDraw(sf::RenderTarget& rt, const sf::Vector2f& Position, sf::Sprite& spr)
+void ObjManager::camDraw(std::vector<sf::Sprite>& toDraw, const sf::Vector2f& Position, sf::Sprite& spr)
 {
 	quadNode* node = searchLeaf(Position);
 	std::list<GameObject*>::iterator it;
@@ -305,7 +305,7 @@ void ObjManager::camDraw(sf::RenderTarget& rt, const sf::Vector2f& Position, sf:
 
 		spr.setPosition((*it)->x, (*it)->y);
 		
-		rt.draw(spr);
+		toDraw.push_back(spr); //Makes a copy which is actually needed
 		//(*it)->Draw();
 	}
 }
