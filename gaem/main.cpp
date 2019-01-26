@@ -414,7 +414,7 @@ int main()
 
 
 		ImGui::Begin("finester");
-		ImGui::Text("Joy: %f, %f", 1337, 42);
+		ImGui::Text("Joy: %f, %f", 1337.f, 42.f);
 		ImGui::End();
 
 		renderTexture.setView(cam);
@@ -475,6 +475,15 @@ int main()
 			renderTexture.draw(particle->sprite);
 		}
 
+
+		renderTexture.display();
+
+
+
+		window.clear();
+		RenderWithShader(window, renderTexture);
+		ImGui::SFML::Render(window);
+
 		sf::Text txt_money;
 		txt_money.setFont(font);
 		sf::String str = std::to_string((int)madera);
@@ -486,19 +495,10 @@ int main()
 		txt_money.setPosition(40 + spr_madera.getTexture()->getSize().x, 40);
 		sf::FloatRect textRect = txt_money.getLocalBounds();
 		txt_money.setOrigin(0, textRect.top + textRect.height / 2.0f);
-		renderTexture.draw(txt_money);
+		window.draw(txt_money);
 		spr_madera.setPosition(40, 40);
-		renderTexture.draw(spr_madera);
+		window.draw(spr_madera);
 
-
-
-		renderTexture.display();
-
-
-
-		window.clear();
-		RenderWithShader(window, renderTexture);
-		ImGui::SFML::Render(window);
 		window.display();
 
 	}
