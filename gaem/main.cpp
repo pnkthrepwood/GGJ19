@@ -119,6 +119,10 @@ void InitTilePassable()
 	}
 }
 
+bool IsInsideMap(int x, int y) {
+	return x >= 0 && x <= MAP_WIDTH && y >= 0 && y <= MAP_HEIGHT;
+}
+
 void draw_dineros(sf::RenderWindow& window, sf::Font &font, int dineros, sf::Color color, int x, int y) {
 
 	sf::Text txt_money;
@@ -141,6 +145,9 @@ void draw_dineros(sf::RenderWindow& window, sf::Font &font, int dineros, sf::Col
 
 float RES_X = 1280.0f;
 float RES_Y = 720.0f;
+
+enum class EDirection {LEFT = 0, UP = 1, RIGHT = 2, DOWN = 3, COUNT = 4};
+const std::array<sf::Vector2i, 4> DIRECTION_OFFSETS = {{ {-1, 0}, {0, -1}, {1, 0}, {0, 1} }};
 
 int main()
 {
@@ -339,6 +346,36 @@ int main()
 				if (tileMap[x][y] == SpriteType::HOUSE && tileOwner[x][y] == -1 && dineros[i] >= 250) {
 					tileOwner[x][y] = i;
 					dineros[i] -= 250;
+				}
+			}
+		}
+
+		// Update bosquecico
+		for (int x = 0; x < MAP_WIDTH; x++)
+		{
+			for (int y = 0; y < MAP_HEIGHT; y++)
+			{
+				auto& tile = tileMap[x][y];
+				const float FACTOR_SPEED = 0.2f;
+				const int FRAMES_TO_EVOLVE = 1000;
+				if (tile == SpriteType::TREE_1)
+				{ // Crecer el arbol
+					if (std::rand()%static_cast<int>(FRAMES_TO_EVOLVE*FACTOR_SPEED) == 0)
+					{
+						tile = SpriteType::TREE_2;
+					}
+				}
+				if (tile == SpriteType::TREE_2)
+				{
+					for (int i = 0; i < static_cast<int>(EDirection::COUNT); ++i)
+					{
+						auto offset = DIRECTION_OFFSETS[i];
+						auto posOffset = sf::Vector2i(x,y) + offset;
+						if (IsInsideMap(posOffset.x, posOffset.y))
+						{
+							
+						}
+					}
 				}
 			}
 		}
