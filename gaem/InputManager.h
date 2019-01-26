@@ -148,7 +148,7 @@ public:
 
 			sf::Joystick::Identification id_joy = sf::Joystick::getIdentification(joystick);
 
-			const int ID_MANDO_STEAM = -1;
+			const int ID_MANDO_STEAM = 999999;
 			switch (id_joy.productId)
 			{
 			case ID_MANDO_STEAM:

@@ -1,6 +1,6 @@
-EXEC	= slavery_resort
+EXEC	= data/gaem
 
-SRC_DIR = GGJ2k18
+SRC_DIR = gaem
 
 SRC	= $(wildcard $(SRC_DIR)/*.cpp)
 OBJ	= $(patsubst $(SRC_DIR)/%, obj/%.o, $(SRC))
@@ -29,7 +29,7 @@ endif
 $(EXEC): $(OBJ)
 	$(CXX) $(LDFLAGS) $(OBJ) -o $(EXEC)
 
-obj/main.cpp.o: $(SRC_DIR)/main.cpp $(SRC_DIR)/animation.h $(SRC_DIR)/gaem_constants.h $(SRC_DIR)/minion.h
+obj/main.cpp.o: $(SRC_DIR)/main.cpp
 	$(CXX) $(CFLAGS) -c $< -o $@
 
 obj/%.cpp.o: $(SRC_DIR)/%.cpp
