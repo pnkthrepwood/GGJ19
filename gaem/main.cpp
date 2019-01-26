@@ -8,6 +8,8 @@
 #include "InputManager.h"
 #include <algorithm>
 #include <queue>
+#include <algorithm>
+
 #include <unordered_set>
 #include <unordered_map>
 #include "rand.h"
@@ -24,7 +26,7 @@ float RES_Y = 720.0f;
 const int TILE_SIZE = 16;
 
 const int NUM_PLAYERS = 4;
-const float PLAYER_SPEED = 500;
+const float PLAYER_SPEED = 400;
 const float BULLET_SPEED = 700;
 const float BULLET_COOLDOWN = 0.5; //seconds
 const float MADERA_GATHER_TIME = 3; //seconds
@@ -418,13 +420,22 @@ int main()
 		//Draw objetesitos
 		obj_manager.Draw(cam, renderTexture, spr_tile_dessert);
 
+		
 		//Draw Playersitos
-		for (int i = 0; i < NUM_PLAYERS; i++) 
+		std::vector<pair<int, int> > draw_order;
+		for (int i = 0; i < NUM_PLAYERS; i++)
 		{
-			spr_player[i].setPosition(players[i].x, players[i].y);
-			renderTexture.draw(spr_player[i]);
+			draw_order.push_back(make_pair(players[i].y, i));
+		}
+		std::sort(draw_order.begin(), draw_order.end());
 
-			Player* p = &players[i];
+		for (int j = 0; j < NUM_PLAYERS; j++) {
+			int num_player = draw_order[j].second;
+
+			spr_player[num_player].setPosition(players[num_player].x, players[num_player].y);
+			renderTexture.draw(spr_player[num_player]);
+
+			Player* p = &players[num_player];
 			static ProgressShape sprite;
 			sprite.progress = sprite.getPointCount() - (sprite.getPointCount()*(p->madera_progress / MADERA_GATHER_TIME));
 			if (sprite.progress < 120 && sprite.progress > 3) {
@@ -434,7 +445,7 @@ int main()
 				sprite.setScale(-1, 1);
 
 				sprite.setOutlineThickness(11);
-				sprite.setOutlineColor(sf::Color(250,20,20,100));
+				sprite.setOutlineColor(sf::Color(250,20,20,90));
 				renderTexture.draw(sprite);
 			}
 
