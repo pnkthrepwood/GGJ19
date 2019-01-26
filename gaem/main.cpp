@@ -17,6 +17,7 @@
 #include <array>
 
 #include "ObjectManager.h"
+#include "DayManager.h"
 
 #pragma warning( disable : 4244 )
 
@@ -27,7 +28,7 @@ float RES_Y = 720.0f;
 
 const int TILE_SIZE = 16;
 
-const int NUM_PLAYERS = 4;
+const int NUM_PLAYERS = 1;
 const float PLAYER_SPEED = 400;
 const float BULLET_SPEED = 700;
 const float BULLET_COOLDOWN = 0.5; //seconds
@@ -221,6 +222,24 @@ std::vector<Particle*> particles;
 std::vector<Enemy*> enemies;
 
 
+void SpawnCosasScenario()
+{
+
+	int area_left = -4000;
+	int area_right = 4000;
+	int area_top = -4000;
+	int area_bottom = 4000;
+
+	for (int i = 0; i < 100; ++i)
+	{
+		int x = std::rand() % (area_right - area_left) + area_left;
+		int y = std::rand() % (area_bottom - area_top) + area_top;
+
+		obj_manager.Spawn(GameObjectType::TREE, x, y);
+	}
+
+}
+
 
 
 void InitPlayers() {
@@ -397,7 +416,6 @@ void RenderWithShader(sf::RenderWindow& window, const sf::RenderTexture& renderT
 
 
 
-
 int main()
 {
 	srand(time(NULL));
@@ -417,6 +435,9 @@ int main()
 
 	sf::View cam(sf::FloatRect(0.0f, 0.0f, RES_X, RES_Y));
 	sf::View ui_view(sf::FloatRect(0.0f, 0.f, RES_X, RES_Y));
+
+	DayManager dayManager;
+	dayManager.InitNightShader(window);
 
 	sf::Font font;
 	font.loadFromFile("8bitwonder.ttf");
@@ -441,12 +462,11 @@ int main()
 	spr_tile_dessert.setTexture(*tex_spritesheet);
 	spr_tile_dessert.setTextureRect(sf::IntRect(1 * TILE_SIZE, 0, TILE_SIZE, TILE_SIZE));
 
-	InitNightShader(window);
-
 	InitPlayers();
 
 	obj_manager.Spawn(GameObjectType::CASA, 0, 0);
 	obj_manager.Spawn(GameObjectType::TREE, 50, 50);
+	SpawnCosasScenario();
 
 	sf::Clock clk_running;
 	sf::Clock clk_delta;
@@ -467,6 +487,7 @@ int main()
 		ImGui::SFML::Update(window, dt_time);
 
 		GamePad::UpdateInputState();
+		dayManager.Update(dt_time.asSeconds());
 
 		//UPDATE
 		for (int i = 0; i < NUM_PLAYERS; i++) {
@@ -505,7 +526,7 @@ int main()
 
 
 //		ImGui::Begin("finester");
-//		ImGui::Text("Joy: %f, %f", 1337.f, 42.f);
+//		ImGui::Text("Joy: %f, %f", cam.getCenter().x, cam.getCenter().y);
 //		ImGui::End();
 
 		renderTexture.setView(cam);
@@ -533,26 +554,24 @@ int main()
 		//Draw cosas que se ordenan
 		static std::vector<sf::Sprite> toDraw;
 		toDraw.clear();
-
 		//Objetesitos
 		obj_manager.Draw(cam, toDraw, spr_tile_dessert);
-
-		
+		//Playersitos
 		for (int i = 0; i < NUM_PLAYERS; i++)
 		{
 			players[i]->Draw(toDraw);
 		}
-
+		//Bulletitas
 		for (int i = 0; i < bullets.size(); i++) {
 			spr_bullet.setPosition(bullets[i]->x, bullets[i]->y);
 			spr_bullet.setColor(playerColors[bullets[i]->player]);
 			toDraw.push_back(spr_bullet);
 		}
-
+		//Ordering madafaca
 		sort(toDraw.begin(), toDraw.end(), [](sf::Sprite& a, sf::Sprite& b) {
 			return a.getPosition().y + a.getTextureRect().height/2 < b.getPosition().y + b.getTextureRect().height / 2;
 		});
-
+		//Dale draw de verdad
 		for (sf::Sprite& d : toDraw) {
 			renderTexture.draw(d);
 		}
@@ -574,7 +593,8 @@ int main()
 
 
 		window.clear();
-		RenderWithShader(window, renderTexture);
+		dayManager.RenderWithShader(window, renderTexture);
+		dayManager.ImGuiRender();
 		ImGui::SFML::Render(window);
 
 		sf::Text txt_money;

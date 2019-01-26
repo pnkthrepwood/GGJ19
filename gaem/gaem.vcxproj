@@ -131,6 +131,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="DayManager.cpp" />
     <ClCompile Include="imgui-SFML.cpp" />
     <ClCompile Include="imgui.cpp" />
     <ClCompile Include="imgui_demo.cpp" />
@@ -141,6 +142,7 @@
     <ClCompile Include="rand.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="DayManager.h" />
     <ClInclude Include="math.h" />
     <ClInclude Include="ObjectManager.h" />
     <ClInclude Include="rand.h" />

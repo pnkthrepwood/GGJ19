@@ -11,7 +11,7 @@ void main()
     // lookup the pixel in the texture
     vec4 pixel = texture2D(texture, gl_TexCoord[0].xy);
 
-    float dayFactor = 1.0-cos(1.0 - abs(pow(sin(dayTime),10.0))) + 0.5;
+    float dayFactor = dayTime;
 
     float factor_day_to_sunset = (dayFactor - 0.75f) / (1.f - 0.75f);
     float factor_sunset_to_night = (dayFactor - 0.5f) / (0.75f - 0.5f);
