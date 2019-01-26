@@ -15,8 +15,8 @@
 
 using namespace std;
 
-const int MAP_HEIGHT = 64;
-const int MAP_WIDTH = 64;
+const int MAP_HEIGHT = 20;
+const int MAP_WIDTH =  1280 / 16;
 
 const int TILE_SIZE = 16;
 
@@ -89,11 +89,27 @@ void selectSprite(SpriteType type)
 SpriteType tileMap[MAP_WIDTH][MAP_HEIGHT];
 bool tilePassable[MAP_WIDTH][MAP_HEIGHT];
 
+void InitTilePassable()
+{
+
+	auto image = background->copyToImage();
+	sf::Color colorBase = image.getPixel(TILE_SIZE/2, TILE_SIZE/2);
+	for (int x = 0; x < MAP_WIDTH; x++)
+	{
+		for (int y = 0; y < MAP_HEIGHT; y++)
+		{
+			tilePassable[x][y] = colorBase == image.getPixel(x * TILE_SIZE + TILE_SIZE/2, y * TILE_SIZE + TILE_SIZE/2);
+		}
+	}
+}
+
 float RES_X = 1280.0f;
 float RES_Y = 720.0f;
 
 int main()
 {
+	srand(time(NULL));
+
 	sf::RenderWindow window(sf::VideoMode(RES_X, RES_Y), "SFML works!");
 	ImGui::SFML::Init(window);
 
@@ -121,13 +137,15 @@ int main()
 		cursor.x[i] = cursor.y[i] = i * 2;
 	}
 
+	InitTilePassable();
+
 	for (int x = 0; x < MAP_WIDTH; x++)
 	{
 		for (int y = 0; y < MAP_HEIGHT; y++)
 		{
 			//if (tileMap[x][y] != TileType::IMPOSSIBLE)
 			{
-				tileMap[x][y] = (std::rand() % 12 == 0) ? SpriteType::HOUSE : SpriteType::EMPTY;
+				tileMap[x][y] = (std::rand() % 12 == 0 && tilePassable[x][y]) ? SpriteType::HOUSE : SpriteType::EMPTY;
 			}
 		}
 	}
