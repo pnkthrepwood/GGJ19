@@ -139,6 +139,8 @@ void RenderWithShader(sf::RenderWindow& window, const sf::RenderTexture& renderT
 	window.display();
 }
 
+ObjManager obj_manager;
+
 int main()
 {
 	srand(time(NULL));
@@ -173,6 +175,8 @@ int main()
 	InitNightShader(window);
 
 	InitPlayers();
+
+	obj_manager.Create(GameObjectType::CASA, 0, 0);
 
 	sf::Clock clk_running;
 	sf::Clock clk_delta;
@@ -240,16 +244,23 @@ int main()
 		int TILES_CAM_WIDTH = 100;
 		int TILES_CAM_HEIGHT = 100;
 
+		//Draw tilesitos del suelo
 		for (int x = start_x; x < start_x + TILES_CAM_WIDTH*TILE_SIZE; x += TILE_SIZE)
 		{
 			for (int y = start_y; y < start_y + TILES_CAM_HEIGHT * TILE_SIZE; y += TILE_SIZE)
 			{
+				spr_tile_dessert.setTextureRect(sf::IntRect(1 * TILE_SIZE, 0, TILE_SIZE, TILE_SIZE));
 				spr_tile_dessert.setPosition(x, y);
 				renderTexture.draw(spr_tile_dessert);
 			}
 		}
 
-		for (int i = 0; i < NUM_PLAYERS; i++) {
+		//Draw objetesitos
+		obj_manager.Draw(cam, renderTexture, spr_tile_dessert);
+
+		//Draw Playersitos
+		for (int i = 0; i < NUM_PLAYERS; i++) 
+		{
 			spr_player[i].setPosition(players[i].x, players[i].y);
 			renderTexture.draw(spr_player[i]);
 		}
