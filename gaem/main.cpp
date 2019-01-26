@@ -24,45 +24,57 @@ sf::Texture* background;
 
 sf::Sprite spr_background;
 sf::Sprite spr_stamp;
+sf::Sprite spr_cursor;
 
 
-enum TileType
+enum SpriteType
 {
 	IMPOSSIBLE,
 	EMPTY,
 	HOUSE,
-	FARM
+	FARM,
+
+	CURSOR
 };
 
-void selectSprite(TileType type)
+void selectSprite(SpriteType type, sf::Sprite& spr)
 {
 	switch (type)
 	{
-		case TileType::HOUSE:
+		case SpriteType::HOUSE:
 		{
-			spr_stamp.setTextureRect(sf::IntRect(0, 0, TILE_SIZE, TILE_SIZE));
+			spr.setTextureRect(sf::IntRect(0, 0, TILE_SIZE, TILE_SIZE));
 		} break;
 
-		case TileType::FARM:
+		case SpriteType::FARM:
 		{
 			//spr_stamp.setTextureRect(sf::IntRect(0, 0, 16, 16));
 		} break;
 
-		case TileType::EMPTY:
+		case SpriteType::EMPTY:
 		{
-			spr_stamp.setTextureRect(sf::IntRect(0, 1* TILE_SIZE, TILE_SIZE, TILE_SIZE));
+			spr.setTextureRect(sf::IntRect(0, 1* TILE_SIZE, TILE_SIZE, TILE_SIZE));
 		} break;
 
-		case TileType::IMPOSSIBLE:
+		case SpriteType::IMPOSSIBLE:
 		{
-			spr_stamp.setTextureRect(sf::IntRect(0, 1 * TILE_SIZE, TILE_SIZE, TILE_SIZE));
+			spr.setTextureRect(sf::IntRect(0, 1 * TILE_SIZE, TILE_SIZE, TILE_SIZE));
+		} break;
+
+		case SpriteType::CURSOR:
+		{
+			spr.setTextureRect(sf::IntRect(0, 3 * TILE_SIZE, TILE_SIZE, TILE_SIZE));
 		} break;
 
 	}
 }
 
+void selectSprite(SpriteType type)
+{
+	selectSprite(type, spr_stamp);
+}
 
-TileType tileMap[MAP_WIDTH][MAP_HEIGHT];
+SpriteType tileMap[MAP_WIDTH][MAP_HEIGHT];
 bool tilePassable[MAP_WIDTH][MAP_HEIGHT];
 
 float RES_X = 1280.0f;
@@ -72,7 +84,6 @@ int main()
 {
 	sf::RenderWindow window(sf::VideoMode(RES_X, RES_Y), "SFML works!");
 	ImGui::SFML::Init(window);
-
 
 	sf::View view(sf::FloatRect(0.0f, 0.0f, RES_X*0.5f, RES_Y*0.5f));
 	window.setView(view);
@@ -85,7 +96,7 @@ int main()
 	background->loadFromFile("background.png");
 	spr_background.setTexture(*background);
 
-	
+	spr_cursor.setTexture(*spriteSheet);
 
 	for (int x = 0; x < MAP_WIDTH; x++)
 	{
@@ -93,7 +104,7 @@ int main()
 		{
 			//if (tileMap[x][y] != TileType::IMPOSSIBLE)
 			{
-				tileMap[x][y] = (std::rand() % 12 == 0) ? TileType::HOUSE : TileType::EMPTY;
+				tileMap[x][y] = (std::rand() % 12 == 0) ? SpriteType::HOUSE : SpriteType::EMPTY;
 			}
 		}
 	}
@@ -124,11 +135,13 @@ int main()
 
 		
 
-
+		//Draw el fondo
 		spr_background.setTexture(*background);
 		spr_background.setPosition(0, 0);
 		window.draw(spr_background);
 
+
+		//Draw el mapita
 		for (int x = 0; x < MAP_WIDTH; x++)
 		{
 			for (int y = 0; y < MAP_HEIGHT; y++)
@@ -140,6 +153,14 @@ int main()
 		}
 
 
+		static int cursor_x = 0;
+		static int cursor_y = 0;
+		//Draw el cursorsito
+		selectSprite(SpriteType::CURSOR, spr_cursor);
+		spr_cursor.setColor(sf::Color(255, 0, 0, 255));
+		spr_cursor.setPosition(cursor_x * TILE_SIZE, cursor_y * TILE_SIZE);
+		window.draw(spr_cursor);
+		
 
 		//ImGui::ShowDemoWindow();
 		ImGui::SFML::Render(window);
