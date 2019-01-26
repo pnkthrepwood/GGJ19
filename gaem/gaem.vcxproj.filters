@@ -38,9 +38,9 @@
     <ClInclude Include="imgui-SFML.h">
       <Filter>imgui</Filter>
     </ClInclude>
-    <ClInclude Include="math.h" />
     <ClInclude Include="ObjectManager.h" />
     <ClInclude Include="DayManager.h" />
+    <ClInclude Include="mates.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="imgui">
