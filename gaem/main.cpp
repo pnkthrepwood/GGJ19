@@ -28,10 +28,13 @@ float RES_Y = 720.0f;
 
 const int TILE_SIZE = 16;
 
-const int NUM_PLAYERS = 1;
+const int NUM_PLAYERS = 4;
 const float PLAYER_SPEED = 400;
 const float BULLET_SPEED = 700;
-const float BULLET_COOLDOWN = 0.5; //seconds
+const float ENEMY_TRIGGER_DISTANCE = 400;
+const float ENEMY_ACCEL = 2000;
+const float ENEMY_MAX_SPEED = 700;
+const float BULLET_COOLDOWN = 0.3; //seconds
 const float MADERA_GATHER_TIME = 3; //seconds
 
 ObjManager obj_manager;
@@ -40,6 +43,8 @@ int madera;
 sf::Texture* tex_spritesheet;
 sf::Texture* player_texture;
 sf::Texture* madera_texture;
+sf::Texture* enemy_texture;
+sf::Texture* bullet_texture;
 
 sf::Shader* nightLight;
 sf::VertexArray quad(sf::Quads, 4);
@@ -230,15 +235,81 @@ struct Particle {
 
 };
 
-struct Enemy {
-
-};
-
 std::array<Player*, NUM_PLAYERS> players;
 std::vector<Bullet*> bullets;
 std::vector<Particle*> particles;
-std::vector<Enemy*> enemies;
 
+
+
+sf::FloatRect getBoundBoxSprite(sf::Sprite* sprite)
+{
+	sf::IntRect size = sprite->getTextureRect();
+	sf::FloatRect fr;
+
+	fr.left = sprite->getPosition().x - size.left*0.5f;
+	fr.width = size.width;
+	fr.top = sprite->getPosition().y - size.top*0.5f;
+	fr.height = size.width;
+
+	return fr;
+}
+
+
+struct Enemy {
+	float x, y;
+	float vel_x, vel_y;
+	int hp = 100;
+	PlayerState state; //IDLE OR WALKING ONLY
+	float anim_timer;
+
+	sf::Sprite sprite;
+
+	Enemy(float px, float py) : x(px), y(py), vel_x(0), vel_y(0), state(IDLE), anim_timer(0.f) {
+		sprite.setTexture(*enemy_texture);
+		//TODO: CENTER texture rect and stuff
+	}
+
+	bool Update(float dt) {
+		Player* closestPlayer = nullptr;
+		float closestDist = 9999999999.f;
+		for (Player *p : players) {
+			float d = Mates::Distance(sf::Vector2f(p->x, p->y), sf::Vector2f(x, y));
+			if (d < closestDist) {
+				closestDist = d;
+				closestPlayer = p;
+			}
+		}
+		if (closestDist < ENEMY_TRIGGER_DISTANCE) {
+			state = WALKING;
+			anim_timer += dt;;
+			sf::Vector2f dir(closestPlayer->x - x, closestPlayer->y - y);
+			sf::Vector2f dir_bona = Mates::Normalize(dir);
+			
+			vel_x += dir_bona.x * ENEMY_ACCEL * dt;
+			vel_y += dir_bona.y * ENEMY_ACCEL * dt;
+			
+			float lenght = Mates::Length(sf::Vector2f(vel_x, vel_y));
+			if (lenght > ENEMY_MAX_SPEED) {
+				vel_x = dir_bona.x * ENEMY_MAX_SPEED;
+				vel_y = dir_bona.y * ENEMY_MAX_SPEED;
+			}
+
+			x += vel_x * dt;
+			y += vel_y * dt;
+
+			sprite.setPosition(x, y);
+		}
+		else {
+			state = IDLE;
+			anim_timer = 0;
+			vel_x = 0;
+			vel_y = 0;
+		}
+		return (hp <= 0);
+	}
+};
+
+std::vector<Enemy*> enemies;
 
 void SpawnCosasScenario()
 {
@@ -282,8 +353,14 @@ bool UpdateBullet(Bullet *b, float dt, sf::View& cam)
 		return true;
 	}
 
-	//TODO: Collisions with enemies
-
+	//Collsions with enemies
+	sf::FloatRect bounding(b->x, b->y, bullet_texture->getSize().x, bullet_texture->getSize().y);
+	for (Enemy* e : enemies) {
+		if (bounding.intersects(getBoundBoxSprite(&(e->sprite)))) {
+			e->hp -= 50;
+			return true;
+		}
+	}
 
 	return false;
 
@@ -295,7 +372,9 @@ void UpdatePlayer(float dt, int num_player, sf::View& cam)
 	Player* p = players[num_player];
 
 	sf::Vector2f stick_L = GamePad::AnalogStick::Left.get(num_player);
+	sf::Vector2f stick_R = GamePad::AnalogStick::Right.get(num_player);
 	float length_L = Mates::Length(stick_L);
+	float length_R = Mates::Length(stick_R);
 
 	// Dead zone
 	if (length_L < 30)
@@ -329,15 +408,13 @@ void UpdatePlayer(float dt, int num_player, sf::View& cam)
 	p->y = Mates::Clamp(p->y, cam.getCenter().y - cam.getSize().y / 2 + 50, cam.getCenter().y + cam.getSize().y / 2 - 50);
 
 	// Update facing vector
-	sf::Vector2f stick_R = GamePad::AnalogStick::Left.get(num_player);
-	float length_R = Mates::Length(stick_L);
 	if (length_R > 30)
 	{
 		p->facing_vector = stick_R;
 	}
 	else if (length_L > 30)
 	{
-		p->facing_vector = stick_R;
+		p->facing_vector = stick_L;
 	}
 	p->facing_vector = Mates::Normalize(sf::Vector2f(p->facing_vector.x, p->facing_vector.y));
 
@@ -356,7 +433,7 @@ void UpdatePlayer(float dt, int num_player, sf::View& cam)
 	if (p->bullet_cooldown > 0) {
 		p->bullet_cooldown -= dt;
 	}
-	if (GamePad::IsButtonJustPressed(num_player, GamePad::Button::A) && p->bullet_cooldown <= 0 && p->madera_progress <= 0) {
+	if (GamePad::Trigger::Right.IsJustPressed(num_player) && p->bullet_cooldown <= 0 && p->madera_progress <= 0) {
 		bullets.push_back(new Bullet(p->x, p->y, p->facing_vector, num_player));
 		p->bullet_cooldown = BULLET_COOLDOWN;
 	}
@@ -453,6 +530,9 @@ void RenderWithShader(sf::RenderWindow& window, const sf::RenderTexture& renderT
 	window.draw(quad, states);
 }
 
+void SpawnAndUnspawnEnemies() {
+	//TODO: Mario 
+}
 
 void SpawnOasis(int x, int y)
 {
@@ -497,10 +577,10 @@ int main()
 	player_texture = new sf::Texture();
 	player_texture->loadFromFile("desertman_sheet.png");
 
-	sf::Texture bullet_texture;
-	bullet_texture.loadFromFile("bullet.png");
+	bullet_texture = new sf::Texture();
+	bullet_texture->loadFromFile("bullet.png");
 	sf::Sprite spr_bullet;
-	spr_bullet.setTexture(bullet_texture);
+	spr_bullet.setTexture(*bullet_texture);
 	SpriteCenterOrigin(spr_bullet);
 
 	madera_texture = new sf::Texture();
@@ -508,6 +588,9 @@ int main()
 	sf::Sprite spr_madera;
 	spr_madera.setTexture(*madera_texture);
 	SpriteCenterOrigin(spr_madera);
+
+	enemy_texture = new sf::Texture();
+	enemy_texture->loadFromFile("madera.png");
 
 	tex_spritesheet = new sf::Texture();
 	tex_spritesheet->loadFromFile("sprite_sheet.png");
@@ -519,6 +602,9 @@ int main()
 
 	obj_manager.Spawn(GameObjectType::CASA, 0, 0);
 	obj_manager.Spawn(GameObjectType::TREE, 50, 50);
+
+	enemies.push_back(new Enemy(600, 400));
+
 	SpawnCosasScenario();
 
 	SpawnOasis(0, 0);
@@ -548,6 +634,19 @@ int main()
 		for (int i = 0; i < NUM_PLAYERS; i++) {
 			UpdatePlayer(dt_time.asSeconds(), i, cam);
 		}
+		//Enemies
+		SpawnAndUnspawnEnemies();
+		for (int i = 0; i < enemies.size(); i++)
+		{
+			bool cale_destruir = enemies[i]->Update(dt_time.asSeconds());
+			if (cale_destruir) {
+				enemies.erase(enemies.begin() + i);
+			}
+			else {
+				i++;
+			}
+		}
+		//Bullets
 		for (int i = 0; i < bullets.size();) {
 			bool cale_destruir = UpdateBullet(bullets[i], dt_time.asSeconds(), cam);
 			if (cale_destruir) {
@@ -556,6 +655,7 @@ int main()
 				i++;
 			}
 		}
+		//Particles
 		for (int i = 0; i < particles.size();) {
 			bool cale_destruir = particles[i]->Update(dt_time.asSeconds());
 			if (cale_destruir) {
@@ -566,9 +666,10 @@ int main()
 			}
 		}
 
+
+
 		//DRAW
 		renderTexture.clear(sf::Color(255, 216, 0)); //Hack to hide black lines between tiles
-
 
 		{ // UpdateCamera(cam);
 			sf::Vector2f centroid;
@@ -615,6 +716,11 @@ int main()
 		for (int i = 0; i < NUM_PLAYERS; i++)
 		{
 			players[i]->Draw(toDraw);
+		}
+		//Enemies
+		for (int i = 0; i < enemies.size(); i++)
+		{
+			toDraw.push_back(enemies[i]->sprite);
 		}
 		//Bulletitas
 		for (int i = 0; i < bullets.size(); i++) {
