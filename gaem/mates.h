@@ -1,6 +1,5 @@
 #pragma once
 
-
 namespace Mates
 {
 
@@ -25,7 +24,7 @@ namespace Mates
 
 	inline float Distance(sf::Vector2f a, sf::Vector2f b)
 	{
-		return std::sqrt((b.y - a.y)*(b.y - a.y) + (b.x - a.x)*(b.x - a.x));
+		return sqrt((b.y - a.y)*(b.y - a.y) + (b.x - a.x)*(b.x - a.x));
 	}
 
 	inline sf::Vector2f Normalize(sf::Vector2f v)

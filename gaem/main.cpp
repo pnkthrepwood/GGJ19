@@ -11,7 +11,7 @@
 #include <unordered_set>
 #include <unordered_map>
 #include "rand.h"
-#include "math.h"
+#include "mates.h"
 #include <array>
 
 using namespace std;
@@ -51,6 +51,7 @@ sf::Sprite spr_tile_dessert;
 
 sf::Shader nightLight;
 sf::VertexArray quad(sf::Quads, 4);
+sf::Clock clockDay;
 
 std::array<Player, NUM_PLAYERS> players;
 
@@ -126,6 +127,7 @@ void RenderWithShader(sf::RenderWindow& window, const sf::RenderTexture& renderT
 	sf::RenderStates states;
 	window.clear();
 	nightLight.setUniform("texture", sf::Shader::CurrentTexture);
+	nightLight.setUniform("dayTime", clockDay.getElapsedTime().asSeconds());
 	states.shader = &nightLight;
 	states.texture = &renderTexture.getTexture();
 	window.draw(quad, states);
@@ -166,7 +168,7 @@ int main()
 	InitNightShader(window);
 
 	InitPlayers();
-	
+
 	sf::Clock clk_running;
 	sf::Clock clk_delta;
 	while (window.isOpen())
@@ -197,9 +199,9 @@ int main()
 			UpdatePlayer(dt_time.asSeconds(), i);
 		}
 
-		
-		
-		
+
+
+
 		//DRAW
 		window.clear();
 		renderTexture.clear();
@@ -256,7 +258,7 @@ int main()
 				renderTexture.draw(spr_tile_dessert);
 			}
 		}
-		
+
 		renderTexture.display();
 
 		ImGui::SFML::Render(window);
