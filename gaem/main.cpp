@@ -14,6 +14,8 @@
 #include "math.h"
 #include <array>
 
+#include "ObjectManager.h"
+
 using namespace std;
 
 float RES_X = 1280.0f;
@@ -23,6 +25,7 @@ const int TILE_SIZE = 16;
 
 const int NUM_PLAYERS = 4;
 const float PLAYER_SPEED = 500;
+
 
 sf::Color playerColors[] = {
 	sf::Color::Cyan,
