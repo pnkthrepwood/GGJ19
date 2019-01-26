@@ -386,7 +386,6 @@ int main()
 			int x = cursor.pos[i].x;
 			int y = cursor.pos[i].y;
 
-			if (GamePad::IsButtonJustPressed(i, GamePad::Button::A))
 			{
 				if (tileMap[x][y] == SpriteType::HOUSE && tileOwner[x][y] == -1 && dineros[i] >= 250)
 				{
@@ -406,6 +405,7 @@ int main()
 				if (tileBuildingTime[x][y] > 1.0f)
 				{
 					tileMap[x][y] = SpriteType::HOUSE;
+					dineros[i] -= 250;
 				}
 			}
 
