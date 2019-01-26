@@ -680,7 +680,7 @@ int main()
 	obj_manager.Spawn(GameObjectType::CASA, 0, 0);
 	obj_manager.Spawn(GameObjectType::TREE, 50, 50);
 
-	enemies.push_back(new Enemy(600, 400));
+	//enemies.push_back(new Enemy(600, 400));
 
 	SpawnCosasScenario();
 
