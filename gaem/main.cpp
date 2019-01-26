@@ -17,6 +17,9 @@
 #include <array>
 
 #include "ObjectManager.h"
+#include "main.h"
+
+#pragma warning( disable : 4244 )
 
 using namespace std;
 
@@ -31,17 +34,10 @@ const float BULLET_SPEED = 700;
 const float BULLET_COOLDOWN = 0.5; //seconds
 const float MADERA_GATHER_TIME = 3; //seconds
 
-enum PlayerState {
-	IDLE = 0,
-	WALKING,
-	GATHERING,
-};
-
 struct Player {
 	float x, y;
 	float vel_x, vel_y;
 	int hp;
-	PlayerState state;
 	sf::Vector2f facing_vector;
 	float bullet_cooldown;
 	float madera_progress;
@@ -124,7 +120,7 @@ int madera = 0;
 
 sf::Texture* tex_spritesheet;
 sf::Sprite spr_tile_dessert;
-
+sf::Sprite* spr_player[NUM_PLAYERS];
 
 sf::Shader* nightLight;
 sf::VertexArray quad(sf::Quads, 4);
@@ -238,7 +234,14 @@ void UpdatePlayer(float dt, int num_player, sf::View& cam)
 		if (p->madera_progress >= MADERA_GATHER_TIME) {
 			madera += 1;
 			p->madera_progress = 0;
-			particles.push_back(new Particle(*madera_texture, p->x, p->y - 50, 0, -200, 0.2));
+			particles.push_back(new Particle(*madera_texture, p->x, p->y - 50, 0, -200, 0.2f));
+		}
+	}
+
+	if (p->hp < 100) {
+		p->hp += dt;
+		if (p->hp > 100) {
+			p->hp = 100;
 		}
 	}
 }
@@ -273,6 +276,39 @@ void RenderWithShader(sf::RenderWindow& window, const sf::RenderTexture& renderT
 
 ObjManager obj_manager;
 
+
+void DrawPlayer(int num_player, sf::RenderTarget& renderTexture)
+{
+
+	spr_player[num_player]->setPosition(players[num_player].x, players[num_player].y);
+	renderTexture.draw(*spr_player[num_player]);
+
+	Player* p = &players[num_player];
+	static ProgressShape sprite;
+	sprite.progress = sprite.getPointCount() - (sprite.getPointCount()*(p->madera_progress / MADERA_GATHER_TIME));
+	if (sprite.progress < 120 && sprite.progress > 3) {
+		sprite.setFillColor(sf::Color::Transparent);
+		sprite.setOrigin(47, 47);
+		sprite.setPosition(p->x, p->y);
+		sprite.setScale(-1, 1);
+
+		sprite.setOutlineThickness(11);
+		sprite.setOutlineColor(sf::Color(20, 250, 20, 90));
+		renderTexture.draw(sprite);
+	}
+
+	static sf::RectangleShape lifeBar;
+	const float health_bar_width = 50;
+	if (p->hp < 100)
+	{
+		lifeBar.setFillColor(sf::Color(250, 20, 20));
+		lifeBar.setPosition(p->x - health_bar_width/2, p->y + 40);
+		lifeBar.setSize(sf::Vector2f(p->hp / 100.f * health_bar_width, 5));
+		renderTexture.draw(lifeBar);
+	}
+
+}
+
 int main()
 {
 	srand(time(NULL));
@@ -300,11 +336,11 @@ int main()
 
 	sf::Texture player_texture;
 	player_texture.loadFromFile("player.png");
-	sf::Sprite spr_player[NUM_PLAYERS];
 	for (int i = 0; i < NUM_PLAYERS; i++) {
-		spr_player[i].setTexture(player_texture);
-		SpriteCenterOrigin(spr_player[i]);
-		spr_player[i].setColor(playerColors[i]);
+		spr_player[i] = new sf::Sprite();
+		spr_player[i]->setTexture(player_texture);
+		SpriteCenterOrigin(*(spr_player[i]));
+		spr_player[i]->setColor(playerColors[i]);
 	}
 
 	sf::Texture bullet_texture;
@@ -398,9 +434,9 @@ int main()
 		renderTexture.setView(cam);
 
 		//Draw fondo del Mapita
-		int start_x = cam.getCenter().x - cam.getSize().x*0.5f - TILE_SIZE;
+		float start_x = cam.getCenter().x - cam.getSize().x*0.5f - TILE_SIZE;
 		start_x = (start_x / TILE_SIZE) * TILE_SIZE;
-		int start_y = cam.getCenter().y - cam.getSize().y*0.5f - TILE_SIZE;
+		float start_y = cam.getCenter().y - cam.getSize().y*0.5f - TILE_SIZE;
 		start_y = (start_y / TILE_SIZE) * TILE_SIZE;
 
 		int TILES_CAM_WIDTH = 100;
@@ -431,24 +467,7 @@ int main()
 
 		for (int j = 0; j < NUM_PLAYERS; j++) {
 			int num_player = draw_order[j].second;
-
-			spr_player[num_player].setPosition(players[num_player].x, players[num_player].y);
-			renderTexture.draw(spr_player[num_player]);
-
-			Player* p = &players[num_player];
-			static ProgressShape sprite;
-			sprite.progress = sprite.getPointCount() - (sprite.getPointCount()*(p->madera_progress / MADERA_GATHER_TIME));
-			if (sprite.progress < 120 && sprite.progress > 3) {
-				sprite.setFillColor(sf::Color::Transparent);
-				sprite.setOrigin(47, 47);
-				sprite.setPosition(p->x, p->y);
-				sprite.setScale(-1, 1);
-
-				sprite.setOutlineThickness(11);
-				sprite.setOutlineColor(sf::Color(250,20,20,90));
-				renderTexture.draw(sprite);
-			}
-
+			DrawPlayer(num_player, renderTexture);
 		}
 
 		for (int i = 0; i < bullets.size(); i++) {
@@ -470,7 +489,7 @@ int main()
 		txt_money.setOutlineColor(sf::Color::Black);
 		txt_money.setOutlineThickness(2);
 		txt_money.setCharacterSize(32);
-		txt_money.setPosition(40 + spr_madera.getTexture()->getSize().x, 40);
+		txt_money.setPosition(40.f + spr_madera.getTexture()->getSize().x, 40.f);
 		sf::FloatRect textRect = txt_money.getLocalBounds();
 		txt_money.setOrigin(0, textRect.top + textRect.height / 2.0f);
 		renderTexture.draw(txt_money);

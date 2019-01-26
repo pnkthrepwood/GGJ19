@@ -4,6 +4,7 @@
 #include <cmath>
 #include <queue>
 #include <SFML/Graphics.hpp>
+#pragma warning( disable : 4244 )
 
 GameObject go_collection[MAX_OBJ_SIZE];
 
