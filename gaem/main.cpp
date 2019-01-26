@@ -96,7 +96,7 @@ int main()
 	sf::RenderWindow window(sf::VideoMode(RES_X, RES_Y), "SFML works!");
 	ImGui::SFML::Init(window);
 
-	sf::View view(sf::FloatRect(0.0f, 0.0f, RES_X*0.5f, RES_Y*0.5f));
+	sf::View view(sf::FloatRect(0.0f, -TILE_SIZE*2.5f, RES_X*0.5f, RES_Y*0.5f));
 	window.setView(view);
 
 	spriteSheet = new sf::Texture();
@@ -181,7 +181,7 @@ int main()
 			joy_left_before = joy_left;
 		}
 
-		
+
 
 		window.clear();
 
