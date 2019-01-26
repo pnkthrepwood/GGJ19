@@ -358,6 +358,7 @@ int main()
 				auto& tile = tileMap[x][y];
 				const float FACTOR_SPEED = 0.2f;
 				const int FRAMES_TO_EVOLVE = 1000;
+				const int FRAMES_TO_EXPLAND = 1000;
 				if (tile == SpriteType::TREE_1)
 				{ // Crecer el arbol
 					if (std::rand()%static_cast<int>(FRAMES_TO_EVOLVE*FACTOR_SPEED) == 0)
@@ -373,7 +374,11 @@ int main()
 						auto posOffset = sf::Vector2i(x,y) + offset;
 						if (IsInsideMap(posOffset.x, posOffset.y))
 						{
-							
+							auto& newTile = tileMap[posOffset.x][posOffset.y];
+							if (newTile == SpriteType::EMPTY && std::rand() % static_cast<int>(FRAMES_TO_EXPLAND*FACTOR_SPEED) == 0)
+							{
+								newTile = SpriteType::TREE_1;
+							}
 						}
 					}
 				}
