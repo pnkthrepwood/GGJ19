@@ -51,7 +51,7 @@ struct Bullet {
 	Bullet(float px, float py, sf::Vector2f facing_vector, int num_player)
 		: x(px)
 		, y(py)
-		, vel_x(facing_vector.x*BULLET_SPEED) 
+		, vel_x(facing_vector.x*BULLET_SPEED)
 		, vel_y(facing_vector.y*BULLET_SPEED)
 		, player(num_player)
 	{ }
@@ -75,12 +75,12 @@ struct Particle {
 		, vel_x(vx)
 		, vel_y(vy)
 		, life(mlife)
-	{ 
+	{
 		sprite.setTexture(texture);
 		SpriteCenterOrigin(sprite);
 	}
 
-	bool Update(float dt) 
+	bool Update(float dt)
 	{
 		x += vel_x * dt;
 		y += vel_y * dt;
@@ -167,7 +167,7 @@ bool UpdateBullet(Bullet *b, float dt, sf::View& cam)
 
 
 	return false;
-	
+
 }
 
 sf::Texture* madera_texture;
@@ -262,16 +262,42 @@ void InitNightShader(sf::RenderTarget& renderTarget) {
 	quad[3].texCoords = sf::Vector2f(size.x,0);
 }
 
+sf::Glsl::Vec3 pSetHSV(float h, float s, float v ) {
+    	// H [0, 360] S and V [0.0, 1.0].
+    	int i = (int)floor(h/60.0f) % 6;
+    	float f = h/60.0f - floor(h/60.0f);
+    	float p = v * (1.f - s);
+    	float q = v * (1.f - s * f);
+    	float t = v * (1.f - (1.f - f) * s);
+
+    	switch (i) {
+    		case 0: return sf::Glsl::Vec3(v, t, p);
+    		break;
+    		case 1: return sf::Glsl::Vec3(q, v, p);
+    		break;
+    		case 2: return sf::Glsl::Vec3(p, v, t);
+    		break;
+    		case 3: return sf::Glsl::Vec3(p, q, v);
+    		break;
+    		case 4: return sf::Glsl::Vec3(t, p, v);
+    		break;
+    		case 5: return sf::Glsl::Vec3(v, p, q);
+    	}
+        return sf::Glsl::Vec3(0.2, 0.2, 0.2);
+    }
+
 void RenderWithShader(sf::RenderWindow& window, const sf::RenderTexture& renderTexture) {
 	sf::RenderStates states;
-	window.clear();
+
 	nightLight->setUniform("texture", sf::Shader::CurrentTexture);
-	nightLight->setUniform("dayTime", (clockDay.getElapsedTime().asSeconds())/60.f);
-	nightLight->setUniform("texture", sf::Shader::CurrentTexture);
+	nightLight->setUniform("dayTime", (clockDay.getElapsedTime().asSeconds())/60);
+	nightLight->setUniform("day_color", sf::Glsl::Vec3(1,1,1));
+	nightLight->setUniform("sun_set_color", sf::Glsl::Vec3(1,0.5,0));
+	nightLight->setUniform("night_color", sf::Glsl::Vec3(0.2,0,1));
+
 	states.shader = nightLight;
 	states.texture = &renderTexture.getTexture();
 	window.draw(quad, states);
-	window.display();
 }
 
 ObjManager obj_manager;
@@ -348,7 +374,7 @@ int main()
 	sf::Sprite spr_bullet;
 	spr_bullet.setTexture(bullet_texture);
 	SpriteCenterOrigin(spr_bullet);
-	
+
 	madera_texture = new sf::Texture();
 	madera_texture->loadFromFile("madera.png");
 	sf::Sprite spr_madera;
@@ -364,7 +390,9 @@ int main()
 
 	InitPlayers();
 
-	obj_manager.Create(GameObjectType::CASA, 0, 0);
+	obj_manager.Spawn(GameObjectType::CASA, 0, 0);
+
+	obj_manager.Spawn(GameObjectType::TREE, 50, 50);
 
 	sf::Clock clk_running;
 	sf::Clock clk_delta;
@@ -412,23 +440,21 @@ int main()
 		}
 
 		//DRAW
-		//window.clear();
-		renderTexture.setView(cam);
 		renderTexture.clear(sf::Color(255, 216, 0));
 
 
-		//static sf::Vector2f joy = GamePad::AnalogStick::Left.get(0);
-		//joy = GamePad::AnalogStick::Left.get(0);
-		//sf::Vector2f cam_offset(0, 0);
-		//if (joy.x < -50) cam_offset.x = -100 * dt_time.asSeconds();
-		//else if (joy.x > 50) cam_offset.x = 100 * dt_time.asSeconds();
-		//if (joy.y < -50) cam_offset.y = -100 * dt_time.asSeconds();
-		//else if (joy.y > 50) cam_offset.y = 100 * dt_time.asSeconds();
-		//cam.move(cam_offset);
+		{ // UpdateCamera(cam);
+			sf::Vector2f centroid;
+			for (int i = 0; i < NUM_PLAYERS; ++i) {
+					centroid += sf::Vector2f(players[i].x, players[i].y);
+			}
+			centroid = centroid / static_cast<float>(NUM_PLAYERS);
+			cam.setCenter(centroid);
+		}
 
 
 		ImGui::Begin("finester");
-		ImGui::Text("Joy: %f, %f", 1337, 42);
+		ImGui::Text("Joy: %f, %f", 1337.f, 42.f);
 		ImGui::End();
 
 		renderTexture.setView(cam);
@@ -477,9 +503,18 @@ int main()
 		}
 
 		for (Particle* particle : particles) {
-			
+
 			renderTexture.draw(particle->sprite);
 		}
+
+
+		renderTexture.display();
+
+
+
+		window.clear();
+		RenderWithShader(window, renderTexture);
+		ImGui::SFML::Render(window);
 
 		sf::Text txt_money;
 		txt_money.setFont(font);
@@ -492,17 +527,11 @@ int main()
 		txt_money.setPosition(40.f + spr_madera.getTexture()->getSize().x, 40.f);
 		sf::FloatRect textRect = txt_money.getLocalBounds();
 		txt_money.setOrigin(0, textRect.top + textRect.height / 2.0f);
-		renderTexture.draw(txt_money);
+		window.draw(txt_money);
 		spr_madera.setPosition(40, 40);
-		renderTexture.draw(spr_madera);
-		
+		window.draw(spr_madera);
 
-
-		renderTexture.display();
-
-		ImGui::SFML::Render(window);
-
-		RenderWithShader(window, renderTexture);
+		window.display();
 
 	}
 
