@@ -128,7 +128,7 @@ void RenderWithShader(sf::RenderWindow& window, const sf::RenderTexture& renderT
 	sf::RenderStates states;
 	window.clear();
 	nightLight->setUniform("texture", sf::Shader::CurrentTexture);
-	nightLight->setUniform("dayTime", clockDay.getElapsedTime().asSeconds());
+	nightLight->setUniform("dayTime", (clockDay.getElapsedTime().asSeconds())/60.f);
 	nightLight->setUniform("texture", sf::Shader::CurrentTexture);
 	states.shader = nightLight;
 	states.texture = &renderTexture.getTexture();
