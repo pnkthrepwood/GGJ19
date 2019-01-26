@@ -40,7 +40,6 @@ int madera;
 sf::Texture* tex_spritesheet;
 sf::Texture* player_texture;
 sf::Sprite spr_tile_dessert;
-sf::Sprite* spr_player[NUM_PLAYERS];
 
 sf::Shader* nightLight;
 sf::VertexArray quad(sf::Quads, 4);
@@ -98,7 +97,7 @@ struct Player
 		, facing_vector(1, 0)
 	{
 		sprite.setTexture(*player_texture);
-		SpriteCenterOrigin(sprite);
+		sprite.setOrigin(16, 32);
 		sprite.setColor(playerColors[n_player]);
 
 		progress.setFillColor(sf::Color::Transparent);
@@ -141,6 +140,7 @@ struct Player
 	void Draw(std::vector<sf::Sprite>& toDraw)
 	{
 		sprite.setPosition(x, y);
+		sprite.setTextureRect(sf::IntRect(0, 0, 32, 64));
 		toDraw.push_back(sprite);
 	}
 
@@ -456,7 +456,7 @@ int main()
 	font.loadFromFile("8bitwonder.ttf");
 
 	player_texture = new sf::Texture();
-	player_texture->loadFromFile("player.png");
+	player_texture->loadFromFile("desertman_sheet.png");
 
 	sf::Texture bullet_texture;
 	bullet_texture.loadFromFile("bullet.png");
