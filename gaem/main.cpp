@@ -34,19 +34,20 @@ const float BULLET_COOLDOWN = 0.5; //seconds
 const float MADERA_GATHER_TIME = 3; //seconds
 
 ObjManager obj_manager;
-int madera = 0;
-
+int madera;
 
 sf::Texture* tex_spritesheet;
 sf::Sprite spr_tile_dessert;
 sf::Sprite* spr_player[NUM_PLAYERS];
 
-
-
 sf::Shader* nightLight;
 sf::VertexArray quad(sf::Quads, 4);
 sf::Clock clockDay;
 
+void SpriteCenterOrigin(sf::Sprite& spr)
+{
+	spr.setOrigin(spr.getTexture()->getSize().x / 2.f, spr.getTexture()->getSize().y / 2.f);
+}
 
 struct Player
 {
@@ -80,10 +81,6 @@ struct Bullet {
 };
 
 
-void SpriteCenterOrigin(sf::Sprite& spr)
-{
-	spr.setOrigin(spr.getTexture()->getSize().x / 2.f, spr.getTexture()->getSize().y / 2.f);
-}
 
 struct Particle {
 	float x, y;
@@ -118,6 +115,7 @@ struct Particle {
 std::array<Player, NUM_PLAYERS> players;
 std::vector<Bullet*> bullets;
 std::vector<Particle*> particles;
+std::vector<Enemy*> enemies;
 
 
 struct ProgressShape : public sf::CircleShape
@@ -144,6 +142,7 @@ struct ProgressShape : public sf::CircleShape
 
 
 void InitPlayers() {
+	int madera = 0;
 	for (int i = 0; i < NUM_PLAYERS; i++) {
 		memset(&(players[i]), 0, sizeof(Player));
 		players[i].hp = 100;
@@ -238,8 +237,6 @@ void UpdatePlayer(float dt, int num_player, sf::View& cam)
 
 
 	// Gather wood
-	// TODO: CHECK THERE IS A TREE
-
 	static std::vector<GameObject*> objs_near;
 	objs_near.clear();
 	obj_manager.getObjects(objs_near, cam);
@@ -419,15 +416,12 @@ int main()
 	InitPlayers();
 
 	obj_manager.Spawn(GameObjectType::CASA, 0, 0);
-
 	obj_manager.Spawn(GameObjectType::TREE, 50, 50);
 
 	sf::Clock clk_running;
 	sf::Clock clk_delta;
 	while (window.isOpen())
 	{
-
-
 		sf::Event event;
 		while (window.pollEvent(event))
 		{
@@ -437,7 +431,6 @@ int main()
 			{
 				window.close();
 			}
-
 		}
 
 		sf::Time dt_time = clk_delta.restart();
@@ -468,7 +461,7 @@ int main()
 		}
 
 		//DRAW
-		renderTexture.clear(sf::Color(255, 216, 0));
+		renderTexture.clear(sf::Color(255, 216, 0)); //Hack to hide black lines between tiles
 
 
 		{ // UpdateCamera(cam);
