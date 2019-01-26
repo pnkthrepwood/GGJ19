@@ -223,6 +223,8 @@ int main()
 				{
 					cursor.x[i]--;
 					timer -= walking_cooldown;
+					cursor.anim_elapsed[i] = 0;
+					cursor.anim_elapsed[i] = 0;
 				}
 			}
 			else if (joy_left.x > 50)
@@ -232,6 +234,7 @@ int main()
 				{
 					cursor.x[i]++;
 					timer -= walking_cooldown;
+					cursor.anim_elapsed[i] = 0;
 				}
 			}
 			else if (joy_left.y < -50)
@@ -241,6 +244,7 @@ int main()
 				{
 					cursor.y[i]--;
 					timer -= walking_cooldown;
+					cursor.anim_elapsed[i] = 0;
 				}
 			}
 			else if (joy_left.y > 50)
@@ -250,6 +254,7 @@ int main()
 				{
 					cursor.y[i]++;
 					timer -= walking_cooldown;
+					cursor.anim_elapsed[i] = 0;
 				}
 			}
 
@@ -281,7 +286,7 @@ int main()
 
 
 
-		for (int i = 0; i < CURSOR_AMOUNT; ++i) 
+		for (int i = 0; i < CURSOR_AMOUNT; ++i)
 		{
 			{ // Cursorsito animation
 				cursor.anim_elapsed[i] -= dt_time.asSeconds();
