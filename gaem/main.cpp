@@ -112,6 +112,11 @@ struct Particle {
 	}
 
 };
+
+struct Enemy {
+
+};
+
 std::array<Player, NUM_PLAYERS> players;
 std::vector<Bullet*> bullets;
 std::vector<Particle*> particles;
