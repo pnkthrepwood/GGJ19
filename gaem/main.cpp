@@ -140,7 +140,7 @@ void draw_dineros(sf::RenderWindow& window, sf::Font &font, int dineros, sf::Col
 	sf::Text txt_money;
 	txt_money.setFont(font);
 	sf::String str;
-	str = "€";
+	str = "$";
 	int mm = dineros;
 	for (int i = 0; i < 5; ++i)
 	{
@@ -406,9 +406,9 @@ int main()
 			for (int y = 0; y < MAP_HEIGHT; y++)
 			{
 				auto& tile = tileMap[x][y];
-				const float FACTOR_SPEED = 0.2f;
-				const int FRAMES_TO_EVOLVE = 1000;
-				const int FRAMES_TO_EXPLAND = 1000;
+				const float FACTOR_SPEED = 1.f;
+				const int FRAMES_TO_EVOLVE = 50000;
+				const int FRAMES_TO_EXPLAND = 50000;
 				if (tile == SpriteType::TREE_1)
 				{ // Crecer el arbol
 					if (std::rand()%static_cast<int>(FRAMES_TO_EVOLVE*FACTOR_SPEED) == 0)
