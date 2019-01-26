@@ -89,6 +89,7 @@ enum PlayerState
 	IDLE,
 	WALKING,
 	GATHERING,
+	SHOOTING,
 };
 
 struct Player
@@ -100,6 +101,7 @@ struct Player
 	float bullet_cooldown;
 	float madera_progress;
 	int num_player;
+	bool will_shot = false;
 
 	//Anim stuff
 	FacingDirection facing;
@@ -413,6 +415,12 @@ void UpdatePlayer(float dt, int num_player, sf::View& cam)
 		p->state = PlayerState::IDLE;
 		p->anim_timer = 0;
 	}
+	else if (p->bullet_cooldown > 0)
+	{
+		stick_L = sf::Vector2f(0, 0);
+		p->state = PlayerState::SHOOTING;
+		p->anim_timer += dt;
+	}
 	else if (p->madera_progress > 0) //gathering -> quieto
 	{
 		stick_L = sf::Vector2f(0, 0);
@@ -439,15 +447,18 @@ void UpdatePlayer(float dt, int num_player, sf::View& cam)
 	p->y = Mates::Clamp(p->y, cam.getCenter().y - cam.getSize().y / 2 + 50, cam.getCenter().y + cam.getSize().y / 2 - 50);
 
 	// Update facing vector
+	sf::Vector2f facing_vector(0, 0);
 	if (length_R > 30)
 	{
-		p->facing_vector = stick_R;
+		facing_vector = stick_R;
 	}
 	else if (length_L > 30)
 	{
-		p->facing_vector = stick_L;
+		facing_vector = stick_L;
 	}
-	p->facing_vector = Mates::Normalize(sf::Vector2f(p->facing_vector.x, p->facing_vector.y));
+	if (Mates::Length(facing_vector) > 0.01f) {
+		p->facing_vector = Mates::Normalize(facing_vector);
+	}
 
 	float angle = 180+Mates::RadsToDegs(atan2(p->facing_vector.y, p->facing_vector.x));
 	if (angle > 270+45) {
@@ -461,11 +472,17 @@ void UpdatePlayer(float dt, int num_player, sf::View& cam)
 	}
 
 	//Shot
+	if (p->will_shot) {
+		bullets.push_back(new Bullet(p->x, p->y, p->facing_vector, num_player));
+		p->will_shot = false;
+	}
 	if (p->bullet_cooldown > 0) {
 		p->bullet_cooldown -= dt;
+		if (p->bullet_cooldown < 0) {
+			p->will_shot = true;
+		}
 	}
 	if (GamePad::Trigger::Right.IsJustPressed(num_player) && p->bullet_cooldown <= 0 && p->madera_progress <= 0) {
-		bullets.push_back(new Bullet(p->x, p->y, p->facing_vector, num_player));
 		p->bullet_cooldown = BULLET_COOLDOWN;
 	}
 
