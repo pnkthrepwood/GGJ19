@@ -24,13 +24,8 @@ const int TILE_SIZE = 16;
 const int NUM_PLAYERS = 4;
 const float PLAYER_SPEED = 500;
 const float BULLET_SPEED = 700;
+const float BULLET_COOLDOWN = 0.5; //seconds
 
-sf::Color playerColors[] = {
-	sf::Color::Cyan,
-	sf::Color::Magenta,
-	sf::Color::Red,
-	sf::Color::Blue,
-};
 
 enum PlayerState {
 	IDLE = 0,
@@ -44,6 +39,7 @@ struct Player {
 	int hp;
 	PlayerState state;
 	sf::Vector2f facing_vector;
+	float bullet_cooldown;
 };
 
 struct Bullet {
@@ -78,6 +74,7 @@ void InitPlayers() {
 		players[i].hp = 100;
 		players[i].x = RES_X / 2;
 		players[i].y = RES_Y / 2;
+		players[i].facing_vector = sf::Vector2f(1, 0);
 	}
 	const int PLAYER_INITIAL_POS_OFFSET = 90;
 	players[0].x -= PLAYER_INITIAL_POS_OFFSET / 2;
@@ -151,8 +148,12 @@ void UpdatePlayer(float dt, int num_player, sf::View& cam)
 	p->facing_vector = Mates::Normalize(sf::Vector2f(p->facing_vector.x, p->facing_vector.y));
 
 	//Shot
-	if (GamePad::IsButtonJustPressed(num_player, GamePad::Button::A)) {
+	if (p->bullet_cooldown > 0) {
+		p->bullet_cooldown -= dt;
+	}
+	if (GamePad::IsButtonJustPressed(num_player, GamePad::Button::A) && p->bullet_cooldown <= 0) {
 		bullets.push_back(new Bullet(p->x, p->y, p->facing_vector, num_player));
+		p->bullet_cooldown = BULLET_COOLDOWN;
 	}
 
 
@@ -204,6 +205,13 @@ int main()
 	sf::RenderTexture renderTexture;
 	renderTexture.create(RES_X, RES_Y);
 
+	sf::Color playerColors[] = {
+		sf::Color::Cyan,
+		sf::Color::Magenta,
+		sf::Color::Red,
+		sf::Color::Blue,
+	};
+
 	window.setFramerateLimit(60);
 	ImGui::SFML::Init(window);
 
@@ -219,7 +227,7 @@ int main()
 	for (int i = 0; i < NUM_PLAYERS; i++) {
 		spr_player[i].setTexture(player_texture);
 		SpriteCenterOrigin(spr_player[i]);
-		//spr_player[i].setColor(playerColors[i]);
+		spr_player[i].setColor(playerColors[i]);
 	}
 
 	sf::Texture bullet_texture;
@@ -268,7 +276,6 @@ int main()
 		for (int i = 0; i < bullets.size();) {
 			bool cale_destruir = UpdateBullet(bullets[i], dt_time.asSeconds(), cam);
 			if (cale_destruir) {
-				cout << "DESTRUR" << endl;
 				bullets.erase(bullets.begin() + i);
 			} else {
 				i++;
@@ -328,7 +335,7 @@ int main()
 
 		for (int i = 0; i < bullets.size(); i++) {
 			spr_bullet.setPosition(bullets[i]->x, bullets[i]->y);
-			//spr_bullet.setColor(playerColors[bullets[i]->player]);
+			spr_bullet.setColor(playerColors[bullets[i]->player]);
 			renderTexture.draw(spr_bullet);
 		}
 
