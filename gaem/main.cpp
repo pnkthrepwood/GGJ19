@@ -25,14 +25,8 @@ const int TILE_SIZE = 16;
 
 const int NUM_PLAYERS = 4;
 const float PLAYER_SPEED = 500;
-
-
-sf::Color playerColors[] = {
-	sf::Color::Cyan,
-	sf::Color::Magenta,
-	sf::Color::Red,
-	sf::Color::Blue,
-};
+const float BULLET_SPEED = 700;
+const float BULLET_COOLDOWN = 0.5; //seconds
 
 enum PlayerState {
 	IDLE = 0,
@@ -45,6 +39,22 @@ struct Player {
 	float vel_x, vel_y;
 	int hp;
 	PlayerState state;
+	sf::Vector2f facing_vector;
+	float bullet_cooldown;
+};
+
+struct Bullet {
+	float x, y;
+	float vel_x, vel_y;
+	int player;
+
+	Bullet(float px, float py, sf::Vector2f facing_vector, int num_player)
+		: x(px)
+		, y(py)
+		, vel_x(facing_vector.x*BULLET_SPEED) 
+		, vel_y(facing_vector.y*BULLET_SPEED)
+		, player(num_player)
+	{ }
 };
 
 
@@ -57,6 +67,7 @@ sf::VertexArray quad(sf::Quads, 4);
 sf::Clock clockDay;
 
 std::array<Player, NUM_PLAYERS> players;
+std::vector<Bullet*> bullets;
 
 void InitPlayers() {
 	for (int i = 0; i < NUM_PLAYERS; i++) {
@@ -64,8 +75,8 @@ void InitPlayers() {
 		players[i].hp = 100;
 		players[i].x = RES_X / 2;
 		players[i].y = RES_Y / 2;
+		players[i].facing_vector = sf::Vector2f(1, 0);
 	}
-	std::cout << players[0].x << std::endl;
 	const int PLAYER_INITIAL_POS_OFFSET = 90;
 	players[0].x -= PLAYER_INITIAL_POS_OFFSET / 2;
 	players[0].y -= PLAYER_INITIAL_POS_OFFSET;
@@ -77,7 +88,28 @@ void InitPlayers() {
 	players[3].y += PLAYER_INITIAL_POS_OFFSET;
 }
 
-void UpdatePlayer(float dt, int num_player)
+bool UpdateBullet(Bullet *b, float dt, sf::View& cam)
+{
+
+	b->x += b->vel_x * dt;
+	b->y += b->vel_y * dt;
+
+	//Out of view
+	if (b->x > cam.getCenter().x + cam.getSize().x / 2 ||
+		b->x < cam.getCenter().x - cam.getSize().x / 2 ||
+		b->y > cam.getCenter().y + cam.getSize().y / 2 ||
+		b->y < cam.getCenter().y - cam.getSize().y / 2) {
+		return true;
+	}
+
+	//TODO: Collisions with enemies
+
+
+	return false;
+	
+}
+
+void UpdatePlayer(float dt, int num_player, sf::View& cam)
 {
 	Player* p = &(players[num_player]);
 
@@ -91,18 +123,45 @@ void UpdatePlayer(float dt, int num_player)
 	}
 
 	// Update speed
-	sf::Vector2f stick = Mates::Normalize(sf::Vector2f(stick_L.x, stick_L.y));
-	p->vel_x = stick.x * PLAYER_SPEED;
-	p->vel_y = stick.y * PLAYER_SPEED;
+	sf::Vector2f direction = Mates::Normalize(sf::Vector2f(stick_L.x, stick_L.y));
+	p->vel_x = direction.x * PLAYER_SPEED;
+	p->vel_y = direction.y * PLAYER_SPEED;
 
 	// Update pos
 	p->x = p->x + p->vel_x * dt;
 	p->y = p->y + p->vel_y * dt;
 
-	//Out of camera (TODO: Use camera instead of res)
-	p->x = Mates::Clamp(p->x, 0, RES_X);
-	p->y = Mates::Clamp(p->y, 0, RES_Y);
+	// Keep inside view
+	p->x = Mates::Clamp(p->x, cam.getCenter().x - cam.getSize().x / 2, cam.getCenter().x + cam.getSize().x / 2);
+	p->y = Mates::Clamp(p->y, cam.getCenter().y - cam.getSize().y / 2, cam.getCenter().y + cam.getSize().y / 2);
 
+	// Update facing vector
+	sf::Vector2f stick_R = GamePad::AnalogStick::Left.get(num_player);
+	float length_R = Mates::Length(stick_L);
+	if (length_R > 30)
+	{
+		p->facing_vector = stick_R;
+	}
+	else if (length_L > 30)
+	{
+		p->facing_vector = stick_R;
+	}
+	p->facing_vector = Mates::Normalize(sf::Vector2f(p->facing_vector.x, p->facing_vector.y));
+
+	//Shot
+	if (p->bullet_cooldown > 0) {
+		p->bullet_cooldown -= dt;
+	}
+	if (GamePad::IsButtonJustPressed(num_player, GamePad::Button::A) && p->bullet_cooldown <= 0) {
+		bullets.push_back(new Bullet(p->x, p->y, p->facing_vector, num_player));
+		p->bullet_cooldown = BULLET_COOLDOWN;
+	}
+
+
+	// Gather wood
+	if (GamePad::IsButtonPressed(num_player, GamePad::Button::B)) {
+
+	}
 }
 
 void SpriteCenterOrigin(sf::Sprite& spr)
@@ -149,6 +208,13 @@ int main()
 	sf::RenderTexture renderTexture;
 	renderTexture.create(RES_X, RES_Y);
 
+	sf::Color playerColors[] = {
+		sf::Color::Cyan,
+		sf::Color::Magenta,
+		sf::Color::Red,
+		sf::Color::Blue,
+	};
+
 	window.setFramerateLimit(60);
 	ImGui::SFML::Init(window);
 
@@ -158,14 +224,20 @@ int main()
 	sf::Font font;
 	font.loadFromFile("8bitmadness.ttf");
 
-	sf::Texture texture;
-	texture.loadFromFile("player.png");
+	sf::Texture player_texture;
+	player_texture.loadFromFile("player.png");
 	sf::Sprite spr_player[NUM_PLAYERS];
 	for (int i = 0; i < NUM_PLAYERS; i++) {
-		spr_player[i].setTexture(texture);
+		spr_player[i].setTexture(player_texture);
 		SpriteCenterOrigin(spr_player[i]);
-		//spr_player[i].setColor(playerColors[i]);
+		spr_player[i].setColor(playerColors[i]);
 	}
+
+	sf::Texture bullet_texture;
+	bullet_texture.loadFromFile("bullet.png");
+	sf::Sprite spr_bullet;
+	spr_bullet.setTexture(bullet_texture);
+	SpriteCenterOrigin(spr_bullet);
 
 	tex_spritesheet = new sf::Texture();
 	tex_spritesheet->loadFromFile("sprite_sheet.png");
@@ -204,16 +276,24 @@ int main()
 
 		//UPDATE
 		for (int i = 0; i < NUM_PLAYERS; i++) {
-			UpdatePlayer(dt_time.asSeconds(), i);
+			UpdatePlayer(dt_time.asSeconds(), i, cam);
+		}
+		for (int i = 0; i < bullets.size();) {
+			bool cale_destruir = UpdateBullet(bullets[i], dt_time.asSeconds(), cam);
+			if (cale_destruir) {
+				bullets.erase(bullets.begin() + i);
+			} else {
+				i++;
+			}
 		}
 
 
 
 
 		//DRAW
-		window.clear();
+		//window.clear();
 		renderTexture.setView(cam);
-		renderTexture.clear();
+		renderTexture.clear(sf::Color(255, 216, 0));
 
 
 		static sf::Vector2f joy = GamePad::AnalogStick::Left.get(0);
@@ -264,6 +344,13 @@ int main()
 			spr_player[i].setPosition(players[i].x, players[i].y);
 			renderTexture.draw(spr_player[i]);
 		}
+
+		for (int i = 0; i < bullets.size(); i++) {
+			spr_bullet.setPosition(bullets[i]->x, bullets[i]->y);
+			spr_bullet.setColor(playerColors[bullets[i]->player]);
+			renderTexture.draw(spr_bullet);
+		}
+
 		renderTexture.display();
 
 		ImGui::SFML::Render(window);
