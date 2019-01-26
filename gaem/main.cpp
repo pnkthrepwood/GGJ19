@@ -39,7 +39,7 @@ int madera;
 
 sf::Texture* tex_spritesheet;
 sf::Texture* player_texture;
-sf::Sprite spr_tile_dessert;
+sf::Texture* madera_texture;
 
 sf::Shader* nightLight;
 sf::VertexArray quad(sf::Quads, 4);
@@ -81,7 +81,8 @@ enum FacingDirection
 enum PlayerState
 {
 	IDLE,
-	WALKING
+	WALKING,
+	GATHERING,
 };
 
 struct Player
@@ -94,8 +95,10 @@ struct Player
 	float madera_progress;
 	int num_player;
 
+	//Anim stuff
 	FacingDirection facing;
 	PlayerState state;
+	float anim_timer;
 
 	sf::Sprite sprite;
 	ProgressShape progress;
@@ -108,6 +111,7 @@ struct Player
 		, vel_y(0)
 		, madera_progress(0)
 		, bullet_cooldown(0)
+		, anim_timer(0.f)
 		, facing_vector(1, 0)
 	{
 		sprite.setTexture(*player_texture);
@@ -303,7 +307,6 @@ bool UpdateBullet(Bullet *b, float dt, sf::View& cam)
 
 }
 
-sf::Texture* madera_texture;
 
 void UpdatePlayer(float dt, int num_player, sf::View& cam)
 {
@@ -324,11 +327,15 @@ void UpdatePlayer(float dt, int num_player, sf::View& cam)
 	if (p->madera_progress > 0) 
 	{
 		p->vel_x = p->vel_y = 0;
+		p->state = PlayerState::IDLE;
+		p->anim_timer = 0;
 	} 
 	else 
 	{
 		p->vel_x = direction.x * PLAYER_SPEED;
 		p->vel_y = direction.y * PLAYER_SPEED;
+		p->state = PlayerState::WALKING;
+		p->anim_timer += dt;
 	}
 
 	// Update pos
@@ -351,6 +358,17 @@ void UpdatePlayer(float dt, int num_player, sf::View& cam)
 		p->facing_vector = stick_R;
 	}
 	p->facing_vector = Mates::Normalize(sf::Vector2f(p->facing_vector.x, p->facing_vector.y));
+
+	float angle = 180+Mates::RadsToDegs(atan2(p->facing_vector.y, p->facing_vector.x));
+	if (angle > 270+45) {
+		p->facing = FacingDirection::LEFT;
+	} else if (angle > 225) {
+		p->facing = FacingDirection::DOWN;
+	} else if (angle > 45+90) {
+		p->facing = FacingDirection::RIGHT;
+	} else {
+		p->facing = FacingDirection::UP;
+	}
 
 	//Shot
 	if (p->bullet_cooldown > 0) {
@@ -381,6 +399,8 @@ void UpdatePlayer(float dt, int num_player, sf::View& cam)
 	}
 	if (touching_arbol && GamePad::IsButtonPressed(num_player, GamePad::Button::B)) {
 		p->madera_progress += dt;
+		p->state = PlayerState::GATHERING;
+		p->anim_timer += dt;
 		if (p->madera_progress >= MADERA_GATHER_TIME) {
 			madera += 1;
 			p->madera_progress = 0;
@@ -509,6 +529,7 @@ int main()
 
 	tex_spritesheet = new sf::Texture();
 	tex_spritesheet->loadFromFile("sprite_sheet.png");
+	sf::Sprite spr_tile_dessert;
 	spr_tile_dessert.setTexture(*tex_spritesheet);
 	spr_tile_dessert.setTextureRect(sf::IntRect(1 * TILE_SIZE, 0, TILE_SIZE, TILE_SIZE));
 
