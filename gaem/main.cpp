@@ -171,19 +171,19 @@ struct Player
 
 		if (facing == FacingDirection::DOWN)
 		{
-			texrect = (sf::IntRect(0, 0, 10, 16));
+			texrect = (sf::IntRect(0, 0, 11, 16));
 		}
 		if (facing == FacingDirection::RIGHT)
 		{
-			texrect = (sf::IntRect(0, 16*1, 10, 16));
+			texrect = (sf::IntRect(0, 16*1, 11, 16));
 		}
 		if (facing == FacingDirection::LEFT)
 		{
-			texrect = (sf::IntRect(0, 16*2, 10, 16));
+			texrect = (sf::IntRect(0, 16*2, 11, 16));
 		}
 		if (facing == FacingDirection::UP)
 		{
-			texrect = (sf::IntRect(0, 16*3, 10, 16));
+			texrect = (sf::IntRect(0, 16*3, 11, 16));
 		}
 
 		if (state == PlayerState::IDLE)
