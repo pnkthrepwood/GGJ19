@@ -28,10 +28,10 @@ float RES_Y = 720.0f;
 
 const int TILE_SIZE = 16;
 
-const int NUM_PLAYERS = 1;
+const int NUM_PLAYERS = 2;
 const float PLAYER_SPEED = 200;
 
-const float BULLET_SPEED = 700;
+const float BULLET_SPEED = 500;
 const float ENEMY_TRIGGER_DISTANCE = 180;
 const float ENEMY_MAX_SPEED = 250;
 const float BULLET_COOLDOWN = 0.1f; //seconds
@@ -333,7 +333,7 @@ struct Enemy
 {
 	float x, y;
 	float vel_x, vel_y;
-	int hp = 100;
+	int hp = 500;
 	PlayerState state; //IDLE OR WALKING ONLY
 	float anim_timer;
 
@@ -745,9 +745,13 @@ int main()
 	srand(time(NULL));
 
 	sf::ContextSettings settings;
-	sf::RenderWindow window(sf::VideoMode(RES_X, RES_Y), "SFML works!", sf::Style::Default, settings);
+
+	//sf::RenderWindow window(sf::VideoMode(RES_X, RES_Y), "SFML works!", sf::Style::Default, settings);
+	sf::RenderWindow window(sf::VideoMode(RES_X, RES_Y), "SFML works!", sf::Style::Fullscreen, settings);
 	sf::RenderTexture renderTexture;
 	renderTexture.create(RES_X, RES_Y);
+
+	window.setVerticalSyncEnabled(true);
 
 	playerColors[0] = sf::Color::Cyan;
 	playerColors[1] = sf::Color::Magenta;
@@ -986,7 +990,7 @@ int main()
 		{
 			players[i]->Draw(toDraw);
 		}
-		//Enemies
+		//Enemies hyenas hyaenas lobos llops
 		for (int i = 0; i < enemies.size(); i++)
 		{
 			int frame = static_cast<int>(enemies[i]->anim_timer / 0.1f) % 2;
@@ -994,7 +998,16 @@ int main()
 			sf::Sprite * sprite = enemies[i]->sprite;
 
 			sprite->setPosition(enemies[i]->x, enemies[i]->y);
-			sprite->setTextureRect(sf::IntRect((1 + frame + ((enemies[i]->vel_x > 0) ? 2 : 0)) * TILE_SIZE, 1*TILE_SIZE, 16, 16));
+
+			sf::IntRect tr = sf::IntRect((1 + frame + ((enemies[i]->vel_x > 0) ? 2 : 0)) * TILE_SIZE, 1 * TILE_SIZE, 16, 16);
+
+			if (enemies[i]->last_hit_timer > 0)
+			{
+				enemies[i]->last_hit_timer -= dt_time.asSeconds();
+				tr.left += 6 * 16;
+			}
+
+			sprite->setTextureRect(tr);
 
 			toDraw.push_back(*sprite);
 		}
