@@ -728,7 +728,7 @@ void UpdatePlayer(float dt, int num_player, sf::View& cam, GameState& gameState)
 
 		if (oasis_near && GamePad::IsButtonPressed(num_player, GamePad::Button::X))
 		{
-			gameState.PlaceHaimaIfPosible(obj_manager, sf::Vector2f(p->x, p->y), madera);
+			gameState.PlaceHaimaIfPosible(sf::Vector2f(p->x, p->y), madera);
 		}
 	}
 
@@ -777,7 +777,7 @@ int main()
 	DayManager dayManager;
 	dayManager.InitNightShader(window);
 
-	GameState gameState(dayManager);
+	GameState gameState(dayManager, obj_manager);
 
 	font = new sf::Font();
 	font->loadFromFile("8bitwonder.ttf");

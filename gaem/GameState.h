@@ -6,14 +6,15 @@
 class DayManager;
 class ObjManager;
 class GameObject;
+class ObjManager;
 
 class GameState {
 public:
-  GameState(DayManager& dayManager);
+  GameState(DayManager& dayManager, ObjManager& obj_manager);
 
   void Update(float dt, std::function<bool()> AreAllPlayersInHaima);
 
-  void PlaceHaimaIfPosible(ObjManager& obj_manager, sf::Vector2f pos, int& woodAmount);
+  void PlaceHaimaIfPosible(sf::Vector2f pos, int& woodAmount);
 
   void Render(sf::RenderWindow& window);
 
@@ -31,5 +32,8 @@ private:
   EState mState;
 
   DayManager& mDayManager;
+  ObjManager& mObjManager;
   GameObject* mHaima;
+
+  float mTimer = 0.f;
 };
