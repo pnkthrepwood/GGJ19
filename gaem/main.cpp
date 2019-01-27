@@ -912,6 +912,8 @@ int main()
 		spr_madera.setPosition(40, 40);
 		window.draw(spr_madera);
 
+		dayManager.RenderGui(window);
+
 		window.display();
 
 	}

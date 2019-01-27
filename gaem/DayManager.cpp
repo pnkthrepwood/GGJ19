@@ -4,7 +4,7 @@
 #include "imgui-SFML.h"
 
 namespace {
-   const float SECONDS_OF_RAW_CICLE = 3.f;
+   const float SECONDS_OF_RAW_CICLE = 3.15f;
    float SECONDS_OF_TARGET_CICLE = 180.f;
 }
 
@@ -77,12 +77,45 @@ void DayManager::RenderWithShader(sf::RenderWindow& window, const sf::RenderText
   window.draw(mQuad, states);
 }
 
+void DayManager::RenderGui(sf::RenderWindow& window) {
+  sf::Vector2f shapeSize(50,50);
+  sf::RectangleShape shape1(shapeSize);
+  shape1.setOrigin(shapeSize*0.5f);
+  shape1.setFillColor(sf::Color(255, 255, 0));
+  sf::RectangleShape shape2(shapeSize);
+  shape2.setOrigin(shapeSize*0.5f);
+  shape2.setFillColor(sf::Color(255, 255, 0));
+  shape2.rotate(30);
+  sf::RectangleShape shape3(shapeSize);
+  shape3.setOrigin(shapeSize*0.5f);
+  shape3.setFillColor(sf::Color(255, 255, 0));
+  shape3.rotate(60);
+
+
+  const auto windowSize = window.getSize();
+  sf::Transform transform;
+  transform.translate(windowSize.x*0.5f, windowSize.y);
+  {
+    const float extra = 40.f;
+    float angle = (GetDayTime())*(180.f + extra) - extra/2.f;
+    transform.rotate(angle);
+  }
+  transform.translate(-100.f, 0);
+
+  sf::RenderStates states;
+  states.transform = transform;
+  window.draw(shape1, states);
+  window.draw(shape2, states);
+  window.draw(shape3, states);
+}
+
 void DayManager::ImGuiRender() {
   ImGui::Begin("DayManager");
-  ImGui::Text("Day time: %f", mElapsed/3.f);
+  ImGui::Text("Day time: %f", GetDayTime());
   ImGui::DragFloat("Day lenght", &SECONDS_OF_TARGET_CICLE);
   ImGui::DragFloat("Elapsed", &mElapsed);
   ImGui::Text("%f", GetDayFactor());
+
   if (ImGui::Button("Fast Forward Morning")) {
     FastForwardUntilNextMorning();
   }
@@ -95,4 +128,12 @@ void DayManager::FastForwardUntilNextMorning() {
 
 float DayManager::GetDayFactor() const {
     return 1.f-cos(1.f - std::abs(pow(sin(mElapsed-1.5f),10.f))) + 0.5f;
+}
+
+float DayManager::GetDayTime() const {
+    return GetElapsedDays() - static_cast<int>(GetElapsedDays());
+}
+
+float DayManager::GetElapsedDays() const {
+    return mElapsed/SECONDS_OF_RAW_CICLE;
 }
