@@ -56,7 +56,7 @@ sf::SoundBuffer* bchopwood; //done
 sf::Font* font;
 
 sf::Music* music; //Done
-sf::Music* musicdanger;
+sf::Music* musicdanger; //done
 
 sf::Shader* nightLight;
 sf::VertexArray quad(sf::Quads, 4);
@@ -452,6 +452,36 @@ void SpawnCosasEnChunk(int casilla_x, int casilla_y, bool first_tile = false)
 		obj_manager.Spawn(GameObjectType::TREE, x, y);
 	}
 
+	//Decor
+	for (int i = 0; i < 8; ++i)
+	{
+		int x = std::rand() % (area_right - area_left) + area_left;
+		int y = std::rand() % (area_bottom - area_top) + area_top;
+
+		obj_manager.Spawn(GameObjectType::DECOR_1, x, y);
+	}
+	for (int i = 0; i < 8; ++i)
+	{
+		int x = std::rand() % (area_right - area_left) + area_left;
+		int y = std::rand() % (area_bottom - area_top) + area_top;
+
+		obj_manager.Spawn(GameObjectType::DECOR_2, x, y);
+	}
+	for (int i = 0; i < 8; ++i)
+	{
+		int x = std::rand() % (area_right - area_left) + area_left;
+		int y = std::rand() % (area_bottom - area_top) + area_top;
+
+		obj_manager.Spawn(GameObjectType::DECOR_3, x, y);
+	}
+	for (int i = 0; i < 8; ++i)
+	{
+		int x = std::rand() % (area_right - area_left) + area_left;
+		int y = std::rand() % (area_bottom - area_top) + area_top;
+
+		obj_manager.Spawn(GameObjectType::DECOR_4, x, y);
+	}
+
 	if (!first_tile) {
 
 		//Enemies
@@ -786,9 +816,12 @@ int main()
 	InitPlayers();
 
 	music->play();
+	music->setLoop(true);
+	musicdanger->play();
+	musicdanger->setVolume(0);
+	musicdanger->setLoop(true);
 
 	obj_manager.Spawn(GameObjectType::WATER, RES_X/2, RES_Y / 2);
-
 
 	auto p = GetCasillaFromCam(cam);
 	current_casilla_x = p.first;
@@ -853,10 +886,11 @@ int main()
 		}
 
 		//Enemies
+		bool in_danger = false;
 		for (int i = 0; i < enemies.size();)
 		{
 			bool cale_destruir = enemies[i]->Update(dt_time.asSeconds());
-
+			if (enemies[i]->state == PlayerState::WALKING) in_danger = true;
 			if (cale_destruir)
 			{
 				delete enemies[i];
@@ -866,6 +900,12 @@ int main()
 			{
 				i++;
 			}
+		}
+		if (in_danger) {
+			musicdanger->setVolume(100);
+		}
+		else {
+			musicdanger->setVolume(0);
 		}
 		//Bullets
 		for (int i = 0; i < bullets.size();) {
@@ -948,7 +988,7 @@ int main()
 		//Enemies
 		for (int i = 0; i < enemies.size(); i++)
 		{
-			int frame = static_cast<int>(enemies[i]->anim_timer / 0.2f) % 2;
+			int frame = static_cast<int>(enemies[i]->anim_timer / 0.1f) % 2;
 
 			sf::Sprite * sprite = enemies[i]->sprite;
 
