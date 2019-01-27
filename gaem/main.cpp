@@ -36,7 +36,7 @@ const float PLAYER_SPEED = 200;
 const float BULLET_SPEED = 500;
 const float ENEMY_TRIGGER_DISTANCE = 180;
 const float ENEMY_MAX_SPEED = 250;
-const float BULLET_COOLDOWN = 0.1f; //seconds
+const float BULLET_COOLDOWN = 0.05f; //seconds
 const float MADERA_GATHER_TIME = 3.5; //seconds
 
 ObjManager obj_manager;
@@ -539,7 +539,7 @@ bool UpdateBullet(Bullet *b, float dt, sf::View& cam)
 	}
 
 	//Collisions with enemies
-	sf::FloatRect bounding(b->x, b->y, bullet_texture->getSize().x, bullet_texture->getSize().y);
+	sf::FloatRect bounding(b->x, b->y, 8, 8);
 	for (Enemy* e : enemies)
 	{
 		if (bounding.intersects(getBoundBoxSprite(e->sprite)))
@@ -754,6 +754,14 @@ int main()
 	sf::ContextSettings settings;
 
 	sf::RenderWindow window(sf::VideoMode(RES_X, RES_Y), "SFML works!", sf::Style::Default, settings);
+
+	/*
+	sf::VideoMode desktop_mode = sf::VideoMode::getDesktopMode();
+	RES_X = desktop_mode.width;
+	RES_Y = desktop_mode.height;
+
+	sf::RenderWindow window(desktop_mode, "SFML works!", sf::Style::Default, settings);
+	*/
 	sf::RenderTexture renderTexture;
 	renderTexture.create(RES_X, RES_Y);
 
@@ -770,7 +778,7 @@ int main()
 	sf::View cam(sf::FloatRect(0.0f, 0.0f, RES_X, RES_Y));
 	sf::View ui_view(sf::FloatRect(0.0f, 0.f, RES_X, RES_Y));
 
-	cam.zoom(0.4f);
+	cam.zoom(0.5f);
 
 
 
@@ -847,7 +855,7 @@ int main()
 		}
 	}
 
-	PerlinNoise perlin(1, .1, 1, 3);
+	PerlinNoise perlin(1, .1, 1, 1);
 
 	sf::Clock clk_running;
 	sf::Clock clk_delta;
@@ -1005,7 +1013,8 @@ int main()
 			for (int y = start_y; y < start_y + TILES_CAM_HEIGHT * TILE_SIZE; y += TILE_SIZE)
 			{
 				float noise = perlin.GetHeight(x, y);
-				spr_tile_dessert.setTextureRect(sf::IntRect((noise > 0.5? 1 : 2) * TILE_SIZE, 0, TILE_SIZE, TILE_SIZE));
+
+				spr_tile_dessert.setTextureRect(sf::IntRect((noise > (0.5f) ? 1 : 2) * TILE_SIZE, 0, TILE_SIZE, TILE_SIZE));
 				spr_tile_dessert.setPosition(x, y);
 				renderTexture.draw(spr_tile_dessert);
 			}
