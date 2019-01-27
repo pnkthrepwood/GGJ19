@@ -13,6 +13,10 @@ enum class GameObjectType
 {
 	NONE,
 	CASA,
+	DECOR_1,
+	DECOR_2,
+	DECOR_3,
+	DECOR_4,
 	TREE,
 	WATER,
 	HAIMA

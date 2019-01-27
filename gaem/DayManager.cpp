@@ -8,6 +8,10 @@ namespace {
    float SECONDS_OF_TARGET_CICLE = 180.f;
 }
 
+extern sf::Font* font;
+extern float RES_Y;
+extern float RES_X;
+
 DayManager::DayManager()
 : mQuad(sf::Quads, 4)
 , mElapsed(1)
@@ -92,9 +96,8 @@ void DayManager::RenderGui(sf::RenderWindow& window) {
   shape3.rotate(60);
 
 
-  const auto windowSize = window.getSize();
   sf::Transform transform;
-  transform.translate(windowSize.x*0.5f, windowSize.y);
+  transform.translate(RES_X*0.5f, RES_Y);
   {
     const float extra = 40.f;
     float angle = (GetDayTime())*(180.f + extra) - extra/2.f;
@@ -107,6 +110,20 @@ void DayManager::RenderGui(sf::RenderWindow& window) {
   window.draw(shape1, states);
   window.draw(shape2, states);
   window.draw(shape3, states);
+
+  sf::Text txt_day;
+  txt_day.setFont(*font);
+  sf::String str = "Day " + std::to_string(int(GetElapsedDays()));
+  txt_day.setString(str);
+  txt_day.setFillColor(sf::Color::White);
+  txt_day.setOutlineColor(sf::Color::Black);
+  txt_day.setOutlineThickness(2);
+  txt_day.setCharacterSize(32);
+  sf::FloatRect textRect = txt_day.getLocalBounds();
+  txt_day.setPosition(RES_X / 2, RES_Y - textRect.height - 10);
+  txt_day.setOrigin(textRect.width/2, 0);
+  window.draw(txt_day);
+  
 }
 
 void DayManager::ImGuiRender() {
