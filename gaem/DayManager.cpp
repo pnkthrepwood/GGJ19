@@ -123,7 +123,6 @@ void DayManager::RenderGui(sf::RenderWindow& window) {
   txt_day.setPosition(RES_X / 2, RES_Y - textRect.height - 10);
   txt_day.setOrigin(textRect.width/2, 0);
   window.draw(txt_day);
-
 }
 
 void DayManager::ImGuiRender()

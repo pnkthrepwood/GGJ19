@@ -779,8 +779,8 @@ int main()
 
 	GameState gameState(dayManager);
 
-	sf::Font font;
-	font.loadFromFile("8bitwonder.ttf");
+	font = new sf::Font();
+	font->loadFromFile("8bitwonder.ttf");
 
 	player_texture = new sf::Texture();
 	player_texture->loadFromFile("desertman_sheet.png");
@@ -1104,7 +1104,7 @@ int main()
 		ImGui::SFML::Render(window);
 
 		sf::Text txt_money;
-		txt_money.setFont(font);
+		txt_money.setFont(*font);
 		sf::String str = std::to_string(madera);
 		txt_money.setString(str);
 		txt_money.setFillColor(sf::Color::White);
