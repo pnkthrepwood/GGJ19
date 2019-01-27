@@ -32,7 +32,7 @@ const int NUM_PLAYERS = 1;
 const float PLAYER_SPEED = 300;
 
 const float BULLET_SPEED = 700;
-const float ENEMY_TRIGGER_DISTANCE = 400;
+const float ENEMY_TRIGGER_DISTANCE = 200;
 const float ENEMY_ACCEL = 1000;
 const float ENEMY_MAX_SPEED = 350;
 const float BULLET_COOLDOWN = 0.3f; //seconds
@@ -358,13 +358,15 @@ void SpawnCosasEnChunk(int casilla_x, int casilla_y)
 
 	chunksSpawned[casilla_x][casilla_y] = true;
 
+	casilla_x -= 2000;
+	casilla_y -= 2000;
 	int area_left = casilla_x * RES_X;
 	int area_right = (casilla_x + 1) * RES_X;
 	int area_top = (casilla_y) * RES_Y;
 	int area_bottom = (casilla_y + 1) * RES_Y;;
 
 	//Trees
-	for (int i = 0; i < 100; ++i)
+	for (int i = 0; i < 8; ++i)
 	{
 		int x = std::rand() % (area_right - area_left) + area_left;
 		int y = std::rand() % (area_bottom - area_top) + area_top;
@@ -373,7 +375,7 @@ void SpawnCosasEnChunk(int casilla_x, int casilla_y)
 	}
 
 	//Enemies
-	for (int i = 0; i < 100; ++i)
+	for (int i = 0; i < 2; ++i)
 	{
 		int x = std::rand() % (area_right - area_left) + area_left;
 		int y = std::rand() % (area_bottom - area_top) + area_top;
@@ -706,7 +708,7 @@ int main()
 			current_casilla_x = p.first;
 			current_casilla_y = p.second;
 
-			cout << "entering chunk " << current_casilla_x << "," << current_casilla_y << endl;
+			cout << "entering " << current_casilla_x << "," << current_casilla_y << endl;
 
 			for (int i = -1; i <= 1; i++) {
 				for (int j = -1; j <= 1; j++) {
@@ -728,6 +730,7 @@ int main()
 
 			if (cale_destruir || esta_lejos) 
 			{
+				delete enemies[i];
 				enemies.erase(enemies.begin() + i);
 			}
 			else 
@@ -739,6 +742,7 @@ int main()
 		for (int i = 0; i < bullets.size();) {
 			bool cale_destruir = UpdateBullet(bullets[i], dt_time.asSeconds(), cam);
 			if (cale_destruir) {
+				delete bullets[i];
 				bullets.erase(bullets.begin() + i);
 			} else {
 				i++;
@@ -748,6 +752,7 @@ int main()
 		for (int i = 0; i < particles.size();) {
 			bool cale_destruir = particles[i]->Update(dt_time.asSeconds());
 			if (cale_destruir) {
+				delete particles[i];
 				particles.erase(particles.begin() + i);
 			}
 			else {
