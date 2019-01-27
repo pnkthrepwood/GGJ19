@@ -203,7 +203,8 @@ struct Player
 	{
 		progress.setOutlineThickness(11); //Force redraw shape
 		progress.progress = progress.getPointCount() - (progress.getPointCount()*(madera_progress / MADERA_GATHER_TIME));
-		if (progress.progress < 120 && progress.progress > 3) {
+		if (progress.progress < 120 && progress.progress > 3) 
+		{
 			progress.setPosition(x, y);
 			rt.draw(progress);
 		}
@@ -288,7 +289,8 @@ sf::FloatRect getBoundBoxSprite(sf::Sprite* sprite)
 }
 
 
-struct Enemy {
+struct Enemy 
+{
 	float x, y;
 	float vel_x, vel_y;
 	int hp = 100;
@@ -633,6 +635,8 @@ int main()
 
 	sf::View cam(sf::FloatRect(0.0f, 0.0f, RES_X, RES_Y));
 	sf::View ui_view(sf::FloatRect(0.0f, 0.f, RES_X, RES_Y));
+
+	cam.zoom(0.4f);
 
 	DayManager dayManager;
 	dayManager.InitNightShader(window);
