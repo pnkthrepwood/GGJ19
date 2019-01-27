@@ -35,7 +35,7 @@ const float BULLET_SPEED = 700;
 const float ENEMY_TRIGGER_DISTANCE = 180;
 const float ENEMY_MAX_SPEED = 250;
 const float BULLET_COOLDOWN = 0.2f; //seconds
-const float MADERA_GATHER_TIME = 3; //seconds
+const float MADERA_GATHER_TIME = 3.5; //seconds
 
 ObjManager obj_manager;
 int madera;
@@ -48,11 +48,10 @@ sf::Texture* bullet_texture;
 sf::Sound* groar1; //done
 sf::Sound* groar2; //done
 sf::Sound* grills;
-sf::Sound* chopwood;
-sf::Sound* chainsaw;
 sf::Sound* shot; //Done
 sf::Sound* mussol;
 sf::Sound* hammer;
+sf::SoundBuffer* bchopwood; //done
 
 sf::Music* music; //Done
 sf::Music* musicdanger;
@@ -112,6 +111,7 @@ struct Player
 	float madera_progress;
 	int num_player;
 	bool will_shot = false;
+	sf::Sound chopwood;
 
 	//Anim stuff
 	FacingDirection facing;
@@ -131,6 +131,7 @@ struct Player
 		, bullet_cooldown(0)
 		, anim_timer(0.f)
 		, facing_vector(1, 0)
+		, chopwood(*bchopwood)
 	{
 		sprite.setTexture(*player_texture);
 		sprite.setOrigin(5, 8);
@@ -206,7 +207,7 @@ struct Player
 		}
 		else if (state == PlayerState::GATHERING)
 		{
-			texrect.left = 5*11 + (static_cast<int>(anim_timer / 0.25f) % 2) * 11;
+			texrect.left = 5*11 + (static_cast<int>(anim_timer / 0.4f) % 2) * 11;
 		}
 
 		sprite.setTextureRect(texrect);
@@ -492,7 +493,8 @@ void UpdatePlayer(float dt, int num_player, sf::View& cam)
 	{
 		stick_L = sf::Vector2f(0, 0);
 		if (p->state != PlayerState::GATHERING) {
-			chainsaw->play();
+			p->anim_timer = 0;
+			p->chopwood.play();
 		}
 		p->state = PlayerState::GATHERING;
 		p->anim_timer += dt;
@@ -588,7 +590,7 @@ void UpdatePlayer(float dt, int num_player, sf::View& cam)
 	if (GamePad::IsButtonJustReleased(num_player, GamePad::Button::X)) 
 	{
 		p->madera_progress = 0;
-		chainsaw->stop();
+		p->chopwood.stop();
 	}
 	if (touching_arbol && GamePad::IsButtonPressed(num_player, GamePad::Button::X)) 
 	{
@@ -718,7 +720,6 @@ int main()
 	spr_tile_dessert.setTexture(*tex_spritesheet);
 	spr_tile_dessert.setTextureRect(sf::IntRect(1 * TILE_SIZE, 0, TILE_SIZE, TILE_SIZE));
 
-	InitPlayers();
 
 	sf::SoundBuffer b_groar1; b_groar1.loadFromFile("groar1.ogg");
 	groar1 = new sf::Sound(b_groar1);
@@ -726,10 +727,9 @@ int main()
 	groar2 = new sf::Sound(bgroar2);
 	sf::SoundBuffer bgrills; bgrills.loadFromFile("grills.ogg");
 	grills = new sf::Sound(bgrills);
-	sf::SoundBuffer bchopwood; bchopwood.loadFromFile("chopwood.ogg");
-	chopwood = new sf::Sound(bchopwood);
-	sf::SoundBuffer bchainsaw; bchainsaw.loadFromFile("chainsaw.ogg");
-	chainsaw = new sf::Sound(bchainsaw);
+	bchopwood = new sf::SoundBuffer(); 
+	bchopwood->loadFromFile("chopwood.ogg"); //chainsaw?
+	
 	sf::SoundBuffer bshot; bshot.loadFromFile("shot.ogg");
 	shot = new sf::Sound(bshot);
 	sf::SoundBuffer bmussol; bmussol.loadFromFile("mussol.ogg");
@@ -741,6 +741,8 @@ int main()
 	music->openFromFile("theme.ogg");
 	musicdanger = new sf::Music();
 	musicdanger->openFromFile("dangerhyena.ogg");
+
+	InitPlayers();
 
 	music->play();
 
