@@ -3,10 +3,9 @@
 #include <set>
 #include <SFML/Graphics.hpp>
 
-#define MAX_OBJ_IN_QTREE 500
+#define MAX_OBJ_IN_QTREE 50
 
 const int MAX_OBJ_SIZE = 5000;
-
 
 
 enum class GameObjectType
@@ -57,7 +56,7 @@ public:
 	void DestroyObject(GameObject* obj);
 	void DestroyObject(GameObject* obj, bool canDelete);
 	void Draw(const sf::View& Camera, std::vector<sf::Sprite>& toDraw, sf::Sprite& spr);
-	void camDraw(std::vector<sf::Sprite>& toDraw, const sf::Vector2f& Position, sf::Sprite& spr);
+	void camDraw(std::vector<sf::Sprite>& toDraw, const sf::Vector2f& Position, sf::Sprite& spr, std::vector<quadNode*>& visited);
 
 	bool isColliding(const sf::FloatRect& rect);
 	bool isColliding(const sf::Vector2f& point);

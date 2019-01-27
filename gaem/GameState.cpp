@@ -7,8 +7,9 @@ extern sf::Font* font;
 extern float RES_Y;
 extern float RES_X;
 
-namespace {
-  const int WOOD_FOR_HAIMA = 1;
+namespace 
+{
+  int WOOD_FOR_HAIMA = 1;
 
   void DrawText(sf::RenderWindow& window, const std::string& str, sf::Vector2f pos, float size) {
     sf::Text txt_day;
@@ -71,11 +72,15 @@ void GameState::Update(float dt, std::function<bool()> AreAllPlayersInHaima) {
 
 }
 
-void GameState::PlaceHaimaIfPosible(sf::Vector2f pos, int& woodAmount, GameObject* oasis) {
-    if (woodAmount >= WOOD_FOR_HAIMA && !mHaima) {
+void GameState::PlaceHaimaIfPosible(sf::Vector2f pos, int& woodAmount, GameObject* oasis) 
+{
+    if (woodAmount >= WOOD_FOR_HAIMA && !mHaima) 
+	{
       woodAmount -= WOOD_FOR_HAIMA;
       mHaima = mObjManager.Spawn(GameObjectType::HAIMA, pos.x, pos.y);
       oasis->type = GameObjectType::WATER_BROKEN;
+
+	  WOOD_FOR_HAIMA += 1;
     }
 }
 

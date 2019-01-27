@@ -5,7 +5,7 @@
 
 namespace {
    const float SECONDS_OF_RAW_CICLE = 3.15f;
-   float SECONDS_OF_TARGET_CICLE = 180.f;
+   float SECONDS_OF_TARGET_CICLE = 120.f;
 }
 
 extern sf::Font* font;
@@ -62,7 +62,7 @@ sf::Glsl::Vec3 DayManager::pSetHSV(float h, float s, float v ) {
 void DayManager::Update(float dt) {
   float incrementOfDt = (dt / SECONDS_OF_TARGET_CICLE) * SECONDS_OF_RAW_CICLE;
   if (IsFastForwarding()) {
-      incrementOfDt *= 100;
+      incrementOfDt *= 75;
   }
   mElapsed += incrementOfDt;
 }

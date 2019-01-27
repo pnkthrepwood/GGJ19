@@ -30,7 +30,7 @@ float RES_Y = 720.0f;
 
 const int TILE_SIZE = 16;
 
-const int NUM_PLAYERS = 1;
+const int NUM_PLAYERS = 4;
 const float PLAYER_SPEED = 200;
 
 const float BULLET_SPEED = 500;
@@ -998,11 +998,6 @@ int main()
 		}
 
 
-#if _DEBUG
-		ImGui::Begin("finester");
-		ImGui::Text("Pos: %f, %f", players[0]->x, players[0]->y);
-		ImGui::End();
-#endif
 
 		renderTexture.setView(cam);
 
@@ -1020,9 +1015,11 @@ int main()
 		{
 			for (int y = start_y; y < start_y + TILES_CAM_HEIGHT * TILE_SIZE; y += TILE_SIZE)
 			{
-				float noise = perlin.GetHeight(x, y);
+				//float noise = perlin.GetHeight(x, y);
+				//spr_tile_dessert.setTextureRect(sf::IntRect((noise > (0.5f) ? 1 : 2) * TILE_SIZE, 0, TILE_SIZE, TILE_SIZE));
 
-				spr_tile_dessert.setTextureRect(sf::IntRect((noise > (0.5f) ? 1 : 2) * TILE_SIZE, 0, TILE_SIZE, TILE_SIZE));
+				spr_tile_dessert.setTextureRect(sf::IntRect(2 * TILE_SIZE, 0, TILE_SIZE, TILE_SIZE));
+
 				spr_tile_dessert.setPosition(x, y);
 				renderTexture.draw(spr_tile_dessert);
 			}
@@ -1077,6 +1074,16 @@ int main()
 		sort(toDraw.begin(), toDraw.end(), [rectWater](sf::Sprite& a, sf::Sprite& b) {
 			return a.getPosition().y + a.getTextureRect().height / 2 < b.getPosition().y + b.getTextureRect().height / 2;
 		});
+
+
+#if _DEBUG
+		ImGui::Begin("finester");
+		ImGui::Text("Pos: %f, %f", players[0]->x, players[0]->y);
+		ImGui::Text("Hyenas: %d", enemies.size());
+		ImGui::Text("Draw Size: %d", toDraw.size());
+		ImGui::End();
+#endif
+
 		//Dale draw de verdad
 		for (sf::Sprite& d : toDraw)
 		{
