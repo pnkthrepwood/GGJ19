@@ -34,6 +34,8 @@ sf::IntRect SelectSprite(GameObjectType type)
 		return sf::IntRect(0 * 16, 4 * 16, 5*16, 3*16);
 	case GameObjectType::HAIMA:
 		return sf::IntRect(0, 181, 64, 44);
+	case GameObjectType::HAIMA_BROKEN:
+		return sf::IntRect(128, 181, 64, 44);
 	default:
 		std::cout << "Sprite type not handled madafaca" << std::endl;
 		return sf::IntRect(0, 0, 0, 0);
@@ -60,6 +62,7 @@ sf::Vector2f getObjSize(GameObjectType type)
 		} break;
 
 		case GameObjectType::HAIMA:
+		case GameObjectType::HAIMA_BROKEN:
 		{
 			return sf::Vector2f(64, 44);
 		} break;
@@ -307,24 +310,42 @@ void ObjManager::Draw(const sf::View& Camera, std::vector<sf::Sprite>& toDraw, s
 	size_y = Camera.getSize().y*0.5f;
 	sf::Vector2f center = Camera.getCenter();
 
-	camDraw(toDraw, center + sf::Vector2f(-size_x*0.5f*2.f, -size_y*0.5f*2.f), spr);
-	camDraw(toDraw, center + sf::Vector2f(0, -size_y*0.5f*1.5f), spr);
-	camDraw(toDraw, center + sf::Vector2f(+size_x*0.5f*2.f, -size_y*0.5f*2.f), spr);
+	
+	std::vector<quadNode*> visited;
 
-	camDraw(toDraw, center + sf::Vector2f(-size_x*0.5f*2.f, 0), spr);
-	camDraw(toDraw, center, spr);
-	camDraw(toDraw, center + sf::Vector2f(+size_x*0.5f*2.f, 0), spr);
+	camDraw(toDraw, center + sf::Vector2f(-size_x*0.5f*2.f, -size_y*0.5f*2.f), spr, visited);
+	camDraw(toDraw, center + sf::Vector2f(0, -size_y*0.5f*1.5f), spr, visited);
+	camDraw(toDraw, center + sf::Vector2f(+size_x*0.5f*2.f, -size_y*0.5f*2.f), spr, visited);
 
-	camDraw(toDraw, center + sf::Vector2f(-size_x*0.5f*2.f, +size_y*0.5f*2.f), spr);
-	camDraw(toDraw, center + sf::Vector2f(0, +size_y*0.5f*1.5f), spr);
-	camDraw(toDraw, center + sf::Vector2f(+size_x*0.5f*2.f, +size_y*0.5f*2.f), spr);
+	camDraw(toDraw, center + sf::Vector2f(-size_x*0.5f*2.f, 0), spr, visited);
+	
+
+	camDraw(toDraw, center, spr, visited);
+	
+	camDraw(toDraw, center + sf::Vector2f(+size_x*0.5f*2.f, 0), spr, visited);
+
+	camDraw(toDraw, center + sf::Vector2f(-size_x*0.5f*2.f, +size_y*0.5f*2.f), spr, visited);
+	camDraw(toDraw, center + sf::Vector2f(0, +size_y*0.5f*1.5f), spr, visited);
+	camDraw(toDraw, center + sf::Vector2f(+size_x*0.5f*2.f, +size_y*0.5f*2.f), spr, visited);
+	
 }
 
 sf::Clock clk_global;
 
-void ObjManager::camDraw(std::vector<sf::Sprite>& toDraw, const sf::Vector2f& Position, sf::Sprite& spr)
+void ObjManager::camDraw(std::vector<sf::Sprite>& toDraw, const sf::Vector2f& Position, sf::Sprite& spr, std::vector<quadNode*>& visited)
 {
 	quadNode* node = searchLeaf(Position);
+
+	for (int i = 0; i < visited.size(); ++i)
+	{
+		if (visited[i] == node)
+		{
+			return;
+		}
+	}
+	visited.push_back(node);
+
+
 	std::list<GameObject*>::iterator it;
 	for (it = node->bucket.begin(); it != node->bucket.end(); ++it)
 	{
@@ -348,6 +369,10 @@ void ObjManager::camDraw(std::vector<sf::Sprite>& toDraw, const sf::Vector2f& Po
 			{
 				r.left += 4 * 16;
 			}
+
+		}
+		if (type == GameObjectType::HAIMA_BROKEN)
+		{
 
 		}
 		spr.setTextureRect(r);

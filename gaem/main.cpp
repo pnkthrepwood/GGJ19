@@ -30,13 +30,13 @@ float RES_Y = 720.0f;
 
 const int TILE_SIZE = 16;
 
-const int NUM_PLAYERS = 1;
+const int NUM_PLAYERS = 4;
 const float PLAYER_SPEED = 200;
 
 const float BULLET_SPEED = 500;
 const float ENEMY_TRIGGER_DISTANCE = 180;
 const float ENEMY_MAX_SPEED = 250;
-const float BULLET_COOLDOWN = 0.1f; //seconds
+const float BULLET_COOLDOWN = 0.05f; //seconds
 const float MADERA_GATHER_TIME = 3.5; //seconds
 
 ObjManager obj_manager;
@@ -539,7 +539,7 @@ bool UpdateBullet(Bullet *b, float dt, sf::View& cam)
 	}
 
 	//Collisions with enemies
-	sf::FloatRect bounding(b->x, b->y, bullet_texture->getSize().x, bullet_texture->getSize().y);
+	sf::FloatRect bounding(b->x, b->y, 8, 8);
 	for (Enemy* e : enemies)
 	{
 		if (bounding.intersects(getBoundBoxSprite(e->sprite)))
@@ -754,6 +754,14 @@ int main()
 	sf::ContextSettings settings;
 
 	sf::RenderWindow window(sf::VideoMode(RES_X, RES_Y), "SFML works!", sf::Style::Default, settings);
+
+	/*
+	sf::VideoMode desktop_mode = sf::VideoMode::getDesktopMode();
+	RES_X = desktop_mode.width;
+	RES_Y = desktop_mode.height;
+
+	sf::RenderWindow window(desktop_mode, "SFML works!", sf::Style::Default, settings);
+	*/
 	sf::RenderTexture renderTexture;
 	renderTexture.create(RES_X, RES_Y);
 
@@ -770,7 +778,7 @@ int main()
 	sf::View cam(sf::FloatRect(0.0f, 0.0f, RES_X, RES_Y));
 	sf::View ui_view(sf::FloatRect(0.0f, 0.f, RES_X, RES_Y));
 
-	cam.zoom(0.4f);
+	cam.zoom(0.5f);
 
 
 
@@ -847,7 +855,7 @@ int main()
 		}
 	}
 
-	PerlinNoise perlin(1, .1, 1, 3);
+	PerlinNoise perlin(1, .1, 1, 1);
 
 	sf::Clock clk_running;
 	sf::Clock clk_delta;
@@ -993,11 +1001,6 @@ int main()
 		}
 
 
-#if _DEBUG
-		ImGui::Begin("finester");
-		ImGui::Text("Pos: %f, %f", players[0]->x, players[0]->y);
-		ImGui::End();
-#endif
 
 		renderTexture.setView(cam);
 
@@ -1015,8 +1018,11 @@ int main()
 		{
 			for (int y = start_y; y < start_y + TILES_CAM_HEIGHT * TILE_SIZE; y += TILE_SIZE)
 			{
-				float noise = perlin.GetHeight(x, y);
-				spr_tile_dessert.setTextureRect(sf::IntRect((noise > 0.5? 1 : 2) * TILE_SIZE, 0, TILE_SIZE, TILE_SIZE));
+				//float noise = perlin.GetHeight(x, y);
+				//spr_tile_dessert.setTextureRect(sf::IntRect((noise > (0.5f) ? 1 : 2) * TILE_SIZE, 0, TILE_SIZE, TILE_SIZE));
+
+				spr_tile_dessert.setTextureRect(sf::IntRect(2 * TILE_SIZE, 0, TILE_SIZE, TILE_SIZE));
+
 				spr_tile_dessert.setPosition(x, y);
 				renderTexture.draw(spr_tile_dessert);
 			}
@@ -1068,9 +1074,21 @@ int main()
 		}
 		//Ordering madafaca
 		sf::IntRect rectWater = SelectSprite(GameObjectType::WATER);;
-		sort(toDraw.begin(), toDraw.end(), [rectWater](sf::Sprite& a, sf::Sprite& b) {
-			return a.getPosition().y + a.getTextureRect().height / 2 < b.getPosition().y + b.getTextureRect().height / 2;
+		sort(toDraw.begin(), toDraw.end(), [rectWater](const sf::Sprite& a, const sf::Sprite& b) {
+			const sf::Vector2f& pos = a.getPosition();
+			const sf::IntRect& rect = a.getTextureRect();
+			return pos.y + rect.height / 2 < pos.y + rect.height / 2;
 		});
+
+
+#if _DEBUG
+		ImGui::Begin("finester");
+		ImGui::Text("Pos: %f, %f", players[0]->x, players[0]->y);
+		ImGui::Text("Hyenas: %d", enemies.size());
+		ImGui::Text("Draw Size: %d", toDraw.size());
+		ImGui::End();
+#endif
+
 		//Dale draw de verdad
 		for (sf::Sprite& d : toDraw)
 		{
