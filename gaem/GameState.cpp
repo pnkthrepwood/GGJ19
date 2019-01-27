@@ -51,3 +51,7 @@ void GameState::PlaceHaimaIfPosible(ObjManager& obj_manager, sf::Vector2f pos, i
       mHaima = obj_manager.Spawn(GameObjectType::HAIMA, pos.x, pos.y);
     }
 }
+
+bool GameState::IsPlaying() const {
+  return mState == EState::PLAYING;
+}

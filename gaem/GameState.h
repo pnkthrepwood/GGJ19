@@ -15,6 +15,8 @@ public:
 
   void PlaceHaimaIfPosible(ObjManager& obj_manager, sf::Vector2f pos, int& woodAmount);
 
+  bool IsPlaying() const;
+
 private:
   enum class EState {
     PLAYING,
