@@ -15,6 +15,8 @@ public:
   void RenderWithShader(sf::RenderWindow& window, const sf::RenderTexture& renderTexture);
   void ImGuiRender();
 
+  void FastForwardUntilNextMorning();
+
 private:
 
   float GetDayFactor() const;
@@ -22,4 +24,6 @@ private:
   std::unique_ptr<sf::Shader> mNightLight;
   sf::VertexArray mQuad;
   float mElapsed;
+
+  float mFastForwardTarget;
 };
