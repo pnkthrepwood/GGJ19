@@ -98,6 +98,8 @@ void GameState::Render(sf::RenderWindow& window) {
       } break;
       case EState::DEAD:
       {
+        sf::String str = "You survived until\n         Day " + std::to_string(int(mDayManager.GetElapsedDays())-1);
+        DrawText(window, str, sf::Vector2f(RES_X / 2, RES_Y/2), 55);
       } break;
     }
 }

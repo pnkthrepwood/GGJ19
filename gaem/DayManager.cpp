@@ -14,7 +14,7 @@ extern float RES_X;
 
 DayManager::DayManager()
 : mQuad(sf::Quads, 4)
-, mElapsed(1)
+, mElapsed(1 + SECONDS_OF_RAW_CICLE)
 , mFastForwardTarget(0) {
 
 }
