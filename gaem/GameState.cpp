@@ -71,11 +71,11 @@ void GameState::Update(float dt, std::function<bool()> AreAllPlayersInHaima) {
 
 }
 
-void GameState::PlaceHaimaIfPosible(sf::Vector2f pos, int& woodAmount) {
+void GameState::PlaceHaimaIfPosible(sf::Vector2f pos, int& woodAmount, GameObject* oasis) {
     if (woodAmount >= WOOD_FOR_HAIMA && !mHaima) {
       woodAmount -= WOOD_FOR_HAIMA;
-
       mHaima = mObjManager.Spawn(GameObjectType::HAIMA, pos.x, pos.y);
+      oasis->type = GameObjectType::WATER_BROKEN;
     }
 }
 

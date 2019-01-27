@@ -14,7 +14,7 @@ public:
 
   void Update(float dt, std::function<bool()> AreAllPlayersInHaima);
 
-  void PlaceHaimaIfPosible(sf::Vector2f pos, int& woodAmount);
+  void PlaceHaimaIfPosible(sf::Vector2f pos, int& woodAmount, GameObject* oasis);
 
   void Render(sf::RenderWindow& window);
 

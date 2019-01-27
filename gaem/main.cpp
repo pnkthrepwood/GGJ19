@@ -728,7 +728,7 @@ void UpdatePlayer(float dt, int num_player, sf::View& cam, GameState& gameState)
 
 		if (oasis_near && GamePad::IsButtonPressed(num_player, GamePad::Button::X))
 		{
-			gameState.PlaceHaimaIfPosible(sf::Vector2f(p->x, p->y), madera);
+			gameState.PlaceHaimaIfPosible(sf::Vector2f(p->x, p->y), madera, oasis_near);
 		}
 	}
 
