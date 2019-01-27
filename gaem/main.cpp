@@ -18,6 +18,7 @@
 
 #include "ObjectManager.h"
 #include "DayManager.h"
+#include "GameState.h"
 
 #pragma warning( disable : 4244 )
 
@@ -495,7 +496,7 @@ bool UpdateBullet(Bullet *b, float dt, sf::View& cam)
 }
 
 
-void UpdatePlayer(float dt, int num_player, sf::View& cam)
+void UpdatePlayer(float dt, int num_player, sf::View& cam, GameState& gameState)
 {
 	Player* p = players[num_player];
 
@@ -631,20 +632,26 @@ void UpdatePlayer(float dt, int num_player, sf::View& cam)
 		}
 	}
 
-	// Plant Haimas
-	objs_near.clear();
-	obj_manager.getObjects(objs_near, cam);
+	{ // Plant Haimas
+		const float DISTANCE_TO_PLANT_HAIMA = 1000;
+		objs_near.clear();
+		obj_manager.getObjects(objs_near, cam);
 
-	GameObject* oasis_near = NULL;
-	sf::Vector2f playerPos(p->centerPos());
-	for (GameObject* obj : objs_near)
-	{
-		if (obj->type == GameObjectType::HAIMA)
+		GameObject* oasis_near = NULL;
+		for (GameObject* obj : objs_near)
 		{
-			if (getBoundBox(obj).intersects(p->boundBox()))
+			if (obj->type == GameObjectType::WATER)
 			{
-				touching_arbol = obj;
+				if (Mates::Distance(sf::Vector2f(p->x, p->y),sf::Vector2f(obj->x, obj->y)) < DISTANCE_TO_PLANT_HAIMA)
+				{
+					oasis_near = obj;
+				}
 			}
+		}
+
+		if (oasis_near && GamePad::IsButtonPressed(num_player, GamePad::Button::X))
+		{
+			gameState.PlaceHaimaIfPosible(obj_manager, sf::Vector2f(p->x, p->y), madera);
 		}
 	}
 
@@ -687,6 +694,8 @@ int main()
 
 	DayManager dayManager;
 	dayManager.InitNightShader(window);
+
+	GameState gameState(dayManager);
 
 	sf::Font font;
 	font.loadFromFile("8bitwonder.ttf");
@@ -775,6 +784,26 @@ int main()
 		GamePad::UpdateInputState();
 		dayManager.Update(dt_time.asSeconds());
 
+		gameState.Update(dt_time.asSeconds(), [&cam] () {
+			std::vector<GameObject*> objs_near;
+			obj_manager.getObjects(objs_near, cam);
+
+			bool areAllPlayersInHaima = true;
+			for (Player* p : players) {
+				bool isPlayerInHaima = false;
+				for (GameObject* obj : objs_near) {
+					if (obj->type == GameObjectType::HAIMA) {
+						if (getBoundBox(obj).intersects(p->boundBox()))	{
+							isPlayerInHaima = true;
+						}
+					}
+				}
+				areAllPlayersInHaima &= isPlayerInHaima;
+			}
+
+			return areAllPlayersInHaima;
+		});
+
 
 		//Spawn chunks
 		auto p = GetCasillaFromCam(cam);
@@ -800,7 +829,7 @@ int main()
 		//UPDATE
 		for (int i = 0; i < NUM_PLAYERS; i++)
 		{
-			UpdatePlayer(dt_time.asSeconds(), i, cam);
+			UpdatePlayer(dt_time.asSeconds(), i, cam, gameState);
 		}
 
 		//Enemies

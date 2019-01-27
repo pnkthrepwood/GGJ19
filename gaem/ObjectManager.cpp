@@ -22,6 +22,8 @@ sf::IntRect SelectSprite(GameObjectType type)
 		return sf::IntRect(0, 7 * 16 + 10, 2*16, 4*16 -10);
 	case GameObjectType::WATER:
 		return sf::IntRect(0 * 16, 4 * 16, 5*16, 3*16);
+	case GameObjectType::HAIMA:
+		return sf::IntRect(0, 181, 64, 44);
 	default:
 		std::cout << "Sprite type not handled madafaca" << std::endl;
 		return sf::IntRect(0, 0, 0, 0);
@@ -45,6 +47,11 @@ sf::Vector2f getObjSize(GameObjectType type)
 		case GameObjectType::TREE:
 		{
 			return sf::Vector2f(29, 54);
+		} break;
+
+		case GameObjectType::HAIMA:
+		{
+			return sf::Vector2f(64, 44);
 		} break;
 	}
 
@@ -99,29 +106,29 @@ void ObjManager::AddObject(GameObject* obj)
 	bounds.width = width;
 	bounds.height = height;
 
-	while(!node->isLeaf) 
+	while(!node->isLeaf)
 	{	           bool north = false;
 	bool west = false;            bool east = false;
 		           bool south = false;
 
-		if (int(obj->x) <= bounds.left + bounds.width*0.5f) 
-		{ 
+		if (int(obj->x) <= bounds.left + bounds.width*0.5f)
+		{
 			bounds.width = bounds.width*0.5f;
 			west = true;
 		}
-		else 
-		{ 
+		else
+		{
 			bounds.left = bounds.left + bounds.width*0.5f;
 			bounds.width = bounds.width*0.5f;
 			east = true;
 		}
 
-		if (int(obj->y) <= bounds.top + bounds.height*0.5f) 
-		{ 
+		if (int(obj->y) <= bounds.top + bounds.height*0.5f)
+		{
 			bounds.height = bounds.height*0.5f;
 			north = true;
 		}
-		else 
+		else
 		{
 			bounds.top = bounds.top + bounds.height*0.5f;
 			bounds.height = bounds.height*0.5f;
@@ -151,7 +158,7 @@ void ObjManager::AddObject(GameObject* obj)
 
 		if (width < min_width) min_width = width;
 		if (height < min_height) min_height = height;
-		
+
 		while(node->bucket.size() > 0)
 		{          bool north = false;
 	bool west = false;            bool east = false;
@@ -164,7 +171,7 @@ void ObjManager::AddObject(GameObject* obj)
 
 		if (int(target->y) <= bounds.top + bounds.height*0.5f) north = true;
 		else south = true;
-		
+
 		if (north && west) node->NW->bucket.push_back(target);
 		else if (north && east) node->NE->bucket.push_back(target);
 		else if (south && west) node->SW->bucket.push_back(target);
@@ -175,17 +182,17 @@ void ObjManager::AddObject(GameObject* obj)
 		//std::cerr << "Objects: " << objects << std::endl;
 		}
 	}
-	
+
 	++nObjects;
 }
 
 
-void ObjManager::DestroyObject(GameObject* obj) 
+void ObjManager::DestroyObject(GameObject* obj)
 {
 	DestroyObject(obj, true);
 }
 
-void ObjManager::DestroyObject(GameObject* obj, bool canDelete) 
+void ObjManager::DestroyObject(GameObject* obj, bool canDelete)
 {
 	quadNode* node = quadTree;
 	quadNode* parent = NULL;
@@ -196,29 +203,29 @@ void ObjManager::DestroyObject(GameObject* obj, bool canDelete)
 	bounds.width = width;
 	bounds.height = height;
 
-	while(!node->isLeaf) 
+	while(!node->isLeaf)
 	{	           bool north = false;
 	bool west = false;            bool east = false;
 		           bool south = false;
 
-		if (int(obj->x) <= bounds.left + bounds.width*0.5f) 
-		{ 
+		if (int(obj->x) <= bounds.left + bounds.width*0.5f)
+		{
 			bounds.width = bounds.width*0.5f;
 			west = true;
 		}
-		else 
-		{ 
+		else
+		{
 			bounds.left = bounds.left + bounds.width*0.5f;
 			bounds.width = bounds.width*0.5f;
 			east = true;
 		}
 
-		if (int(obj->y) <= bounds.top + bounds.height*0.5f) 
-		{ 
+		if (int(obj->y) <= bounds.top + bounds.height*0.5f)
+		{
 			bounds.height = bounds.height*0.5f;
 			north = true;
 		}
-		else 
+		else
 		{
 			bounds.top = bounds.top + bounds.height*0.5f;
 			bounds.height = bounds.height*0.5f;
@@ -234,9 +241,9 @@ void ObjManager::DestroyObject(GameObject* obj, bool canDelete)
 		else std::cerr << "! ERROR: Search in QTree failed! (DELETING)" << std::endl;
 	}
 
-	for (std::list<GameObject*>::iterator it = node->bucket.begin(); it != node->bucket.end(); ++it) 
+	for (std::list<GameObject*>::iterator it = node->bucket.begin(); it != node->bucket.end(); ++it)
 	{
-		if ((*it) == obj) 
+		if ((*it) == obj)
 		{
 			it = node->bucket.erase(it);
 			if (canDelete)
@@ -247,7 +254,7 @@ void ObjManager::DestroyObject(GameObject* obj, bool canDelete)
 		}
 	}
 
-	if (parent != NULL     && !parent->isLeaf && 
+	if (parent != NULL     && !parent->isLeaf &&
 		parent->NE != NULL && parent->NE->isLeaf &&
 		parent->NW != NULL && parent->NW->isLeaf &&
 		parent->SE != NULL && parent->SE->isLeaf &&
@@ -259,7 +266,7 @@ void ObjManager::DestroyObject(GameObject* obj, bool canDelete)
 		total += parent->SE->bucket.size();
 		total += parent->SW->bucket.size();
 
-		if (total < MAX_OBJ_IN_QTREE) 
+		if (total < MAX_OBJ_IN_QTREE)
 		{
 			std::cerr << "! Resizing OBJECT MANAGER" << std::endl;
 
@@ -279,7 +286,7 @@ void ObjManager::DestroyObject(GameObject* obj, bool canDelete)
 			parent->isLeaf = true;
 		}
 	}
-	
+
 	--nObjects;
 }
 
@@ -297,7 +304,7 @@ void ObjManager::Draw(const sf::View& Camera, std::vector<sf::Sprite>& toDraw, s
 	camDraw(toDraw, center + sf::Vector2f(-size_x*0.5f*2.f, 0), spr);
 	camDraw(toDraw, center, spr);
 	camDraw(toDraw, center + sf::Vector2f(+size_x*0.5f*2.f, 0), spr);
-	
+
 	camDraw(toDraw, center + sf::Vector2f(-size_x*0.5f*2.f, +size_y*0.5f*2.f), spr);
 	camDraw(toDraw, center + sf::Vector2f(0, +size_y*0.5f*1.5f), spr);
 	camDraw(toDraw, center + sf::Vector2f(+size_x*0.5f*2.f, +size_y*0.5f*2.f), spr);
@@ -312,53 +319,53 @@ void ObjManager::camDraw(std::vector<sf::Sprite>& toDraw, const sf::Vector2f& Po
 		auto type = (*it)->type;
 		auto r = SelectSprite(type);
 		spr.setTextureRect(r);
-		if (type == GameObjectType::TREE) {
-			spr.setOrigin(r.width / 2, r.height / 2);
-		} else {
+		if (type == GameObjectType::WATER) {
 			spr.setOrigin(0,0); //MAGIA
+		} else {
+			spr.setOrigin(r.width / 2, r.height / 2);
 		}
 		spr.setPosition((*it)->x, (*it)->y);
-		
+
 		toDraw.push_back(spr); //Makes a copy which is actually needed
 		//(*it)->Draw();
 	}
 }
 
-bool ObjManager::isColliding(const sf::Vector2f& point) 
+bool ObjManager::isColliding(const sf::Vector2f& point)
 {
-	
+
 	quadNode* node;
 	std::list<GameObject*>::iterator it;
 
 	node = searchLeaf(point);
-	for (it = node->bucket.begin(); it != node->bucket.end(); ++it) {	
+	for (it = node->bucket.begin(); it != node->bucket.end(); ++it) {
 		sf::FloatRect objRect = getBoundBox((*it)); //(*it)->getBoundBox();
-		if (objRect.contains(point)) return true;	
+		if (objRect.contains(point)) return true;
 	}
 
 	return false;
-	
+
 }
 
 GameObject* ObjManager::getColliding(const sf::Vector2f& point)
 {
-	
+
 	quadNode* node;
 	std::list<GameObject*>::iterator it;
 
 	node = searchLeaf(point);
-	for (it = node->bucket.begin(); it != node->bucket.end(); ++it) 
-	{	
+	for (it = node->bucket.begin(); it != node->bucket.end(); ++it)
+	{
 		sf::FloatRect objRect = getBoundBox((*it));
 		if (objRect.contains(point)) return (*it);
 	}
-	
+
 	return NULL;
 }
 
 bool ObjManager::isColliding(const sf::FloatRect& rect)
 {
-	
+
 	quadNode* node;
 	std::list<GameObject*>::iterator it;
 
@@ -366,7 +373,7 @@ bool ObjManager::isColliding(const sf::FloatRect& rect)
 	for (it = node->bucket.begin(); it != node->bucket.end(); ++it)
 	{
 		sf::FloatRect objRect = getBoundBox((*it));
-		if (rect.intersects(objRect)) 
+		if (rect.intersects(objRect))
 		{
 			lastObjCollided = (*it);
 			return true;
@@ -377,7 +384,7 @@ bool ObjManager::isColliding(const sf::FloatRect& rect)
 	for (it = node->bucket.begin(); it != node->bucket.end(); ++it)
 	{
 		sf::FloatRect objRect = getBoundBox((*it));
-		if (rect.intersects(objRect)) 
+		if (rect.intersects(objRect))
 		{
 			lastObjCollided = (*it);
 			return true;
@@ -388,7 +395,7 @@ bool ObjManager::isColliding(const sf::FloatRect& rect)
 	for (it = node->bucket.begin(); it != node->bucket.end(); ++it)
 	{
 		sf::FloatRect objRect = getBoundBox((*it));
-		if (rect.intersects(objRect)) 
+		if (rect.intersects(objRect))
 		{
 			lastObjCollided = (*it);
 			return true;
@@ -399,7 +406,7 @@ bool ObjManager::isColliding(const sf::FloatRect& rect)
 	for (it = node->bucket.begin(); it != node->bucket.end(); ++it)
 	{
 		sf::FloatRect objRect = getBoundBox((*it));
-		if (rect.intersects(objRect)) 
+		if (rect.intersects(objRect))
 		{
 			lastObjCollided = (*it);
 			return true;
@@ -414,10 +421,10 @@ GameObject* ObjManager::getLastObjCollided()
 	return lastObjCollided;
 }
 
-void ObjManager::getAllObjects(std::vector<GameObject*>& vec, quadNode* node) 
+void ObjManager::getAllObjects(std::vector<GameObject*>& vec, quadNode* node)
 {
 	std::list<GameObject*>::iterator it;
-	for (it = node->bucket.begin(); it != node->bucket.end(); ++it) 
+	for (it = node->bucket.begin(); it != node->bucket.end(); ++it)
 	{
 		vec.push_back(*it);
 	}
@@ -445,26 +452,26 @@ static bool rectTouchesCircle(const sf::FloatRect& r,
 
 }
 
-void ObjManager::getObjectsNear(const sf::Vector2f& pos, const float& threshold, 
+void ObjManager::getObjectsNear(const sf::Vector2f& pos, const float& threshold,
 	std::vector<GameObject*>& vec, quadNode* node, sf::FloatRect& bounds)
 {
-	sf::FloatRect fr(pos.x - threshold/2, pos.y - threshold/2, 
+	sf::FloatRect fr(pos.x - threshold/2, pos.y - threshold/2,
 		threshold, threshold);
 
 	if (!rectTouchesCircle(bounds, pos, threshold) &&
 		!fr.intersects(bounds) && !bounds.intersects(fr) &&
-		!fr.contains(sf::Vector2f(bounds.left, bounds.top)) && 
-		!fr.contains(sf::Vector2f(bounds.left, bounds.top+bounds.height)) && 
-		!fr.contains(sf::Vector2f(bounds.left+bounds.width, bounds.top)) && 
-		!fr.contains(sf::Vector2f(bounds.left+bounds.width, bounds.top+bounds.height)) && 
-		!bounds.contains(sf::Vector2f(fr.left, fr.top)) && 
-		!bounds.contains(sf::Vector2f(fr.left, fr.top+bounds.height)) && 
-		!bounds.contains(sf::Vector2f(fr.left+bounds.width, fr.top)) && 
-		!bounds.contains(sf::Vector2f(fr.left+bounds.width, fr.top+bounds.height))) 
+		!fr.contains(sf::Vector2f(bounds.left, bounds.top)) &&
+		!fr.contains(sf::Vector2f(bounds.left, bounds.top+bounds.height)) &&
+		!fr.contains(sf::Vector2f(bounds.left+bounds.width, bounds.top)) &&
+		!fr.contains(sf::Vector2f(bounds.left+bounds.width, bounds.top+bounds.height)) &&
+		!bounds.contains(sf::Vector2f(fr.left, fr.top)) &&
+		!bounds.contains(sf::Vector2f(fr.left, fr.top+bounds.height)) &&
+		!bounds.contains(sf::Vector2f(fr.left+bounds.width, fr.top)) &&
+		!bounds.contains(sf::Vector2f(fr.left+bounds.width, fr.top+bounds.height)))
 	{
 		/*
 			InputEng* input = InputEng::getInstance();
-			
+
 			if (input->getKeyDown(InputEng::F1)) {
 				std::cerr << "GETOBJECTSNEAR NOT ON SITIO" << std::endl;
 				std::cerr << "Bounds: " << bounds.left << " "<< bounds.top << " " <<
@@ -476,11 +483,11 @@ void ObjManager::getObjectsNear(const sf::Vector2f& pos, const float& threshold,
 			return;
 	}
 
-	if (node->isLeaf) 
+	if (node->isLeaf)
 	{
 		/*
 		//Create boxpoints
-		sf::Vector2f center(bounds.left+bounds.width/2,		
+		sf::Vector2f center(bounds.left+bounds.width/2,
 					    bounds.top+bounds.height/2);
 		std::vector<sf::Vector2f> boxPoints;
 		boxPoints.push_back(center);
@@ -500,7 +507,7 @@ void ObjManager::getObjectsNear(const sf::Vector2f& pos, const float& threshold,
 		*/
 		//Push'em'all
 		std::list<GameObject*>::iterator it;
-		for (it = node->bucket.begin(); it != node->bucket.end(); ++it) 
+		for (it = node->bucket.begin(); it != node->bucket.end(); ++it)
 		{
 			vec.push_back((*it));
 		}
@@ -508,32 +515,32 @@ void ObjManager::getObjectsNear(const sf::Vector2f& pos, const float& threshold,
 		return;
 	}
 
-	else 
+	else
 	{
 		bounds.width *= 0.5f;
 		bounds.height *= 0.5f;
 
 		getObjectsNear(pos, threshold, vec, node->NW, bounds);
-			//sf::FloatRect(bounds.left, bounds.top, 
+			//sf::FloatRect(bounds.left, bounds.top,
 			//bounds.width*0.5f, bounds.height*0.5f));
 
 		bounds.left += bounds.width;
 
 		getObjectsNear(pos, threshold, vec, node->NE, bounds);
-			//sf::FloatRect(bounds.left+bounds.width*0.5f, bounds.top, 
+			//sf::FloatRect(bounds.left+bounds.width*0.5f, bounds.top,
 			//bounds.width*0.5f, bounds.height*0.5f));
 
 		bounds.left -= bounds.width;
 		bounds.top += bounds.height;
 
 		getObjectsNear(pos, threshold, vec, node->SW, bounds);
-			//sf::FloatRect(bounds.left, bounds.top+bounds.height*0.5f, 
+			//sf::FloatRect(bounds.left, bounds.top+bounds.height*0.5f,
 			//bounds.width*0.5f, bounds.height*0.5f));
 
 		bounds.left += bounds.width;
 
 		getObjectsNear(pos, threshold, vec, node->SE, bounds);
-			//sf::FloatRect(bounds.left+bounds.width*0.5f, 
+			//sf::FloatRect(bounds.left+bounds.width*0.5f,
 			//bounds.top+bounds.height*0.5f,
 			//bounds.width*0.5f, bounds.height*0.5f));
 
@@ -542,7 +549,7 @@ void ObjManager::getObjectsNear(const sf::Vector2f& pos, const float& threshold,
 		bounds.top -= bounds.height;
 		bounds.height *= 2;
 	}
-	
+
 
 
 }
@@ -561,14 +568,14 @@ void ObjManager::getObjectsNear(const sf::Vector2f& pos, const float& threshold,
 }
 
 /*
-void ObjManager::DrawBoundaries() 
+void ObjManager::DrawBoundaries()
 {
 	DrawBoundaries(quadTree, sf::FloatRect(0,0,width,height));
 }
 
-void ObjManager::DrawBoundaries(quadNode* node, sf::FloatRect bounds) 
+void ObjManager::DrawBoundaries(quadNode* node, sf::FloatRect bounds)
 {
-	if (node->isLeaf) 
+	if (node->isLeaf)
 	{
 		sf::RectangleShape rect(sf::Vector2f(bounds.width, bounds.height));
 		rect.setPosition(sf::Vector2f(bounds.left, bounds.top));
@@ -584,25 +591,25 @@ void ObjManager::DrawBoundaries(quadNode* node, sf::FloatRect bounds)
 		rect.setOutlineColor(sf::Color::Red);
 		rect.setOutlineThickness(50);
 		App->draw(rect);
-	
 
-	
+
+
 		DrawBoundaries(
-			node->NE, sf::FloatRect(bounds.left, bounds.top, 
+			node->NE, sf::FloatRect(bounds.left, bounds.top,
 			bounds.width*0.5f, bounds.height*0.5f));
 
 		DrawBoundaries(
-			node->NW, sf::FloatRect((bounds.left+bounds.width)*0.5f, bounds.top, 
+			node->NW, sf::FloatRect((bounds.left+bounds.width)*0.5f, bounds.top,
 			bounds.width, bounds.height*0.5f));
 
 		DrawBoundaries(
-			node->SE, sf::FloatRect(bounds.left, (bounds.top+bounds.height)*0.5f, 
+			node->SE, sf::FloatRect(bounds.left, (bounds.top+bounds.height)*0.5f,
 			bounds.width*0.5f, bounds.height));
 
 		DrawBoundaries(
 			node->SW, sf::FloatRect((bounds.left+bounds.width)*0.5f, (bounds.top+bounds.height)*0.5f,
 			bounds.width, bounds.height));
-	
+
 }
 */
 
@@ -621,18 +628,18 @@ quadNode* ObjManager::searchLeaf(const sf::Vector2f& p)
 	{	          bool north = false;
 		bool west = false;    bool east = false;
                  bool south = false;
-		
-		if (int(p.x) <= bounds.left + bounds.width*0.5f) { 
+
+		if (int(p.x) <= bounds.left + bounds.width*0.5f) {
 			bounds.width = bounds.width*0.5f;
 			west = true;
 		}
-		else { 
+		else {
 			bounds.left = bounds.left + bounds.width*0.5f;
 			bounds.width = bounds.width*0.5f;
 			east = true;
 		}
 
-		if (int(p.y) <= bounds.top + bounds.height*0.5f) { 
+		if (int(p.y) <= bounds.top + bounds.height*0.5f) {
 			bounds.height = bounds.height*0.5f;
 			north = true;
 		}
@@ -652,7 +659,7 @@ quadNode* ObjManager::searchLeaf(const sf::Vector2f& p)
 	return node;
 }
 
-int ObjManager::Count() 
+int ObjManager::Count()
 {
 	return nObjects;
 }
@@ -664,11 +671,11 @@ void ObjManager::getObjects(std::vector<GameObject*>& vec, const sf::View& camer
 
 	quadNode* node = searchLeaf(camera.getCenter());
 	std::list<GameObject*>::iterator it;
-	for (it = node->bucket.begin(); it != node->bucket.end(); ++it) 
+	for (it = node->bucket.begin(); it != node->bucket.end(); ++it)
 	{
 		vec.push_back(*it);
 	}
-	
+
 
 
 	/*
@@ -676,7 +683,7 @@ void ObjManager::getObjects(std::vector<GameObject*>& vec, const sf::View& camer
 
 	for (int i = camera.getCenter().x - camera.getSize().x*2.0f;
 		i < camera.getCenter().x + camera.getSize().x*2.0f;
-		i += 16*2) 
+		i += 16*2)
 	{
 			for (int j = camera.getCenter().y - camera.getSize().y*2.0f;
 				j < camera.getCenter().y + camera.getSize().y*2.0f;
@@ -686,12 +693,12 @@ void ObjManager::getObjects(std::vector<GameObject*>& vec, const sf::View& camer
 
 					quadNode* node = searchLeaf(sf::Vector2f(i, j));
 
-					if (set.find(node) == set.end()) 
+					if (set.find(node) == set.end())
 					{
 						set.insert(node);
 
 						std::list<GameObject*>::iterator it;
-						for (it = node->bucket.begin(); 
+						for (it = node->bucket.begin();
 							it != node->bucket.end(); ++it){
 								vec.push_back(*it);
 						}

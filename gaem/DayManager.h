@@ -17,6 +17,7 @@ public:
   void ImGuiRender();
 
   void FastForwardUntilNextMorning();
+  bool IsFastForwarding() const;
 
 private:
 
