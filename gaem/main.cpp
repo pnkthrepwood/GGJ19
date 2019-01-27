@@ -29,13 +29,12 @@ float RES_Y = 720.0f;
 const int TILE_SIZE = 16;
 
 const int NUM_PLAYERS = 1;
-const float PLAYER_SPEED = 300;
+const float PLAYER_SPEED = 200;
 
 const float BULLET_SPEED = 700;
-const float ENEMY_TRIGGER_DISTANCE = 200;
-const float ENEMY_ACCEL = 1000;
-const float ENEMY_MAX_SPEED = 350;
-const float BULLET_COOLDOWN = 0.3f; //seconds
+const float ENEMY_TRIGGER_DISTANCE = 180;
+const float ENEMY_MAX_SPEED = 200;
+const float BULLET_COOLDOWN = 0.2f; //seconds
 const float MADERA_GATHER_TIME = 3; //seconds
 
 ObjManager obj_manager;
