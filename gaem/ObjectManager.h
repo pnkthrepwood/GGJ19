@@ -14,7 +14,8 @@ enum class GameObjectType
 	NONE,
 	CASA,
 	TREE,
-	WATER
+	WATER,
+	HAIMA
 	//...
 };
 struct GameObject
@@ -70,19 +71,17 @@ public:
 
 	quadNode* quadTree;
 	void getAllObjects(std::vector<GameObject*>& vec, quadNode* node);
-	void getObjectsNear(const sf::Vector2f& pos, const float& threshold, 
+	void getObjectsNear(const sf::Vector2f& pos, const float& threshold,
 						std::vector<GameObject*>& vec, quadNode* node, sf::FloatRect& bounds);
 	void getObjectsAux(std::set<GameObject*>& set, sf::Vector2f pos);
 
-	
+
 	quadNode* searchLeaf(const sf::Vector2f& p);
-	
+
 
 	GameObject* lastObjCollided;
 
 	int nObjects;
-
-
 
 	GameObject* Spawn(GameObjectType type, int x, int y);
 };
