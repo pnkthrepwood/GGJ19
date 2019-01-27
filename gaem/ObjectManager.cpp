@@ -16,6 +16,14 @@ sf::IntRect SelectSprite(GameObjectType type)
 	{
 	case GameObjectType::NONE:
 		return sf::IntRect(0, 0, 0, 0);
+	case GameObjectType::DECOR_1:
+		return sf::IntRect(0, 4, 16, 16);
+	case GameObjectType::DECOR_2:
+		return sf::IntRect(0, 5, 16, 16);
+	case GameObjectType::DECOR_3:
+		return sf::IntRect(0, 6, 16, 16);
+	case GameObjectType::DECOR_4:
+		return sf::IntRect(0, 7, 16, 16);
 	case GameObjectType::CASA:
 		return sf::IntRect(0, 0, 16, 16);
 	case GameObjectType::TREE:

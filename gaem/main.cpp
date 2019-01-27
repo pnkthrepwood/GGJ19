@@ -447,6 +447,36 @@ void SpawnCosasEnChunk(int casilla_x, int casilla_y, bool first_tile = false)
 		obj_manager.Spawn(GameObjectType::TREE, x, y);
 	}
 
+	//Decor
+	for (int i = 0; i < 15; ++i)
+	{
+		int x = std::rand() % (area_right - area_left) + area_left;
+		int y = std::rand() % (area_bottom - area_top) + area_top;
+
+		obj_manager.Spawn(GameObjectType::DECOR_1, x, y);
+	}
+	for (int i = 0; i < 15; ++i)
+	{
+		int x = std::rand() % (area_right - area_left) + area_left;
+		int y = std::rand() % (area_bottom - area_top) + area_top;
+
+		obj_manager.Spawn(GameObjectType::DECOR_2, x, y);
+	}
+	for (int i = 0; i < 15; ++i)
+	{
+		int x = std::rand() % (area_right - area_left) + area_left;
+		int y = std::rand() % (area_bottom - area_top) + area_top;
+
+		obj_manager.Spawn(GameObjectType::DECOR_3, x, y);
+	}
+	for (int i = 0; i < 15; ++i)
+	{
+		int x = std::rand() % (area_right - area_left) + area_left;
+		int y = std::rand() % (area_bottom - area_top) + area_top;
+
+		obj_manager.Spawn(GameObjectType::DECOR_4, x, y);
+	}
+
 	if (!first_tile) {
 
 		//Enemies
