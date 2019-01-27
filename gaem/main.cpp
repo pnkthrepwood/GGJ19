@@ -28,14 +28,14 @@ float RES_Y = 720.0f;
 
 const int TILE_SIZE = 16;
 
-const int NUM_PLAYERS = 4;
+const int NUM_PLAYERS = 1;
 const float PLAYER_SPEED = 300;
 
 const float BULLET_SPEED = 700;
 const float ENEMY_TRIGGER_DISTANCE = 400;
 const float ENEMY_ACCEL = 1000;
 const float ENEMY_MAX_SPEED = 350;
-const float BULLET_COOLDOWN = 0.3; //seconds
+const float BULLET_COOLDOWN = 0.3f; //seconds
 const float MADERA_GATHER_TIME = 3; //seconds
 
 ObjManager obj_manager;
@@ -344,14 +344,24 @@ struct Enemy {
 
 std::vector<Enemy*> enemies;
 
-void SpawnCosasScenario()
+bool chunksSpawned[4000][4000] = { 0 };
+
+void SpawnCosasEnChunk(int casilla_x, int casilla_y)
 {
+	if (chunksSpawned[casilla_x][casilla_y]) {
+		return;
+	}
 
-	int area_left = -4000;
-	int area_right = 4000;
-	int area_top = -4000;
-	int area_bottom = 4000;
+	cout << "Spawning chunk " << casilla_x << "," << casilla_y << endl;
 
+	chunksSpawned[casilla_x][casilla_y] = true;
+
+	int area_left = casilla_x * RES_X;
+	int area_right = (casilla_x + 1) * RES_X;
+	int area_top = (casilla_y) * RES_Y;
+	int area_bottom = (casilla_y + 1) * RES_Y;;
+
+	//Trees
 	for (int i = 0; i < 100; ++i)
 	{
 		int x = std::rand() % (area_right - area_left) + area_left;
@@ -360,9 +370,32 @@ void SpawnCosasScenario()
 		obj_manager.Spawn(GameObjectType::TREE, x, y);
 	}
 
+	//Enemies
+	for (int i = 0; i < 100; ++i)
+	{
+		int x = std::rand() % (area_right - area_left) + area_left;
+		int y = std::rand() % (area_bottom - area_top) + area_top;
+
+		enemies.push_back(new Enemy(x, y));
+	}
+
+	//Water
+	{
+		int x = std::rand() % (area_right - area_left) + area_left;
+		int y = std::rand() % (area_bottom - area_top) + area_top;
+
+		obj_manager.Spawn(GameObjectType::WATER, x, y);
+	}
 }
 
 
+int current_casilla_x = -500, current_casilla_y = -500;
+
+pair<int, int> GetCasillaFromCam(sf::View& cam) {
+	int x = int(cam.getCenter().x - cam.getSize().x / 2) / RES_X;
+	int y = int(cam.getCenter().y - cam.getSize().y / 2) / RES_Y;
+	return make_pair(x+2000, y + 2000);
+}
 
 void InitPlayers() {
 	int madera = 0;
@@ -578,45 +611,8 @@ void RenderWithShader(sf::RenderWindow& window, const sf::RenderTexture& renderT
 	window.draw(quad, states);
 }
 
-void SpawnAndUnspawnEnemies(sf::Time dt_time, sf::View& cam) 
-{
-
-	static float timer_spawn_next = 0.0f;
-	timer_spawn_next += dt_time.asSeconds();
-
-	if (timer_spawn_next > 5.0f)
-	{
-		int x = cam.getCenter().x;
-		int y = cam.getCenter().y;
-
-		float x_enemy = x + std::rand() % static_cast<int>(cam.getSize().x * 3) - cam.getSize().x;
-		float y_enemy = y + std::rand() % static_cast<int>(cam.getSize().y * 3) - cam.getSize().y;
-
-		if (x_enemy > (cam.getCenter().x - cam.getSize().x*0.5f) &&
-			x_enemy < (cam.getCenter().x + cam.getSize().x*0.5f) &&
-			y_enemy >(cam.getCenter().y - cam.getSize().y*0.5f) &&
-			y_enemy < (cam.getCenter().y + cam.getSize().y*0.5f))
-		{
-
-		}
-		else
-		{
-			enemies.push_back(new Enemy(x_enemy, y_enemy));
-		}
-
-		timer_spawn_next = 0.0f;
-
-	}
-
-	
-
-
-}
-
-void SpawnOasis(int x, int y)
-{
-	obj_manager.Spawn(GameObjectType::WATER, x, y);
-}
+//	3hola qye ts c-dcD
+//		hola mamonn bbbbastant er
 
 int main()
 {
@@ -670,14 +666,11 @@ int main()
 
 	InitPlayers();
 
-	obj_manager.Spawn(GameObjectType::CASA, 0, 0);
-	obj_manager.Spawn(GameObjectType::TREE, 50, 50);
+	//obj_manager.Spawn(GameObjectType::CASA, 0, 0);
+	//obj_manager.Spawn(GameObjectType::TREE, 50, 50);
 
 	//enemies.push_back(new Enemy(600, 400));
 
-	SpawnCosasScenario();
-
-	SpawnOasis(0, 0);
 
 	sf::Clock clk_running;
 	sf::Clock clk_delta;
@@ -700,12 +693,30 @@ int main()
 		GamePad::UpdateInputState();
 		dayManager.Update(dt_time.asSeconds());
 
+
+		//Spawn chunks
+		auto p = GetCasillaFromCam(cam);
+		if (p.first != current_casilla_x || 
+			p.second != current_casilla_y) {
+			
+			current_casilla_x = p.first;
+			current_casilla_y = p.second;
+
+			cout << "entering chunk " << current_casilla_x << "," << current_casilla_y << endl;
+
+			for (int i = -1; i <= 1; i++) {
+				for (int j = -1; j <= 1; j++) {
+					SpawnCosasEnChunk(current_casilla_x + i, current_casilla_y + j);
+				}
+			}
+		}
+
+
 		//UPDATE
 		for (int i = 0; i < NUM_PLAYERS; i++) {
 			UpdatePlayer(dt_time.asSeconds(), i, cam);
 		}
 		//Enemies
-		SpawnAndUnspawnEnemies(dt_time, cam);
 		for (int i = 0; i < enemies.size(); i++)
 		{
 			bool cale_destruir = enemies[i]->Update(dt_time.asSeconds());
