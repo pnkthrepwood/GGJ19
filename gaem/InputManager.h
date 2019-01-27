@@ -16,6 +16,8 @@ private:
 	static KeyStates button_states[JoystickCountMax][sf::Joystick::ButtonCount];
 	static int player_to_joystick[JoystickCountMax];
 
+	static int player_count;
+
 	static KeyStates calculateJustPressed(bool pressed, KeyStates state) {
 		if (pressed) {
 			if (state == JUST_PRESSED || state == PRESSED) {
@@ -166,6 +168,8 @@ public:
 
 		}
 
+		player_count = player;
+
 		while (player < JoystickCountMax) 
 		{
 			player_to_joystick[player] = -1;
@@ -176,6 +180,10 @@ public:
 			player++;
 		}
 
+	}
+
+	static int GetPlayerCount() {
+		return player_count;
 	}
 
 };

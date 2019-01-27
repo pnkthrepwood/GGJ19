@@ -30,7 +30,7 @@ float RES_Y = 720.0f;
 
 const int TILE_SIZE = 16;
 
-const int NUM_PLAYERS = 4;
+int NUM_PLAYERS = 4;
 const float PLAYER_SPEED = 200;
 
 const float BULLET_SPEED = 500;
@@ -312,7 +312,7 @@ struct Particle {
 
 };
 
-std::array<Player*, NUM_PLAYERS> players;
+std::vector<Player*> players;
 std::vector<Bullet*> bullets;
 std::vector<Particle*> particles;
 
@@ -521,7 +521,7 @@ void InitPlayers()
 {
 	for (int i = 0; i < NUM_PLAYERS; i++)
 	{
-		players[i] = new Player(i);
+		players.push_back(new Player(i));
 	}
 }
 
@@ -884,6 +884,27 @@ int main()
 		ImGui::SFML::Update(window, dt_time);
 
 		GamePad::UpdateInputState();
+		int new_num_players = max(1,GamePad::GetPlayerCount());
+		if (new_num_players != NUM_PLAYERS) {
+			
+			if (new_num_players > NUM_PLAYERS) {
+				for (int i = NUM_PLAYERS; i != new_num_players-1; i++) {
+					Player* player = new Player(i);
+					player->x = cam.getCenter().x;
+					player->y = cam.getCenter().y;
+					players.push_back(player);
+				}
+			}
+			else {
+				for (int i = NUM_PLAYERS-1; i != new_num_players; i--) {
+					delete players[i];
+					players.erase(players.begin()+i);
+				}
+			}
+			NUM_PLAYERS = new_num_players;
+
+		}
+
 		dayManager.Update(dt_time.asSeconds());
 
 		gameState.Update(dt_time.asSeconds(), [&cam] () {

@@ -4,6 +4,8 @@ GamePad::KeyStates GamePad::button_states[GamePad::JoystickCountMax][sf::Joystic
 
 int GamePad::player_to_joystick[GamePad::JoystickCountMax];
 
+int GamePad::player_count;
+
 const GamePad::AnalogStick GamePad::AnalogStick::Left(sf::Joystick::Axis::X, sf::Joystick::Axis::Y);
 const GamePad::AnalogStick GamePad::AnalogStick::Right(sf::Joystick::Axis::U, sf::Joystick::Axis::R);
 
