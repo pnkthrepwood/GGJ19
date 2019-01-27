@@ -309,8 +309,14 @@ void ObjManager::camDraw(std::vector<sf::Sprite>& toDraw, const sf::Vector2f& Po
 	std::list<GameObject*>::iterator it;
 	for (it = node->bucket.begin(); it != node->bucket.end(); ++it)
 	{
-		spr.setTextureRect( SelectSprite((*it)->type));
-
+		auto type = (*it)->type;
+		auto r = SelectSprite(type);
+		spr.setTextureRect(r);
+		if (type == GameObjectType::TREE) {
+			spr.setOrigin(r.width / 2, r.height / 2);
+		} else {
+			spr.setOrigin(0,0); //MAGIA
+		}
 		spr.setPosition((*it)->x, (*it)->y);
 		
 		toDraw.push_back(spr); //Makes a copy which is actually needed
@@ -697,7 +703,7 @@ void ObjManager::getObjects(std::vector<GameObject*>& vec, const sf::View& camer
 }
 
 
-void ObjManager::Spawn(GameObjectType type, int x, int y)
+GameObject* ObjManager::Spawn(GameObjectType type, int x, int y)
 {
 	for (int i = 0; i < MAX_OBJ_SIZE; ++i)
 	{
@@ -709,9 +715,10 @@ void ObjManager::Spawn(GameObjectType type, int x, int y)
 
 			AddObject(&go_collection[i]);
 
-			return;
+			return &(go_collection[i]);
 		}
 	}
+	return nullptr;
 
 	//Error: si llega aqui, todo mal
 }

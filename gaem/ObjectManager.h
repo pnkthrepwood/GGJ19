@@ -84,5 +84,5 @@ public:
 
 
 
-	void Spawn(GameObjectType type, int x, int y);
+	GameObject* Spawn(GameObjectType type, int x, int y);
 };
