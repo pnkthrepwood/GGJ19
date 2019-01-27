@@ -34,7 +34,7 @@ const float PLAYER_SPEED = 200;
 const float BULLET_SPEED = 700;
 const float ENEMY_TRIGGER_DISTANCE = 180;
 const float ENEMY_MAX_SPEED = 250;
-const float BULLET_COOLDOWN = 0.15f; //seconds
+const float BULLET_COOLDOWN = 0.1f; //seconds
 const float MADERA_GATHER_TIME = 3.5; //seconds
 
 ObjManager obj_manager;
@@ -496,7 +496,8 @@ bool UpdateBullet(Bullet *b, float dt, sf::View& cam)
 	if (b->x > cam.getCenter().x + cam.getSize().x / 2 ||
 		b->x < cam.getCenter().x - cam.getSize().x / 2 ||
 		b->y > cam.getCenter().y + cam.getSize().y / 2 ||
-		b->y < cam.getCenter().y - cam.getSize().y / 2) {
+		b->y < cam.getCenter().y - cam.getSize().y / 2) 
+	{
 		return true;
 	}
 
@@ -737,7 +738,7 @@ int main()
 	player_texture->loadFromFile("desertman_sheet.png");
 
 	bullet_texture = new sf::Texture();
-	bullet_texture->loadFromFile("bullet.png");
+	bullet_texture->loadFromFile("desertman_sheet.png");
 	sf::Sprite spr_bullet;
 	spr_bullet.setTexture(*bullet_texture);
 	SpriteCenterOrigin(spr_bullet);
@@ -953,8 +954,14 @@ int main()
 		//Bulletitas
 		for (int i = 0; i < bullets.size(); i++)
 		{
+			
 			spr_bullet.setPosition(bullets[i]->x, bullets[i]->y);
-			spr_bullet.setColor(playerColors[bullets[i]->player]);
+			spr_bullet.setOrigin( 5, 8 );
+			spr_bullet.setTextureRect(sf::IntRect(0, 4*16, 11, 16));
+
+			spr_bullet.setRotation(Mates::RadsToDegs(atan2(bullets[i]->vel_y, bullets[i]->vel_x)));
+
+			//spr_bullet.setColor(playerColors[bullets[i]->player]);
 			toDraw.push_back(spr_bullet);
 		}
 		//Ordering madafaca
