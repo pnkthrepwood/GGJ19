@@ -45,6 +45,7 @@ int madera;
 sf::Texture* tex_spritesheet;
 sf::Texture* player_texture;
 sf::Texture* madera_texture;
+sf::Texture* cripta_texture;
 sf::Texture* bullet_texture;
 
 sf::Sound* groar1; //done
@@ -335,7 +336,7 @@ struct Enemy
 {
 	float x, y;
 	float vel_x, vel_y;
-	int hp = 500;
+	int hp = 400;
 	PlayerState state; //IDLE OR WALKING ONLY
 	float anim_timer;
 
@@ -354,7 +355,7 @@ struct Enemy
 		sprite->setOrigin(8, 8);
 	}
 
-	bool Update(float dt)
+	bool UpdateEnemy(float dt)
 	{
 
 		Player* closestPlayer = nullptr;
@@ -413,7 +414,9 @@ struct Enemy
 				if (madera > 0)
 				{
 					madera -= 1;
-					particles.push_back(new Particle(*madera_texture, player->x, player->y + 25, (rand() % 2) ? 200 : -200, 200, 0.2f));
+
+					particles.push_back(new Particle(*madera_texture, this->x, this->y + 25, (rand() % 2) ? 200 : -200, 200, 0.2f));
+
 				}
 				shot->play();
 			}
@@ -434,8 +437,6 @@ void SpawnCosasEnChunk(int casilla_x, int casilla_y, bool first_tile = false)
 		return;
 	}
 
-	cout << "Spawning chunk " << casilla_x << "," << casilla_y << " " << first_tile << endl;
-
 	chunksSpawned[casilla_x][casilla_y] = true;
 
 	casilla_x -= 2000;
@@ -455,28 +456,28 @@ void SpawnCosasEnChunk(int casilla_x, int casilla_y, bool first_tile = false)
 	}
 
 	//Decor
-	for (int i = 0; i < 8; ++i)
+	for (int i = 0; i < 6; ++i)
 	{
 		int x = std::rand() % (area_right - area_left) + area_left;
 		int y = std::rand() % (area_bottom - area_top) + area_top;
 
 		obj_manager.Spawn(GameObjectType::DECOR_CACTUS, x, y);
 	}
-	for (int i = 0; i < 8; ++i)
+	for (int i = 0; i < 6; ++i)
 	{
 		int x = std::rand() % (area_right - area_left) + area_left;
 		int y = std::rand() % (area_bottom - area_top) + area_top;
 
 		obj_manager.Spawn(GameObjectType::DECOR_SKELETON, x, y);
 	}
-	for (int i = 0; i < 8; ++i)
+	for (int i = 0; i < 4; ++i)
 	{
 		int x = std::rand() % (area_right - area_left) + area_left;
 		int y = std::rand() % (area_bottom - area_top) + area_top;
 
 		obj_manager.Spawn(GameObjectType::DECOR_ONE_ROCK, x, y);
 	}
-	for (int i = 0; i < 8; ++i)
+	for (int i = 0; i < 4; ++i)
 	{
 		int x = std::rand() % (area_right - area_left) + area_left;
 		int y = std::rand() % (area_bottom - area_top) + area_top;
@@ -484,7 +485,8 @@ void SpawnCosasEnChunk(int casilla_x, int casilla_y, bool first_tile = false)
 		obj_manager.Spawn(GameObjectType::DECOR_TWO_ROCKS, x, y);
 	}
 
-	if (!first_tile) {
+	if (!first_tile) 
+	{
 
 		//Enemies
 		for (int i = 0; i < 5; ++i)
@@ -805,6 +807,11 @@ int main()
 	spr_madera.setTexture(*madera_texture);
 	SpriteCenterOrigin(spr_madera);
 
+	cripta_texture = new sf::Texture();
+	cripta_texture->loadFromFile("cripta.png");
+
+
+
 	tex_spritesheet = new sf::Texture();
 	tex_spritesheet->loadFromFile("sprite_sheet.png");
 	sf::Sprite spr_tile_dessert;
@@ -937,12 +944,21 @@ int main()
 			bool in_danger = false;
 			for (int i = 0; i < enemies.size();)
 			{
-				bool cale_destruir = enemies[i]->Update(dt_time.asSeconds());
+				bool cale_destruir = enemies[i]->UpdateEnemy(dt_time.asSeconds());
 				if (enemies[i]->state == PlayerState::WALKING) in_danger = true;
 				if (cale_destruir)
 				{
+					particles.push_back(new Particle(*cripta_texture,
+						enemies[i]->x, enemies[i]->y,
+						0, 0,
+						10.0f));
+
+
+
 					delete enemies[i];
 					enemies.erase(enemies.begin() + i);
+
+					
 				}
 				else
 				{
