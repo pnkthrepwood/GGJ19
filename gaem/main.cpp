@@ -885,10 +885,13 @@ int main()
 			bool areAllPlayersInHaima = true;
 			for (Player* p : players) {
 				bool isPlayerInHaima = false;
+				auto boundBox = p->boundBox();
+				float size = boundBox.width * boundBox.height;
 				for (GameObject* obj : objs_near) {
 					if (obj->type == GameObjectType::HAIMA) {
 						sf::FloatRect intersect;
-						if (getBoundBox(obj).intersects(p->boundBox(), intersect) && intersect == p->boundBox())	{
+						if (getBoundBox(obj).intersects(p->boundBox(), intersect))	{
+							if (intersect.width * intersect.height > size * 0.6f)
 							isPlayerInHaima = true;
 						}
 					}
