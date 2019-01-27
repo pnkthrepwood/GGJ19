@@ -96,9 +96,8 @@ void DayManager::RenderGui(sf::RenderWindow& window) {
   shape3.rotate(60);
 
 
-  const auto windowSize = window.getSize();
   sf::Transform transform;
-  transform.translate(windowSize.x*0.5f, windowSize.y);
+  transform.translate(RES_X*0.5f, RES_Y);
   {
     const float extra = 40.f;
     float angle = (GetDayTime())*(180.f + extra) - extra/2.f;
