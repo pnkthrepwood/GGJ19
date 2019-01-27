@@ -127,9 +127,8 @@ struct Player
 
 		progress.setFillColor(sf::Color::Transparent);
 		progress.setOrigin(47, 47);
-		progress.setScale(-1, 1);
-		progress.setOutlineThickness(11);
-		progress.setOutlineColor(sf::Color(20, 250, 20, 90));
+		progress.setScale(-0.3, 0.3);
+		progress.setOutlineColor(sf::Color(0, 200, 0, 100));
 		lifeBar.setFillColor(sf::Color(250, 20, 20));
 
 		const int PLAYER_INITIAL_POS_OFFSET = 90;
@@ -200,7 +199,7 @@ struct Player
 
 	void DrawUI(sf::RenderTarget& rt)
 	{
-		progress.setOutlineThickness(11); //Force redraw shape
+		progress.setOutlineThickness(12); //Force redraw shape
 		progress.progress = progress.getPointCount() - (progress.getPointCount()*(madera_progress / MADERA_GATHER_TIME));
 		if (progress.progress < 120 && progress.progress > 3) 
 		{
@@ -251,6 +250,7 @@ struct Particle {
 		, life(mlife)
 	{
 		sprite.setTexture(texture);
+		sprite.setScale(0.6f, 0.6f);
 		SpriteCenterOrigin(sprite);
 	}
 
@@ -558,7 +558,7 @@ void UpdatePlayer(float dt, int num_player, sf::View& cam)
 		if (p->madera_progress >= MADERA_GATHER_TIME) {
 			madera += 1;
 			p->madera_progress = 0;
-			particles.push_back(new Particle(*madera_texture, p->x, p->y - 50, 0, -200, 0.2f));
+			particles.push_back(new Particle(*madera_texture, p->x, p->y - 25, 0, -200, 0.2f));
 			obj_manager.DestroyObject(touching_arbol);;
 		}
 	}
