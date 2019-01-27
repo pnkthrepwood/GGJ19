@@ -139,7 +139,7 @@ struct Player
 
 		progress.setFillColor(sf::Color::Transparent);
 		progress.setOrigin(47, 47);
-		progress.setScale(-0.3, 0.3);
+		progress.setScale(-0.3f, 0.3f);
 		progress.setOutlineColor(sf::Color(0, 200, 0, 100));
 		lifeBar.setFillColor(sf::Color(250, 20, 20));
 
@@ -167,10 +167,11 @@ struct Player
 
 	sf::FloatRect boundBox()
 	{
-		return sf::FloatRect(x - sprite.getTexture()->getSize().x/2, 
-			y - sprite.getTexture()->getSize().y/2,
-			sprite.getTexture()->getSize().x,
-			sprite.getTexture()->getSize().y);
+		return 
+			sf::FloatRect(x - sprite.getTextureRect().width/2, 
+			y - sprite.getTextureRect().height/2,
+			sprite.getTextureRect().width,
+			sprite.getTextureRect().height);
 	}
 
 	void Draw(std::vector<sf::Sprite>& toDraw)
@@ -202,7 +203,11 @@ struct Player
 		}
 		else if (state == PlayerState::WALKING)
 		{
-			texrect.left += (static_cast<int>(anim_timer / 0.1f) % 3) * 10;
+			texrect.left += (static_cast<int>(anim_timer / 0.1f) % 3) * 11;
+		}
+		else if (state == PlayerState::GATHERING)
+		{
+			texrect.left = 5*11 + (static_cast<int>(anim_timer / 0.25f) % 2) * 11;
 		}
 
 		sprite.setTextureRect(texrect);
@@ -474,13 +479,8 @@ void UpdatePlayer(float dt, int num_player, sf::View& cam)
 	float length_L = Mates::Length(stick_L);
 	float length_R = Mates::Length(stick_R);
 
-	if (length_L < 30) // Dead zone -> quieto
-	{
-		stick_L = sf::Vector2f(0, 0);
-		p->state = PlayerState::IDLE;
-		p->anim_timer = 0;
-	}
-	else if (p->bullet_cooldown > 0)
+	
+	if (p->bullet_cooldown > 0)
 	{
 		stick_L = sf::Vector2f(0, 0);
 		p->state = PlayerState::SHOOTING;
@@ -495,11 +495,18 @@ void UpdatePlayer(float dt, int num_player, sf::View& cam)
 		p->state = PlayerState::GATHERING;
 		p->anim_timer += dt;
 	}
+	else if (length_L < 30) // Dead zone -> quieto
+	{
+		stick_L = sf::Vector2f(0, 0);
+		p->state = PlayerState::IDLE;
+		p->anim_timer = 0;
+	}
 	else // else -> walking
 	{
 		p->state = PlayerState::WALKING;
 		p->anim_timer += dt;
 	}
+	
 	
 	// Update speed
 	sf::Vector2f direction = Mates::Normalize(sf::Vector2f(stick_L.x, stick_L.y));
@@ -540,17 +547,21 @@ void UpdatePlayer(float dt, int num_player, sf::View& cam)
 	}
 
 	//Shot
-	if (p->will_shot) {
+	if (p->will_shot) 
+	{
 		bullets.push_back(new Bullet(p->x, p->y, p->facing_vector, num_player));
 		p->will_shot = false;
 	}
-	if (p->bullet_cooldown > 0) {
+	if (p->bullet_cooldown > 0) 
+	{
 		p->bullet_cooldown -= dt;
-		if (p->bullet_cooldown < 0) {
+		if (p->bullet_cooldown < 0) 
+		{
 			p->will_shot = true;
 		}
 	}
-	if (GamePad::Trigger::Right.IsJustPressed(num_player) && p->bullet_cooldown <= 0 && p->madera_progress <= 0) {
+	if (GamePad::Trigger::Right.IsJustPressed(num_player) && p->bullet_cooldown <= 0 && p->madera_progress <= 0) 
+	{
 		p->bullet_cooldown = BULLET_COOLDOWN;
 	}
 
@@ -572,13 +583,16 @@ void UpdatePlayer(float dt, int num_player, sf::View& cam)
 		}
 	}
 
-	if (GamePad::IsButtonJustReleased(num_player, GamePad::Button::B)) {
+	if (GamePad::IsButtonJustReleased(num_player, GamePad::Button::X)) 
+	{
 		p->madera_progress = 0;
 		chainsaw->stop();
 	}
-	if (touching_arbol && GamePad::IsButtonPressed(num_player, GamePad::Button::B)) {
+	if (touching_arbol && GamePad::IsButtonPressed(num_player, GamePad::Button::X)) 
+	{
 		p->madera_progress += dt;
-		if (p->madera_progress >= MADERA_GATHER_TIME) {
+		if (p->madera_progress >= MADERA_GATHER_TIME) 
+		{
 			madera += 1;
 			p->madera_progress = 0;
 			particles.push_back(new Particle(*madera_texture, p->x, p->y - 25, 0, -200, 0.2f));
@@ -898,11 +912,7 @@ int main()
 		{
 			int frame = static_cast<int>(enemies[i]->anim_timer / 0.2f) % 2;
 
-			
-
 			enemies[i]->sprite.setTextureRect(sf::IntRect((1 + frame + ((enemies[i]->vel_x > 0) ? 2 : 0)) * TILE_SIZE, 1*TILE_SIZE, 16, 16));
-
-			//cout << i << " " << enemies[i]->sprite.getPosition().x << endl;
 
 			toDraw.push_back(enemies[i]->sprite);
 		}
@@ -918,7 +928,11 @@ int main()
 			return a.getPosition().y + a.getTextureRect().height/2 < b.getPosition().y + b.getTextureRect().height / 2;
 		});
 		//Dale draw de verdad
-		for (sf::Sprite& d : toDraw) {
+		for (sf::Sprite& d : toDraw) 
+		{
+
+
+
 			renderTexture.draw(d);
 		}
 

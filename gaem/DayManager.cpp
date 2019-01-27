@@ -10,7 +10,8 @@ namespace {
 
 DayManager::DayManager()
 : mQuad(sf::Quads, 4)
-, mElapsed(0) {
+, mElapsed(1)
+, mFastForwardTarget(0) {
 
 }
 
@@ -55,7 +56,11 @@ sf::Glsl::Vec3 DayManager::pSetHSV(float h, float s, float v ) {
 }
 
 void DayManager::Update(float dt) {
-  mElapsed += (dt / SECONDS_OF_TARGET_CICLE) * SECONDS_OF_RAW_CICLE;
+  float incrementOfDt = (dt / SECONDS_OF_TARGET_CICLE) * SECONDS_OF_RAW_CICLE;
+  if (mElapsed < mFastForwardTarget) {
+      incrementOfDt *= 100;
+  }
+  mElapsed += incrementOfDt;
 }
 
 void DayManager::RenderWithShader(sf::RenderWindow& window, const sf::RenderTexture& renderTexture) {
@@ -74,11 +79,20 @@ void DayManager::RenderWithShader(sf::RenderWindow& window, const sf::RenderText
 
 void DayManager::ImGuiRender() {
   ImGui::Begin("DayManager");
+  ImGui::Text("Day time: %f", mElapsed/3.f);
   ImGui::DragFloat("Day lenght", &SECONDS_OF_TARGET_CICLE);
   ImGui::DragFloat("Elapsed", &mElapsed);
+  ImGui::Text("%f", GetDayFactor());
+  if (ImGui::Button("Fast Forward Morning")) {
+    FastForwardUntilNextMorning();
+  }
   ImGui::End();
 }
 
+void DayManager::FastForwardUntilNextMorning() {
+    mFastForwardTarget = std::ceil(mElapsed/SECONDS_OF_RAW_CICLE)*SECONDS_OF_RAW_CICLE + SECONDS_OF_RAW_CICLE/5.f;
+}
+
 float DayManager::GetDayFactor() const {
-    return 1.f-cos(1.f - std::abs(pow(sin(mElapsed),10.f))) + 0.5f;;
+    return 1.f-cos(1.f - std::abs(pow(sin(mElapsed-1.5f),10.f))) + 0.5f;
 }
