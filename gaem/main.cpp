@@ -112,6 +112,7 @@ struct Player
 	int num_player;
 	bool will_shot = false;
 	sf::Sound chopwood;
+	float inmune;
 
 	//Anim stuff
 	FacingDirection facing;
@@ -132,6 +133,7 @@ struct Player
 		, anim_timer(0.f)
 		, facing_vector(1, 0)
 		, chopwood(*bchopwood)
+		, inmune(-1)
 	{
 		sprite.setTexture(*player_texture);
 		sprite.setOrigin(5, 8);
@@ -370,6 +372,22 @@ struct Enemy
 			vel_y = 0;
 		}
 		
+
+		//Collsions with enemies
+		sf::FloatRect bounding(x - 4, y - 4, 8, 8);
+		for (Player* player : players) {
+			if (player->inmune > 0) continue;
+			if (bounding.intersects(player->boundBox())) {
+				player->inmune = 2.f;
+				//player->hp -= 50;
+				if (madera > 0) {
+					madera -= 1;
+					particles.push_back(new Particle(*madera_texture, player->x, player->y + 25, (rand() % 2) ? 200 : -200, 200, 0.2f));
+				}
+				shot->play();
+			}
+		}
+
 		return (hp <= 0);
 	}
 };
@@ -482,7 +500,11 @@ void UpdatePlayer(float dt, int num_player, sf::View& cam)
 	float length_L = Mates::Length(stick_L);
 	float length_R = Mates::Length(stick_R);
 
-	
+
+	if (p->inmune > 0) {
+		p->inmune -= dt;
+	}
+
 	if (p->bullet_cooldown > 0)
 	{
 		stick_L = sf::Vector2f(0, 0);
@@ -582,6 +604,7 @@ void UpdatePlayer(float dt, int num_player, sf::View& cam)
 		{
 			if (getBoundBox(obj).intersects(p->boundBox()))
 			{
+				
 				touching_arbol = obj;
 			}
 		}
@@ -669,6 +692,7 @@ void RenderWithShader(sf::RenderWindow& window, const sf::RenderTexture& renderT
 //	3hola qye ts c-dcD
 //		hola mamonn bbbbastant er
 
+
 int main()
 {
 	srand(time(NULL));
@@ -749,16 +773,10 @@ int main()
 	obj_manager.Spawn(GameObjectType::WATER, RES_X/2, RES_Y / 2);
 
 
-	//obj_manager.Spawn(GameObjectType::TREE, 50, 50);
-
-	//enemies.push_back(new Enemy(600, 400));
-
 	auto p = GetCasillaFromCam(cam);
 	current_casilla_x = p.first;
 	current_casilla_y = p.second;
-
 	cout << "first chunks " << current_casilla_x << "," << current_casilla_y << endl;
-
 	for (int i = -1; i <= 1; i++)
 	{
 		for (int j = -1; j <= 1; j++)
@@ -930,14 +948,13 @@ int main()
 			toDraw.push_back(spr_bullet);
 		}
 		//Ordering madafaca
-		sort(toDraw.begin(), toDraw.end(), [](sf::Sprite& a, sf::Sprite& b) {
-			return a.getPosition().y + a.getTextureRect().height/2 < b.getPosition().y + b.getTextureRect().height / 2;
+		sf::IntRect rectWater = SelectSprite(GameObjectType::WATER);;
+		sort(toDraw.begin(), toDraw.end(), [rectWater](sf::Sprite& a, sf::Sprite& b) {
+			return a.getPosition().y + a.getTextureRect().height / 2 < b.getPosition().y + b.getTextureRect().height / 2;
 		});
 		//Dale draw de verdad
 		for (sf::Sprite& d : toDraw) 
 		{
-
-
 
 			renderTexture.draw(d);
 		}
@@ -954,6 +971,21 @@ int main()
 			players[i]->DrawUI(renderTexture);
 		}
 
+
+
+		/*
+		static std::vector<GameObject*> objs_near;
+		objs_near.clear();
+		obj_manager.getObjects(objs_near, cam);
+
+		for (GameObject* go : objs_near) {
+			sf::RectangleShape rs;
+			sf::FloatRect bb = getBoundBox(go);
+			rs.setPosition(bb.left, bb.top);
+			rs.setSize(sf::Vector2f(bb.width, bb.height));
+			renderTexture.draw(rs);
+		}
+		*/
 		renderTexture.display();
 
 
