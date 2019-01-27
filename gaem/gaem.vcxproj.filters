@@ -18,6 +18,7 @@
     </ClCompile>
     <ClCompile Include="ObjectManager.cpp" />
     <ClCompile Include="DayManager.cpp" />
+    <ClCompile Include="GameState.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="rand.h" />
