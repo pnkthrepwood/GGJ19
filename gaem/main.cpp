@@ -34,7 +34,7 @@ const float PLAYER_SPEED = 200;
 const float BULLET_SPEED = 700;
 const float ENEMY_TRIGGER_DISTANCE = 180;
 const float ENEMY_MAX_SPEED = 250;
-const float BULLET_COOLDOWN = 0.2f; //seconds
+const float BULLET_COOLDOWN = 0.1f; //seconds
 const float MADERA_GATHER_TIME = 3.5; //seconds
 
 ObjManager obj_manager;
@@ -101,6 +101,8 @@ enum PlayerState
 	WALKING,
 	GATHERING,
 	SHOOTING,
+	PREPARING_LANCE,
+	THROWING_LANCE
 };
 
 struct Player
@@ -150,7 +152,8 @@ struct Player
 		const int PLAYER_INITIAL_POS_OFFSET = 90;
 		x = RES_X / 2;
 		y = RES_Y / 2;
-		switch (n_player) {
+		switch (n_player) 
+		{
 			case 0:
 				x -= PLAYER_INITIAL_POS_OFFSET / 2;
 				y -= PLAYER_INITIAL_POS_OFFSET;
@@ -171,11 +174,15 @@ struct Player
 
 	sf::FloatRect boundBox()
 	{
-		return
-			sf::FloatRect(x - sprite.getTextureRect().width/2,
-			y - sprite.getTextureRect().height/2,
+		sf::FloatRect int_rect = 
+		sf::FloatRect(
+			x - sprite.getTextureRect().width / 2,
+			y - sprite.getTextureRect().height / 2,
 			sprite.getTextureRect().width,
-			sprite.getTextureRect().height);
+			sprite.getTextureRect().height
+		);
+
+		return int_rect;
 	}
 
 	sf::Vector2f centerPos() {
@@ -217,6 +224,14 @@ struct Player
 		else if (state == PlayerState::GATHERING)
 		{
 			texrect.left = 5*11 + (static_cast<int>(anim_timer / 0.4f) % 2) * 11;
+		}
+		else if (state == PlayerState::PREPARING_LANCE)
+		{
+			texrect.left = 3 * 11;
+		}
+		else if (state == PlayerState::THROWING_LANCE)
+		{
+			texrect.left = 4 * 11;
 		}
 
 		sprite.setTextureRect(texrect);
@@ -352,11 +367,14 @@ struct Enemy
 		if (closestDist < ENEMY_TRIGGER_DISTANCE)
 		{
 			anim_timer += dt;
-			if (state == IDLE) {
-				if (std::rand() % 2) {
+			if (state == IDLE) 
+			{
+				if (std::rand() % 2) 
+				{
 					groar2->play();
 				}
-				else {
+				else 
+				{
 					groar1->play();
 				}
 
@@ -460,11 +478,11 @@ pair<int, int> GetCasillaFromCam(sf::View& cam) {
 	return make_pair(x+2000, y + 2000);
 }
 
-void InitPlayers() {
-	int madera = 0;
-	for (int i = 0; i < NUM_PLAYERS; i++) {
+void InitPlayers() 
+{
+	for (int i = 0; i < NUM_PLAYERS; i++) 
+	{
 		players[i] = new Player(i);
-
 	}
 }
 
@@ -478,14 +496,17 @@ bool UpdateBullet(Bullet *b, float dt, sf::View& cam)
 	if (b->x > cam.getCenter().x + cam.getSize().x / 2 ||
 		b->x < cam.getCenter().x - cam.getSize().x / 2 ||
 		b->y > cam.getCenter().y + cam.getSize().y / 2 ||
-		b->y < cam.getCenter().y - cam.getSize().y / 2) {
+		b->y < cam.getCenter().y - cam.getSize().y / 2) 
+	{
 		return true;
 	}
 
 	//Collsions with enemies
 	sf::FloatRect bounding(b->x, b->y, bullet_texture->getSize().x, bullet_texture->getSize().y);
-	for (Enemy* e : enemies) {
-		if (bounding.intersects(getBoundBoxSprite(e->sprite))) {
+	for (Enemy* e : enemies) 
+	{
+		if (bounding.intersects(getBoundBoxSprite(e->sprite))) 
+		{
 			e->hp -= 50;
 			shot->play();
 			return true;
@@ -506,39 +527,43 @@ void UpdatePlayer(float dt, int num_player, sf::View& cam)
 	float length_L = Mates::Length(stick_L);
 	float length_R = Mates::Length(stick_R);
 
-
-	if (p->inmune > 0) {
+	if (p->inmune > 0) 
+	{
 		p->inmune -= dt;
 	}
 
-	if (p->bullet_cooldown > 0)
-	{
-		stick_L = sf::Vector2f(0, 0);
-		p->state = PlayerState::SHOOTING;
-		p->anim_timer += dt;
-	}
-	else if (p->madera_progress > 0) //gathering -> quieto
-	{
-		stick_L = sf::Vector2f(0, 0);
-		if (p->state != PlayerState::GATHERING) {
-			p->anim_timer = 0;
-			p->chopwood.play();
-		}
-		p->state = PlayerState::GATHERING;
-		p->anim_timer += dt;
-	}
-	else if (length_L < 30) // Dead zone -> quieto
-	{
-		stick_L = sf::Vector2f(0, 0);
-		p->state = PlayerState::IDLE;
-		p->anim_timer = 0;
-	}
-	else // else -> walking
-	{
-		p->state = PlayerState::WALKING;
-		p->anim_timer += dt;
-	}
 
+	if (p->state != PlayerState::PREPARING_LANCE &&
+		p->state != PlayerState::THROWING_LANCE)
+	{
+		if (p->madera_progress > 0) //gathering -> quieto
+		{
+			stick_L = sf::Vector2f(0, 0);
+			if (p->state != PlayerState::GATHERING)
+			{
+				p->anim_timer = 0;
+				p->chopwood.play();
+			}
+			p->state = PlayerState::GATHERING;
+			p->anim_timer += dt;
+		}
+		else if (length_L < 30) // Dead zone -> quieto
+		{
+			stick_L = sf::Vector2f(0, 0);
+			p->state = PlayerState::IDLE;
+			p->anim_timer = 0;
+		}
+		else // else -> walking
+		{
+			p->state = PlayerState::WALKING;
+			p->anim_timer += dt;
+		}
+	}
+	else
+	{
+
+		stick_L = sf::Vector2f(0, 0);
+	}
 
 	// Update speed
 	sf::Vector2f direction = Mates::Normalize(sf::Vector2f(stick_L.x, stick_L.y));
@@ -563,7 +588,8 @@ void UpdatePlayer(float dt, int num_player, sf::View& cam)
 	{
 		facing_vector = stick_L;
 	}
-	if (Mates::Length(facing_vector) > 0.01f) {
+	if (Mates::Length(facing_vector) > 0.01f) 
+	{
 		p->facing_vector = Mates::Normalize(facing_vector);
 	}
 
@@ -579,24 +605,36 @@ void UpdatePlayer(float dt, int num_player, sf::View& cam)
 	}
 
 	//Shot
-	if (p->will_shot)
-	{
-		bullets.push_back(new Bullet(p->x, p->y, p->facing_vector, num_player));
-		p->will_shot = false;
-	}
-	if (p->bullet_cooldown > 0)
+	if (p->state == PlayerState::THROWING_LANCE && p->bullet_cooldown > 0)
 	{
 		p->bullet_cooldown -= dt;
 		if (p->bullet_cooldown < 0)
 		{
+			p->state = PlayerState::IDLE;
+		}
+	}
+	else if (p->will_shot) 
+	{
+		p->state = PlayerState::THROWING_LANCE;
+		p->bullet_cooldown = BULLET_COOLDOWN;
+		bullets.push_back(new Bullet(p->x, p->y, p->facing_vector, num_player));
+		p->will_shot = false;
+	}
+	else if (p->state == PlayerState::PREPARING_LANCE && p->bullet_cooldown > 0)
+	{
+		p->bullet_cooldown -= dt;
+		
+		if (p->bullet_cooldown < 0) 
+		{
 			p->will_shot = true;
 		}
 	}
-	if (GamePad::Trigger::Right.IsJustPressed(num_player) && p->bullet_cooldown <= 0 && p->madera_progress <= 0)
+	else if (GamePad::Trigger::Right.IsJustPressed(num_player) && p->bullet_cooldown <= 0 && p->madera_progress <= 0) 
 	{
 		p->bullet_cooldown = BULLET_COOLDOWN;
+		p->state = PlayerState::PREPARING_LANCE;
 	}
-
+	
 
 	// Gather wood
 	static std::vector<GameObject*> objs_near;
@@ -633,6 +671,7 @@ void UpdatePlayer(float dt, int num_player, sf::View& cam)
 		}
 	}
 
+
 	// Plant Haimas
 	objs_near.clear();
 	obj_manager.getObjects(objs_near, cam);
@@ -651,9 +690,11 @@ void UpdatePlayer(float dt, int num_player, sf::View& cam)
 	}
 
 
-	if (p->hp < 100) {
+	if (p->hp < 100) 
+	{
 		p->hp += dt;
-		if (p->hp > 100) {
+		if (p->hp > 100) 
+		{
 			p->hp = 100;
 		}
 	}
@@ -697,7 +738,7 @@ int main()
 	player_texture->loadFromFile("desertman_sheet.png");
 
 	bullet_texture = new sf::Texture();
-	bullet_texture->loadFromFile("bullet.png");
+	bullet_texture->loadFromFile("desertman_sheet.png");
 	sf::Sprite spr_bullet;
 	spr_bullet.setTexture(*bullet_texture);
 	SpriteCenterOrigin(spr_bullet);
@@ -923,8 +964,14 @@ int main()
 		//Bulletitas
 		for (int i = 0; i < bullets.size(); i++)
 		{
+			
 			spr_bullet.setPosition(bullets[i]->x, bullets[i]->y);
-			spr_bullet.setColor(playerColors[bullets[i]->player]);
+			spr_bullet.setOrigin( 5, 8 );
+			spr_bullet.setTextureRect(sf::IntRect(0, 4*16, 11, 16));
+
+			spr_bullet.setRotation(Mates::RadsToDegs(atan2(bullets[i]->vel_y, bullets[i]->vel_x)));
+
+			//spr_bullet.setColor(playerColors[bullets[i]->player]);
 			toDraw.push_back(spr_bullet);
 		}
 		//Ordering madafaca
