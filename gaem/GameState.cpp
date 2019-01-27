@@ -39,7 +39,6 @@ GameState::GameState(DayManager& dayManager, ObjManager& obj_manager)
 extern sf::Sound* mussol;
 extern sf::Sound* grills;
 void GameState::Update(float dt, std::function<bool()> AreAllPlayersInHaima) {
-	std::cout << mDayManager.GetDayTime() << std::endl;
   if (mDayManager.GetDayTime() > 0.72f && mDayManager.GetDayTime() < 0.77f && grills->getStatus() != sf::Sound::Status::Playing) {
 	  grills->play();
   }
