@@ -16,14 +16,14 @@ sf::IntRect SelectSprite(GameObjectType type)
 	{
 	case GameObjectType::NONE:
 		return sf::IntRect(0, 0, 0, 0);
-	case GameObjectType::DECOR_1:
-		return sf::IntRect(0, 4, 16, 16);
-	case GameObjectType::DECOR_2:
-		return sf::IntRect(0, 5, 16, 16);
-	case GameObjectType::DECOR_3:
-		return sf::IntRect(0, 6, 16, 16);
-	case GameObjectType::DECOR_4:
-		return sf::IntRect(0, 7, 16, 16);
+	case GameObjectType::DECOR_CACTUS:
+		return sf::IntRect(4*16, 0, 16, 16);
+	case GameObjectType::DECOR_SKELETON:
+		return sf::IntRect(5*16, 0, 16, 16);
+	case GameObjectType::DECOR_ONE_ROCK:
+		return sf::IntRect(6*16, 0, 16, 16);
+	case GameObjectType::DECOR_TWO_ROCKS:
+		return sf::IntRect(7*16, 0, 16, 16);
 	case GameObjectType::CASA:
 		return sf::IntRect(0, 0, 16, 16);
 	case GameObjectType::TREE:
@@ -311,6 +311,8 @@ void ObjManager::Draw(const sf::View& Camera, std::vector<sf::Sprite>& toDraw, s
 	camDraw(toDraw, center + sf::Vector2f(+size_x*0.5f*2.f, +size_y*0.5f*2.f), spr);
 }
 
+sf::Clock clk_global;
+
 void ObjManager::camDraw(std::vector<sf::Sprite>& toDraw, const sf::Vector2f& Position, sf::Sprite& spr)
 {
 	quadNode* node = searchLeaf(Position);
@@ -319,12 +321,37 @@ void ObjManager::camDraw(std::vector<sf::Sprite>& toDraw, const sf::Vector2f& Po
 	{
 		auto type = (*it)->type;
 		auto r = SelectSprite(type);
+		
+		//Hack texture rects
+		if (type == GameObjectType::WATER)
+		{
+			int ms = clk_global.getElapsedTime().asMilliseconds() % 1000;
+			if (ms > 500)
+			{
+				r.left += 5 * 16;
+			}
+
+		}
+		if (type == GameObjectType::HAIMA)
+		{
+			int ms = clk_global.getElapsedTime().asMilliseconds() % 1000;
+			if (ms > 500)
+			{
+				r.left += 4 * 16;
+			}
+
+		}
 		spr.setTextureRect(r);
-		if (type == GameObjectType::TREE) {
+
+		//Hack origins
+		if (type == GameObjectType::TREE) 
+		{
 			spr.setOrigin(r.width / 2, r.height / 2);
-		} else {
+		} else 
+		{
 			spr.setOrigin(0,0); //MAGIA
 		}
+
 		spr.setPosition((*it)->x, (*it)->y);
 		
 		toDraw.push_back(spr); //Makes a copy which is actually needed
