@@ -15,7 +15,10 @@ public:
 
   void PlaceHaimaIfPosible(ObjManager& obj_manager, sf::Vector2f pos, int& woodAmount);
 
+  void Render(sf::RenderWindow& window);
+
   bool IsPlaying() const;
+
 
 private:
   enum class EState {

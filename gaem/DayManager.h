@@ -19,11 +19,11 @@ public:
   void FastForwardUntilNextMorning();
   bool IsFastForwarding() const;
 
+  float GetDayTime() const;
+  float GetElapsedDays() const;
 private:
 
   float GetDayFactor() const;
-  float GetDayTime() const;
-  float GetElapsedDays() const;
 
   std::unique_ptr<sf::Shader> mNightLight;
   sf::VertexArray mQuad;

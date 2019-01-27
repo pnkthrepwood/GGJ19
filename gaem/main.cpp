@@ -30,7 +30,7 @@ float RES_Y = 720.0f;
 
 const int TILE_SIZE = 16;
 
-const int NUM_PLAYERS = 2;
+const int NUM_PLAYERS = 1;
 const float PLAYER_SPEED = 200;
 
 const float BULLET_SPEED = 500;
@@ -1102,6 +1102,7 @@ int main()
 		dayManager.RenderWithShader(window, renderTexture);
 		dayManager.ImGuiRender();
 		ImGui::SFML::Render(window);
+		gameState.Render(window);
 
 		sf::Text txt_money;
 		txt_money.setFont(*font);
