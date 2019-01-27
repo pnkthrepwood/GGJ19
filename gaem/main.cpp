@@ -50,10 +50,10 @@ sf::Texture* bullet_texture;
 
 sf::Sound* groar1; //done
 sf::Sound* groar2; //done
-sf::Sound* grills;
+sf::Sound* grills; //done
 sf::Sound* shot; //Done
-sf::Sound* mussol;
-sf::Sound* hammer;
+sf::Sound* mussol; //Done
+sf::Sound* hammer; // Done
 sf::SoundBuffer* bchopwood; //done
 
 sf::Font* font;
@@ -61,7 +61,7 @@ sf::Font* font;
 sf::Music* music; //Done
 sf::Music* musicdanger; //done
 
-sf::Shader* nightLight;
+sf::Shader* banyadorPlayer;
 sf::VertexArray quad(sf::Quads, 4);
 sf::Clock clockDay;
 
@@ -144,7 +144,7 @@ struct Player
 	{
 		sprite.setTexture(*player_texture);
 		sprite.setOrigin(5, 8);
-		//sprite.setColor(playerColors[n_player]);
+		sprite.setColor(playerColors[n_player]);
 
 		progress.setFillColor(sf::Color::Transparent);
 		progress.setOrigin(47, 47);
@@ -756,7 +756,7 @@ int main()
 
 	sf::ContextSettings settings;
 
-	sf::RenderWindow window(sf::VideoMode(RES_X, RES_Y), "SFML works!", sf::Style::Default, settings);
+	sf::RenderWindow window(sf::VideoMode(RES_X, RES_Y), "Desert Nomads", sf::Style::Default, settings);
 
 	/*
 	sf::VideoMode desktop_mode = sf::VideoMode::getDesktopMode();
@@ -819,6 +819,9 @@ int main()
 	spr_tile_dessert.setTexture(*tex_spritesheet);
 	spr_tile_dessert.setTextureRect(sf::IntRect(1 * TILE_SIZE, 0, TILE_SIZE, TILE_SIZE));
 
+	banyadorPlayer = new sf::Shader();
+	banyadorPlayer->loadFromFile("banyador.frag", sf::Shader::Type::Fragment);
+
 
 	sf::SoundBuffer b_groar1; b_groar1.loadFromFile("groar1.ogg");
 	groar1 = new sf::Sound(b_groar1);
@@ -862,8 +865,6 @@ int main()
 			SpawnCosasEnChunk(current_casilla_x + i, current_casilla_y + j, (i == 0 && j == 0));
 		}
 	}
-
-	PerlinNoise perlin(1, .1, 1, 1);
 
 	sf::Clock clk_running;
 	sf::Clock clk_delta;
@@ -1107,10 +1108,12 @@ int main()
 #endif
 
 		//Dale draw de verdad
+		sf::RenderStates states;
+		states.shader = banyadorPlayer;
 		for (sf::Sprite& d : toDraw)
 		{
 
-			renderTexture.draw(d);
+			renderTexture.draw(d, states);
 		}
 
 
