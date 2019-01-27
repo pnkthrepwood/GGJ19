@@ -874,7 +874,8 @@ int main()
 				bool isPlayerInHaima = false;
 				for (GameObject* obj : objs_near) {
 					if (obj->type == GameObjectType::HAIMA) {
-						if (getBoundBox(obj).intersects(p->boundBox()))	{
+						sf::FloatRect intersect;
+						if (getBoundBox(obj).intersects(p->boundBox(), intersect) && intersect == p->boundBox())	{
 							isPlayerInHaima = true;
 						}
 					}
