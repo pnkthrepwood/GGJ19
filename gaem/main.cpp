@@ -337,6 +337,8 @@ struct Enemy
 	PlayerState state; //IDLE OR WALKING ONLY
 	float anim_timer;
 
+	float last_hit_timer = 0.0f;
+
 	sf::Sprite* sprite;
 
 	~Enemy() {
@@ -397,14 +399,17 @@ struct Enemy
 			vel_y = 0;
 		}
 
-		//Collsions with enemies
+		//Collisions with enemies
 		sf::FloatRect bounding(x - 4, y - 4, 8, 8);
-		for (Player* player : players) {
+		for (Player* player : players) 
+		{
 			if (player->inmune > 0) continue;
-			if (bounding.intersects(player->boundBox())) {
+			if (bounding.intersects(player->boundBox())) 
+			{
 				player->inmune = 2.f;
 				//player->hp -= 50;
-				if (madera > 0) {
+				if (madera > 0) 
+				{
 					madera -= 1;
 					particles.push_back(new Particle(*madera_texture, player->x, player->y + 25, (rand() % 2) ? 200 : -200, 200, 0.2f));
 				}
@@ -501,12 +506,13 @@ bool UpdateBullet(Bullet *b, float dt, sf::View& cam)
 		return true;
 	}
 
-	//Collsions with enemies
+	//Collisions with enemies
 	sf::FloatRect bounding(b->x, b->y, bullet_texture->getSize().x, bullet_texture->getSize().y);
 	for (Enemy* e : enemies) 
 	{
 		if (bounding.intersects(getBoundBoxSprite(e->sprite))) 
 		{
+			e->last_hit_timer = 0.2f;
 			e->hp -= 50;
 			shot->play();
 			return true;
