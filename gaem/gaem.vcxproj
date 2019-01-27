@@ -140,12 +140,14 @@
     <ClCompile Include="InputManager.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="ObjectManager.cpp" />
+    <ClCompile Include="Perlin.cpp" />
     <ClCompile Include="rand.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="DayManager.h" />
     <ClInclude Include="mates.h" />
     <ClInclude Include="ObjectManager.h" />
+    <ClInclude Include="Perlin.h" />
     <ClInclude Include="rand.h" />
     <ClInclude Include="imconfig-SFML.h" />
     <ClInclude Include="imconfig.h" />

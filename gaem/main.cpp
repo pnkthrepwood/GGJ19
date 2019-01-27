@@ -1005,8 +1005,8 @@ int main()
 		{
 			for (int y = start_y; y < start_y + TILES_CAM_HEIGHT * TILE_SIZE; y += TILE_SIZE)
 			{
-				float perlin = perlin.GetHeight(x, y);
-				spr_tile_dessert.setTextureRect(sf::IntRect((perlin> 0.7? 1 : 2) * TILE_SIZE, 0, TILE_SIZE, TILE_SIZE));
+				float noise = perlin.GetHeight(x, y);
+				spr_tile_dessert.setTextureRect(sf::IntRect((noise > 0.7? 1 : 2) * TILE_SIZE, 0, TILE_SIZE, TILE_SIZE));
 				spr_tile_dessert.setPosition(x, y);
 				renderTexture.draw(spr_tile_dessert);
 			}

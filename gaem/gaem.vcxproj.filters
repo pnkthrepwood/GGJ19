@@ -19,6 +19,7 @@
     <ClCompile Include="ObjectManager.cpp" />
     <ClCompile Include="DayManager.cpp" />
     <ClCompile Include="GameState.cpp" />
+    <ClCompile Include="Perlin.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="rand.h" />
@@ -42,6 +43,7 @@
     <ClInclude Include="ObjectManager.h" />
     <ClInclude Include="DayManager.h" />
     <ClInclude Include="mates.h" />
+    <ClInclude Include="Perlin.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="imgui">
