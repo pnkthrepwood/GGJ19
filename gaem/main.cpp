@@ -89,6 +89,8 @@ enum PlayerState
 	WALKING,
 	GATHERING,
 	SHOOTING,
+	PREPARING_LANCE,
+	THROWING_LANCE
 };
 
 struct Player
@@ -134,7 +136,8 @@ struct Player
 		const int PLAYER_INITIAL_POS_OFFSET = 90;
 		x = RES_X / 2;
 		y = RES_Y / 2;
-		switch (n_player) {
+		switch (n_player) 
+		{
 			case 0:
 				x -= PLAYER_INITIAL_POS_OFFSET / 2;
 				y -= PLAYER_INITIAL_POS_OFFSET;
@@ -155,11 +158,15 @@ struct Player
 
 	sf::FloatRect boundBox()
 	{
-		return 
-			sf::FloatRect(x - sprite.getTextureRect().width/2, 
-			y - sprite.getTextureRect().height/2,
+		sf::FloatRect int_rect = 
+		sf::FloatRect(
+			x - sprite.getTextureRect().width / 2,
+			y - sprite.getTextureRect().height / 2,
 			sprite.getTextureRect().width,
-			sprite.getTextureRect().height);
+			sprite.getTextureRect().height
+		);
+
+		return int_rect;
 	}
 
 	void Draw(std::vector<sf::Sprite>& toDraw)
@@ -196,6 +203,14 @@ struct Player
 		else if (state == PlayerState::GATHERING)
 		{
 			texrect.left = 5*11 + (static_cast<int>(anim_timer / 0.25f) % 2) * 11;
+		}
+		else if (state == PlayerState::PREPARING_LANCE)
+		{
+			texrect.left = 5 * 11 + (static_cast<int>(anim_timer / 0.25f) % 2) * 11;
+		}
+		else if (state == PlayerState::THROWING_LANCE)
+		{
+			texrect.left = 5 * 11 + (static_cast<int>(anim_timer / 0.25f) % 2) * 11;
 		}
 
 		sprite.setTextureRect(texrect);
