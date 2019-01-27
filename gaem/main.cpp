@@ -30,7 +30,7 @@ float RES_Y = 720.0f;
 
 const int TILE_SIZE = 16;
 
-const int NUM_PLAYERS = 2;
+const int NUM_PLAYERS = 1;
 const float PLAYER_SPEED = 200;
 
 const float BULLET_SPEED = 500;
@@ -728,7 +728,7 @@ void UpdatePlayer(float dt, int num_player, sf::View& cam, GameState& gameState)
 
 		if (oasis_near && GamePad::IsButtonPressed(num_player, GamePad::Button::X))
 		{
-			gameState.PlaceHaimaIfPosible(obj_manager, sf::Vector2f(p->x, p->y), madera);
+			gameState.PlaceHaimaIfPosible(sf::Vector2f(p->x, p->y), madera, oasis_near);
 		}
 	}
 
@@ -785,7 +785,7 @@ int main()
 	DayManager dayManager;
 	dayManager.InitNightShader(window);
 
-	GameState gameState(dayManager);
+	GameState gameState(dayManager, obj_manager);
 
 	font = new sf::Font();
 	font->loadFromFile("8bitwonder.ttf");
@@ -922,43 +922,51 @@ int main()
 
 
 		//UPDATE
-		for (int i = 0; i < NUM_PLAYERS; i++)
-		{
-			UpdatePlayer(dt_time.asSeconds(), i, cam, gameState);
-		}
+		if (gameState.IsPlaying()) {
 
-		//Enemies
-		bool in_danger = false;
-		for (int i = 0; i < enemies.size();)
-		{
-			bool cale_destruir = enemies[i]->Update(dt_time.asSeconds());
-			if (enemies[i]->state == PlayerState::WALKING) in_danger = true;
-			if (cale_destruir)
+			for (int i = 0; i < NUM_PLAYERS; i++)
 			{
-				delete enemies[i];
-				enemies.erase(enemies.begin() + i);
+				UpdatePlayer(dt_time.asSeconds(), i, cam, gameState);
 			}
-			else
+
+			//Enemies
+			bool in_danger = false;
+			for (int i = 0; i < enemies.size();)
 			{
-				i++;
+				bool cale_destruir = enemies[i]->Update(dt_time.asSeconds());
+				if (enemies[i]->state == PlayerState::WALKING) in_danger = true;
+				if (cale_destruir)
+				{
+					delete enemies[i];
+					enemies.erase(enemies.begin() + i);
+				}
+				else
+				{
+					i++;
+				}
 			}
-		}
-		if (in_danger) {
-			musicdanger->setVolume(100);
+			if (in_danger) {
+				musicdanger->setVolume(100);
+			}
+			else {
+				musicdanger->setVolume(0);
+			}
+			//Bullets
+			for (int i = 0; i < bullets.size();) {
+				bool cale_destruir = UpdateBullet(bullets[i], dt_time.asSeconds(), cam);
+				if (cale_destruir) {
+					delete bullets[i];
+					bullets.erase(bullets.begin() + i);
+				}
+				else {
+					i++;
+				}
+			}
 		}
 		else {
 			musicdanger->setVolume(0);
 		}
-		//Bullets
-		for (int i = 0; i < bullets.size();) {
-			bool cale_destruir = UpdateBullet(bullets[i], dt_time.asSeconds(), cam);
-			if (cale_destruir) {
-				delete bullets[i];
-				bullets.erase(bullets.begin() + i);
-			} else {
-				i++;
-			}
-		}
+
 		//Particles
 		for (int i = 0; i < particles.size();) {
 			bool cale_destruir = particles[i]->Update(dt_time.asSeconds());
@@ -1111,6 +1119,7 @@ int main()
 		dayManager.RenderWithShader(window, renderTexture);
 		dayManager.ImGuiRender();
 		ImGui::SFML::Render(window);
+		gameState.Render(window);
 
 		sf::Text txt_money;
 		txt_money.setFont(*font);

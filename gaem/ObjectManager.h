@@ -19,7 +19,9 @@ enum class GameObjectType
 	DECOR_TWO_ROCKS,
 	TREE,
 	WATER,
-	HAIMA
+	WATER_BROKEN,
+	HAIMA,
+	HAIMA_BROKEN
 	//...
 };
 struct GameObject

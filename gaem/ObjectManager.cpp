@@ -30,6 +30,8 @@ sf::IntRect SelectSprite(GameObjectType type)
 		return sf::IntRect(0, 7 * 16 + 10, 2*16, 4*16 -10);
 	case GameObjectType::WATER:
 		return sf::IntRect(0 * 16, 4 * 16, 5*16, 3*16);
+	case GameObjectType::WATER_BROKEN:
+		return sf::IntRect(0 * 16, 4 * 16, 5*16, 3*16);
 	case GameObjectType::HAIMA:
 		return sf::IntRect(0, 181, 64, 44);
 	default:
@@ -330,7 +332,7 @@ void ObjManager::camDraw(std::vector<sf::Sprite>& toDraw, const sf::Vector2f& Po
 		auto r = SelectSprite(type);
 
 		//Hack texture rects
-		if (type == GameObjectType::WATER)
+		if (type == GameObjectType::WATER || type == GameObjectType::WATER_BROKEN)
 		{
 			int ms = clk_global.getElapsedTime().asMilliseconds() % 500;
 			if (ms > 250)
@@ -349,7 +351,7 @@ void ObjManager::camDraw(std::vector<sf::Sprite>& toDraw, const sf::Vector2f& Po
 
 		}
 		spr.setTextureRect(r);
-		if (type == GameObjectType::WATER) {
+		if (type == GameObjectType::WATER || type == GameObjectType::WATER_BROKEN) {
 			spr.setOrigin(0,0); //MAGIA
 		} else {
 			spr.setOrigin(r.width / 2, r.height / 2);
