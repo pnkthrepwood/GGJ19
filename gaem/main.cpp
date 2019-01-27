@@ -914,43 +914,51 @@ int main()
 
 
 		//UPDATE
-		for (int i = 0; i < NUM_PLAYERS; i++)
-		{
-			UpdatePlayer(dt_time.asSeconds(), i, cam, gameState);
-		}
+		if (gameState.IsPlaying()) {
 
-		//Enemies
-		bool in_danger = false;
-		for (int i = 0; i < enemies.size();)
-		{
-			bool cale_destruir = enemies[i]->Update(dt_time.asSeconds());
-			if (enemies[i]->state == PlayerState::WALKING) in_danger = true;
-			if (cale_destruir)
+			for (int i = 0; i < NUM_PLAYERS; i++)
 			{
-				delete enemies[i];
-				enemies.erase(enemies.begin() + i);
+				UpdatePlayer(dt_time.asSeconds(), i, cam, gameState);
 			}
-			else
+
+			//Enemies
+			bool in_danger = false;
+			for (int i = 0; i < enemies.size();)
 			{
-				i++;
+				bool cale_destruir = enemies[i]->Update(dt_time.asSeconds());
+				if (enemies[i]->state == PlayerState::WALKING) in_danger = true;
+				if (cale_destruir)
+				{
+					delete enemies[i];
+					enemies.erase(enemies.begin() + i);
+				}
+				else
+				{
+					i++;
+				}
 			}
-		}
-		if (in_danger) {
-			musicdanger->setVolume(100);
+			if (in_danger) {
+				musicdanger->setVolume(100);
+			}
+			else {
+				musicdanger->setVolume(0);
+			}
+			//Bullets
+			for (int i = 0; i < bullets.size();) {
+				bool cale_destruir = UpdateBullet(bullets[i], dt_time.asSeconds(), cam);
+				if (cale_destruir) {
+					delete bullets[i];
+					bullets.erase(bullets.begin() + i);
+				}
+				else {
+					i++;
+				}
+			}
 		}
 		else {
 			musicdanger->setVolume(0);
 		}
-		//Bullets
-		for (int i = 0; i < bullets.size();) {
-			bool cale_destruir = UpdateBullet(bullets[i], dt_time.asSeconds(), cam);
-			if (cale_destruir) {
-				delete bullets[i];
-				bullets.erase(bullets.begin() + i);
-			} else {
-				i++;
-			}
-		}
+
 		//Particles
 		for (int i = 0; i < particles.size();) {
 			bool cale_destruir = particles[i]->Update(dt_time.asSeconds());
