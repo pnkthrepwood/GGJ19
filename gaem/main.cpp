@@ -336,7 +336,7 @@ struct Enemy
 {
 	float x, y;
 	float vel_x, vel_y;
-	int hp = 300;
+	int hp = 400;
 	PlayerState state; //IDLE OR WALKING ONLY
 	float anim_timer;
 
@@ -437,8 +437,6 @@ void SpawnCosasEnChunk(int casilla_x, int casilla_y, bool first_tile = false)
 		return;
 	}
 
-	cout << "Spawning chunk " << casilla_x << "," << casilla_y << " " << first_tile << endl;
-
 	chunksSpawned[casilla_x][casilla_y] = true;
 
 	casilla_x -= 2000;
@@ -458,28 +456,28 @@ void SpawnCosasEnChunk(int casilla_x, int casilla_y, bool first_tile = false)
 	}
 
 	//Decor
-	for (int i = 0; i < 8; ++i)
+	for (int i = 0; i < 6; ++i)
 	{
 		int x = std::rand() % (area_right - area_left) + area_left;
 		int y = std::rand() % (area_bottom - area_top) + area_top;
 
 		obj_manager.Spawn(GameObjectType::DECOR_CACTUS, x, y);
 	}
-	for (int i = 0; i < 8; ++i)
+	for (int i = 0; i < 6; ++i)
 	{
 		int x = std::rand() % (area_right - area_left) + area_left;
 		int y = std::rand() % (area_bottom - area_top) + area_top;
 
 		obj_manager.Spawn(GameObjectType::DECOR_SKELETON, x, y);
 	}
-	for (int i = 0; i < 8; ++i)
+	for (int i = 0; i < 4; ++i)
 	{
 		int x = std::rand() % (area_right - area_left) + area_left;
 		int y = std::rand() % (area_bottom - area_top) + area_top;
 
 		obj_manager.Spawn(GameObjectType::DECOR_ONE_ROCK, x, y);
 	}
-	for (int i = 0; i < 8; ++i)
+	for (int i = 0; i < 4; ++i)
 	{
 		int x = std::rand() % (area_right - area_left) + area_left;
 		int y = std::rand() % (area_bottom - area_top) + area_top;
@@ -487,7 +485,8 @@ void SpawnCosasEnChunk(int casilla_x, int casilla_y, bool first_tile = false)
 		obj_manager.Spawn(GameObjectType::DECOR_TWO_ROCKS, x, y);
 	}
 
-	if (!first_tile) {
+	if (!first_tile) 
+	{
 
 		//Enemies
 		for (int i = 0; i < 5; ++i)
