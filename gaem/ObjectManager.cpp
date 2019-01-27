@@ -332,8 +332,8 @@ void ObjManager::camDraw(std::vector<sf::Sprite>& toDraw, const sf::Vector2f& Po
 		//Hack texture rects
 		if (type == GameObjectType::WATER)
 		{
-			int ms = clk_global.getElapsedTime().asMilliseconds() % 1000;
-			if (ms > 500)
+			int ms = clk_global.getElapsedTime().asMilliseconds() % 500;
+			if (ms > 250)
 			{
 				r.left += 5 * 16;
 			}
@@ -341,8 +341,8 @@ void ObjManager::camDraw(std::vector<sf::Sprite>& toDraw, const sf::Vector2f& Po
 		}
 		if (type == GameObjectType::HAIMA)
 		{
-			int ms = clk_global.getElapsedTime().asMilliseconds() % 1000;
-			if (ms > 500)
+			int ms = clk_global.getElapsedTime().asMilliseconds() % 500;
+			if (ms > 250)
 			{
 				r.left += 4 * 16;
 			}
