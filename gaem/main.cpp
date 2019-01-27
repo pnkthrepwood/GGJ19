@@ -313,16 +313,22 @@ struct Enemy
 	PlayerState state; //IDLE OR WALKING ONLY
 	float anim_timer;
 
-	sf::Sprite sprite;
+	sf::Sprite* sprite;
+
+	~Enemy() {
+		delete sprite;
+	}
 
 	Enemy(float px, float py) : x(px), y(py), vel_x(0), vel_y(0), state(IDLE), anim_timer(0.f) 
 	{
-		sprite.setTexture(*tex_spritesheet);
-		sprite.setOrigin(8, 8);
+		sprite = new sf::Sprite();
+		sprite->setTexture(*tex_spritesheet);
+		sprite->setOrigin(8, 8);
 	}
 
 	bool Update(float dt) 
 	{
+		
 		Player* closestPlayer = nullptr;
 		float closestDist = 9999999999.f;
 		for (Player *p : players) 
@@ -363,10 +369,7 @@ struct Enemy
 			vel_x = 0;
 			vel_y = 0;
 		}
-
-		//cout << x << "A" << y << endl;
-		sprite.setPosition(x, y);
-
+		
 		return (hp <= 0);
 	}
 };
@@ -382,7 +385,7 @@ void SpawnCosasEnChunk(int casilla_x, int casilla_y, bool first_tile = false)
 		return;
 	}
 
-	cout << "Spawning chunk " << casilla_x << "," << casilla_y << endl;
+	cout << "Spawning chunk " << casilla_x << "," << casilla_y << " " << first_tile << endl;
 
 	chunksSpawned[casilla_x][casilla_y] = true;
 
@@ -458,7 +461,7 @@ bool UpdateBullet(Bullet *b, float dt, sf::View& cam)
 	//Collsions with enemies
 	sf::FloatRect bounding(b->x, b->y, bullet_texture->getSize().x, bullet_texture->getSize().y);
 	for (Enemy* e : enemies) {
-		if (bounding.intersects(getBoundBoxSprite(&(e->sprite)))) {
+		if (bounding.intersects(getBoundBoxSprite(e->sprite))) {
 			e->hp -= 50;
 			shot->play();
 			return true;
@@ -814,12 +817,11 @@ int main()
 		}
 
 		//Enemies
-		for (int i = 0; i < enemies.size(); i++)
+		for (int i = 0; i < enemies.size();)
 		{
 			bool cale_destruir = enemies[i]->Update(dt_time.asSeconds());
-			bool esta_lejos = (Mates::Distance(cam.getCenter(), sf::Vector2f(enemies[i]->x, enemies[i]->y))) > cam.getSize().x*8;
-
-			if (cale_destruir || esta_lejos) 
+			
+			if (cale_destruir) 
 			{
 				delete enemies[i];
 				enemies.erase(enemies.begin() + i);
@@ -912,9 +914,12 @@ int main()
 		{
 			int frame = static_cast<int>(enemies[i]->anim_timer / 0.2f) % 2;
 
-			enemies[i]->sprite.setTextureRect(sf::IntRect((1 + frame + ((enemies[i]->vel_x > 0) ? 2 : 0)) * TILE_SIZE, 1*TILE_SIZE, 16, 16));
+			sf::Sprite * sprite = enemies[i]->sprite;
+			
+			sprite->setPosition(enemies[i]->x, enemies[i]->y);
+			sprite->setTextureRect(sf::IntRect((1 + frame + ((enemies[i]->vel_x > 0) ? 2 : 0)) * TILE_SIZE, 1*TILE_SIZE, 16, 16));
 
-			toDraw.push_back(enemies[i]->sprite);
+			toDraw.push_back(*sprite);
 		}
 		//Bulletitas
 		for (int i = 0; i < bullets.size(); i++) 
