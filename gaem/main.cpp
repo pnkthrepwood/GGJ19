@@ -18,6 +18,7 @@
 
 #include "ObjectManager.h"
 #include "DayManager.h"
+#include "GameState.h"
 
 #pragma warning( disable : 4244 )
 
@@ -152,7 +153,7 @@ struct Player
 		const int PLAYER_INITIAL_POS_OFFSET = 90;
 		x = RES_X / 2;
 		y = RES_Y / 2;
-		switch (n_player) 
+		switch (n_player)
 		{
 			case 0:
 				x -= PLAYER_INITIAL_POS_OFFSET / 2;
@@ -174,7 +175,7 @@ struct Player
 
 	sf::FloatRect boundBox()
 	{
-		sf::FloatRect int_rect = 
+		sf::FloatRect int_rect =
 		sf::FloatRect(
 			x - sprite.getTextureRect().width / 2,
 			y - sprite.getTextureRect().height / 2,
@@ -369,13 +370,13 @@ struct Enemy
 		if (closestDist < ENEMY_TRIGGER_DISTANCE)
 		{
 			anim_timer += dt;
-			if (state == IDLE) 
+			if (state == IDLE)
 			{
-				if (std::rand() % 2) 
+				if (std::rand() % 2)
 				{
 					groar2->play();
 				}
-				else 
+				else
 				{
 					groar1->play();
 				}
@@ -401,14 +402,14 @@ struct Enemy
 
 		//Collisions with enemies
 		sf::FloatRect bounding(x - 4, y - 4, 8, 8);
-		for (Player* player : players) 
+		for (Player* player : players)
 		{
 			if (player->inmune > 0) continue;
-			if (bounding.intersects(player->boundBox())) 
+			if (bounding.intersects(player->boundBox()))
 			{
 				player->inmune = 2.f;
 				//player->hp -= 50;
-				if (madera > 0) 
+				if (madera > 0)
 				{
 					madera -= 1;
 					particles.push_back(new Particle(*madera_texture, player->x, player->y + 25, (rand() % 2) ? 200 : -200, 200, 0.2f));
@@ -513,9 +514,9 @@ pair<int, int> GetCasillaFromCam(sf::View& cam) {
 	return make_pair(x+2000, y + 2000);
 }
 
-void InitPlayers() 
+void InitPlayers()
 {
-	for (int i = 0; i < NUM_PLAYERS; i++) 
+	for (int i = 0; i < NUM_PLAYERS; i++)
 	{
 		players[i] = new Player(i);
 	}
@@ -531,16 +532,16 @@ bool UpdateBullet(Bullet *b, float dt, sf::View& cam)
 	if (b->x > cam.getCenter().x + cam.getSize().x / 2 ||
 		b->x < cam.getCenter().x - cam.getSize().x / 2 ||
 		b->y > cam.getCenter().y + cam.getSize().y / 2 ||
-		b->y < cam.getCenter().y - cam.getSize().y / 2) 
+		b->y < cam.getCenter().y - cam.getSize().y / 2)
 	{
 		return true;
 	}
 
 	//Collisions with enemies
 	sf::FloatRect bounding(b->x, b->y, bullet_texture->getSize().x, bullet_texture->getSize().y);
-	for (Enemy* e : enemies) 
+	for (Enemy* e : enemies)
 	{
-		if (bounding.intersects(getBoundBoxSprite(e->sprite))) 
+		if (bounding.intersects(getBoundBoxSprite(e->sprite)))
 		{
 			e->last_hit_timer = 0.2f;
 			e->hp -= 50;
@@ -554,7 +555,7 @@ bool UpdateBullet(Bullet *b, float dt, sf::View& cam)
 }
 
 
-void UpdatePlayer(float dt, int num_player, sf::View& cam)
+void UpdatePlayer(float dt, int num_player, sf::View& cam, GameState& gameState)
 {
 	Player* p = players[num_player];
 
@@ -563,7 +564,7 @@ void UpdatePlayer(float dt, int num_player, sf::View& cam)
 	float length_L = Mates::Length(stick_L);
 	float length_R = Mates::Length(stick_R);
 
-	if (p->inmune > 0) 
+	if (p->inmune > 0)
 	{
 		p->inmune -= dt;
 	}
@@ -624,7 +625,7 @@ void UpdatePlayer(float dt, int num_player, sf::View& cam)
 	{
 		facing_vector = stick_L;
 	}
-	if (Mates::Length(facing_vector) > 0.01f) 
+	if (Mates::Length(facing_vector) > 0.01f)
 	{
 		p->facing_vector = Mates::Normalize(facing_vector);
 	}
@@ -649,7 +650,7 @@ void UpdatePlayer(float dt, int num_player, sf::View& cam)
 			p->state = PlayerState::IDLE;
 		}
 	}
-	else if (p->will_shot) 
+	else if (p->will_shot)
 	{
 		p->state = PlayerState::THROWING_LANCE;
 		p->bullet_cooldown = BULLET_COOLDOWN;
@@ -659,18 +660,18 @@ void UpdatePlayer(float dt, int num_player, sf::View& cam)
 	else if (p->state == PlayerState::PREPARING_LANCE && p->bullet_cooldown > 0)
 	{
 		p->bullet_cooldown -= dt;
-		
-		if (p->bullet_cooldown < 0) 
+
+		if (p->bullet_cooldown < 0)
 		{
 			p->will_shot = true;
 		}
 	}
-	else if (GamePad::Trigger::Right.IsJustPressed(num_player) && p->bullet_cooldown <= 0 && p->madera_progress <= 0) 
+	else if (GamePad::Trigger::Right.IsJustPressed(num_player) && p->bullet_cooldown <= 0 && p->madera_progress <= 0)
 	{
 		p->bullet_cooldown = BULLET_COOLDOWN;
 		p->state = PlayerState::PREPARING_LANCE;
 	}
-	
+
 
 	// Gather wood
 	static std::vector<GameObject*> objs_near;
@@ -707,29 +708,34 @@ void UpdatePlayer(float dt, int num_player, sf::View& cam)
 		}
 	}
 
+	{ // Plant Haimas
+		const float DISTANCE_TO_PLANT_HAIMA = 100;
+		objs_near.clear();
+		obj_manager.getObjects(objs_near, cam);
 
-	// Plant Haimas
-	objs_near.clear();
-	obj_manager.getObjects(objs_near, cam);
-
-	GameObject* oasis_near = NULL;
-	sf::Vector2f playerPos(p->centerPos());
-	for (GameObject* obj : objs_near)
-	{
-		if (obj->type == GameObjectType::HAIMA)
+		GameObject* oasis_near = NULL;
+		for (GameObject* obj : objs_near)
 		{
-			if (getBoundBox(obj).intersects(p->boundBox()))
+			if (obj->type == GameObjectType::WATER)
 			{
-				touching_arbol = obj;
+				if (Mates::Distance(sf::Vector2f(p->x, p->y),sf::Vector2f(obj->x, obj->y)) < DISTANCE_TO_PLANT_HAIMA)
+				{
+					oasis_near = obj;
+				}
 			}
+		}
+
+		if (oasis_near && GamePad::IsButtonPressed(num_player, GamePad::Button::X))
+		{
+			gameState.PlaceHaimaIfPosible(obj_manager, sf::Vector2f(p->x, p->y), madera);
 		}
 	}
 
 
-	if (p->hp < 100) 
+	if (p->hp < 100)
 	{
 		p->hp += dt;
-		if (p->hp > 100) 
+		if (p->hp > 100)
 		{
 			p->hp = 100;
 		}
@@ -771,8 +777,10 @@ int main()
 	DayManager dayManager;
 	dayManager.InitNightShader(window);
 
-	font = new sf::Font();
-	font->loadFromFile("8bitwonder.ttf");
+	GameState gameState(dayManager);
+
+	sf::Font font;
+	font.loadFromFile("8bitwonder.ttf");
 
 	player_texture = new sf::Texture();
 	player_texture->loadFromFile("desertman_sheet.png");
@@ -861,6 +869,27 @@ int main()
 		GamePad::UpdateInputState();
 		dayManager.Update(dt_time.asSeconds());
 
+		gameState.Update(dt_time.asSeconds(), [&cam] () {
+			std::vector<GameObject*> objs_near;
+			obj_manager.getObjects(objs_near, cam);
+
+			bool areAllPlayersInHaima = true;
+			for (Player* p : players) {
+				bool isPlayerInHaima = false;
+				for (GameObject* obj : objs_near) {
+					if (obj->type == GameObjectType::HAIMA) {
+						sf::FloatRect intersect;
+						if (getBoundBox(obj).intersects(p->boundBox(), intersect) && intersect == p->boundBox())	{
+							isPlayerInHaima = true;
+						}
+					}
+				}
+				areAllPlayersInHaima &= isPlayerInHaima;
+			}
+
+			return areAllPlayersInHaima;
+		});
+
 
 		//Spawn chunks
 		auto p = GetCasillaFromCam(cam);
@@ -886,7 +915,7 @@ int main()
 		//UPDATE
 		for (int i = 0; i < NUM_PLAYERS; i++)
 		{
-			UpdatePlayer(dt_time.asSeconds(), i, cam);
+			UpdatePlayer(dt_time.asSeconds(), i, cam, gameState);
 		}
 
 		//Enemies
@@ -1014,7 +1043,7 @@ int main()
 		//Bulletitas
 		for (int i = 0; i < bullets.size(); i++)
 		{
-			
+
 			spr_bullet.setPosition(bullets[i]->x, bullets[i]->y);
 			spr_bullet.setOrigin( 5, 8 );
 			spr_bullet.setTextureRect(sf::IntRect(0, 4*16, 11, 16));
@@ -1073,7 +1102,7 @@ int main()
 		ImGui::SFML::Render(window);
 
 		sf::Text txt_money;
-		txt_money.setFont(*font);
+		txt_money.setFont(font);
 		sf::String str = std::to_string(madera);
 		txt_money.setString(str);
 		txt_money.setFillColor(sf::Color::White);

@@ -61,7 +61,7 @@ sf::Glsl::Vec3 DayManager::pSetHSV(float h, float s, float v ) {
 
 void DayManager::Update(float dt) {
   float incrementOfDt = (dt / SECONDS_OF_TARGET_CICLE) * SECONDS_OF_RAW_CICLE;
-  if (mElapsed < mFastForwardTarget) {
+  if (IsFastForwarding()) {
       incrementOfDt *= 100;
   }
   mElapsed += incrementOfDt;
@@ -123,10 +123,10 @@ void DayManager::RenderGui(sf::RenderWindow& window) {
   txt_day.setPosition(RES_X / 2, RES_Y - textRect.height - 10);
   txt_day.setOrigin(textRect.width/2, 0);
   window.draw(txt_day);
-  
+
 }
 
-void DayManager::ImGuiRender() 
+void DayManager::ImGuiRender()
 {
 #if _DEBUG
   ImGui::Begin("DayManager");
@@ -144,6 +144,10 @@ void DayManager::ImGuiRender()
 
 void DayManager::FastForwardUntilNextMorning() {
     mFastForwardTarget = std::ceil(mElapsed/SECONDS_OF_RAW_CICLE)*SECONDS_OF_RAW_CICLE + SECONDS_OF_RAW_CICLE/5.f;
+}
+
+bool DayManager::IsFastForwarding() const {
+    return mElapsed < mFastForwardTarget;
 }
 
 float DayManager::GetDayFactor() const {
