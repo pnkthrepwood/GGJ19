@@ -13,6 +13,7 @@ public:
 
   void Update(float dt);
   void RenderWithShader(sf::RenderWindow& window, const sf::RenderTexture& renderTexture);
+  void RenderGui(sf::RenderWindow& window);
   void ImGuiRender();
 
   void FastForwardUntilNextMorning();
@@ -20,6 +21,8 @@ public:
 private:
 
   float GetDayFactor() const;
+  float GetDayTime() const;
+  float GetElapsedDays() const;
 
   std::unique_ptr<sf::Shader> mNightLight;
   sf::VertexArray mQuad;

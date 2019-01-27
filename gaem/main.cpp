@@ -53,6 +53,8 @@ sf::Sound* mussol;
 sf::Sound* hammer;
 sf::SoundBuffer* bchopwood; //done
 
+sf::Font* font;
+
 sf::Music* music; //Done
 sf::Music* musicdanger;
 
@@ -114,6 +116,7 @@ struct Player
 	int num_player;
 	bool will_shot = false;
 	sf::Sound chopwood;
+	float inmune;
 
 	//Anim stuff
 	FacingDirection facing;
@@ -124,8 +127,8 @@ struct Player
 	ProgressShape progress;
 	sf::RectangleShape lifeBar;
 
-	Player(int n_player) 
-		: num_player(n_player) 
+	Player(int n_player)
+		: num_player(n_player)
 		, hp(100)
 		, vel_x(0)
 		, vel_y(0)
@@ -134,6 +137,7 @@ struct Player
 		, anim_timer(0.f)
 		, facing_vector(1, 0)
 		, chopwood(*bchopwood)
+		, inmune(-1)
 	{
 		sprite.setTexture(*player_texture);
 		sprite.setOrigin(5, 8);
@@ -179,6 +183,11 @@ struct Player
 		);
 
 		return int_rect;
+	}
+
+	sf::Vector2f centerPos() {
+		 const auto box = boundBox();
+		 return {box.left + box.width/2.f, box.top + box.height/2.f};
 	}
 
 	void Draw(std::vector<sf::Sprite>& toDraw)
@@ -233,7 +242,7 @@ struct Player
 	{
 		progress.setOutlineThickness(12); //Force redraw shape
 		progress.progress = progress.getPointCount() - (progress.getPointCount()*(madera_progress / MADERA_GATHER_TIME));
-		if (progress.progress < 120 && progress.progress > 3) 
+		if (progress.progress < 120 && progress.progress > 3)
 		{
 			progress.setPosition(x, y);
 			rt.draw(progress);
@@ -320,7 +329,7 @@ sf::FloatRect getBoundBoxSprite(sf::Sprite* sprite)
 }
 
 
-struct Enemy 
+struct Enemy
 {
 	float x, y;
 	float vel_x, vel_y;
@@ -334,28 +343,28 @@ struct Enemy
 		delete sprite;
 	}
 
-	Enemy(float px, float py) : x(px), y(py), vel_x(0), vel_y(0), state(IDLE), anim_timer(0.f) 
+	Enemy(float px, float py) : x(px), y(py), vel_x(0), vel_y(0), state(IDLE), anim_timer(0.f)
 	{
 		sprite = new sf::Sprite();
 		sprite->setTexture(*tex_spritesheet);
 		sprite->setOrigin(8, 8);
 	}
 
-	bool Update(float dt) 
+	bool Update(float dt)
 	{
-		
+
 		Player* closestPlayer = nullptr;
 		float closestDist = 9999999999.f;
-		for (Player *p : players) 
+		for (Player *p : players)
 		{
 			float d = Mates::Distance(sf::Vector2f(p->x, p->y), sf::Vector2f(x, y));
-			if (d < closestDist) 
+			if (d < closestDist)
 			{
 				closestDist = d;
 				closestPlayer = p;
 			}
 		}
-		if (closestDist < ENEMY_TRIGGER_DISTANCE) 
+		if (closestDist < ENEMY_TRIGGER_DISTANCE)
 		{
 			anim_timer += dt;
 			if (state == IDLE) 
@@ -372,7 +381,7 @@ struct Enemy
 				state = WALKING;
 				sf::Vector2f dir(closestPlayer->x - x, closestPlayer->y - y);
 				sf::Vector2f dir_bona = Mates::Normalize(dir);
-				
+
 				vel_x = dir_bona.x * ENEMY_MAX_SPEED;
 				vel_y = dir_bona.y * ENEMY_MAX_SPEED;
 
@@ -380,14 +389,29 @@ struct Enemy
 			x += vel_x * dt;
 			y += vel_y * dt;
 		}
-		else 
+		else
 		{
 			state = IDLE;
 			anim_timer = 0;
 			vel_x = 0;
 			vel_y = 0;
 		}
-		
+
+		//Collsions with enemies
+		sf::FloatRect bounding(x - 4, y - 4, 8, 8);
+		for (Player* player : players) {
+			if (player->inmune > 0) continue;
+			if (bounding.intersects(player->boundBox())) {
+				player->inmune = 2.f;
+				//player->hp -= 50;
+				if (madera > 0) {
+					madera -= 1;
+					particles.push_back(new Particle(*madera_texture, player->x, player->y + 25, (rand() % 2) ? 200 : -200, 200, 0.2f));
+				}
+				shot->play();
+			}
+		}
+
 		return (hp <= 0);
 	}
 };
@@ -398,7 +422,7 @@ bool chunksSpawned[4000][4000] = { 0 };
 
 void SpawnCosasEnChunk(int casilla_x, int casilla_y, bool first_tile = false)
 {
-	if (chunksSpawned[casilla_x][casilla_y]) 
+	if (chunksSpawned[casilla_x][casilla_y])
 	{
 		return;
 	}
@@ -502,7 +526,11 @@ void UpdatePlayer(float dt, int num_player, sf::View& cam)
 	float length_L = Mates::Length(stick_L);
 	float length_R = Mates::Length(stick_R);
 
-	
+	if (p->inmune > 0) 
+	{
+		p->inmune -= dt;
+	}
+
 
 	if (p->state != PlayerState::PREPARING_LANCE &&
 		p->state != PlayerState::THROWING_LANCE)
@@ -535,9 +563,7 @@ void UpdatePlayer(float dt, int num_player, sf::View& cam)
 
 		stick_L = sf::Vector2f(0, 0);
 	}
-	
-	
-	
+
 	// Update speed
 	sf::Vector2f direction = Mates::Normalize(sf::Vector2f(stick_L.x, stick_L.y));
 	p->vel_x = direction.x * PLAYER_SPEED;
@@ -617,7 +643,43 @@ void UpdatePlayer(float dt, int num_player, sf::View& cam)
 	GameObject* touching_arbol = NULL;
 	for (GameObject* obj : objs_near)
 	{
-		if (obj->type == GameObjectType::TREE) 
+		if (obj->type == GameObjectType::TREE)
+		{
+			if (getBoundBox(obj).intersects(p->boundBox()))
+			{
+
+				touching_arbol = obj;
+			}
+		}
+	}
+
+	if (GamePad::IsButtonJustReleased(num_player, GamePad::Button::X))
+	{
+		p->madera_progress = 0;
+		p->chopwood.stop();
+	}
+	if (touching_arbol && GamePad::IsButtonPressed(num_player, GamePad::Button::X))
+	{
+		p->madera_progress += dt;
+		if (p->madera_progress >= MADERA_GATHER_TIME)
+		{
+			madera += 1;
+			p->madera_progress = 0;
+			particles.push_back(new Particle(*madera_texture, p->x, p->y - 25, 0, -200, 0.2f));
+			obj_manager.DestroyObject(touching_arbol);;
+		}
+	}
+
+
+	// Plant Haimas
+	objs_near.clear();
+	obj_manager.getObjects(objs_near, cam);
+
+	GameObject* oasis_near = NULL;
+	sf::Vector2f playerPos(p->centerPos());
+	for (GameObject* obj : objs_near)
+	{
+		if (obj->type == GameObjectType::HAIMA)
 		{
 			if (getBoundBox(obj).intersects(p->boundBox()))
 			{
@@ -626,22 +688,6 @@ void UpdatePlayer(float dt, int num_player, sf::View& cam)
 		}
 	}
 
-	if (GamePad::IsButtonJustReleased(num_player, GamePad::Button::X)) 
-	{
-		p->madera_progress = 0;
-		p->chopwood.stop();
-	}
-	if (touching_arbol && GamePad::IsButtonPressed(num_player, GamePad::Button::X)) 
-	{
-		p->madera_progress += dt;
-		if (p->madera_progress >= MADERA_GATHER_TIME) 
-		{
-			madera += 1;
-			p->madera_progress = 0;
-			particles.push_back(new Particle(*madera_texture, p->x, p->y - 25, 0, -200, 0.2f));
-			obj_manager.DestroyObject(touching_arbol);;
-		}
-	}
 
 	if (p->hp < 100) 
 	{
@@ -653,62 +699,9 @@ void UpdatePlayer(float dt, int num_player, sf::View& cam)
 	}
 }
 
-void InitNightShader(sf::RenderTarget& renderTarget) {
-	nightLight = new sf::Shader();
-	nightLight->loadFromFile("nightLight.frag", sf::Shader::Type::Fragment);
-
-	auto size = renderTarget.getSize();
-	quad[0].position = sf::Vector2f(0,0);
-	quad[1].position = sf::Vector2f(0,size.y);
-	quad[2].position = sf::Vector2f(size.x,size.y);
-	quad[3].position = sf::Vector2f(size.x,0);
-
-	quad[0].texCoords = sf::Vector2f(0,0);
-	quad[1].texCoords = sf::Vector2f(0,size.y);
-	quad[2].texCoords = sf::Vector2f(size.x,size.y);
-	quad[3].texCoords = sf::Vector2f(size.x,0);
-}
-
-sf::Glsl::Vec3 pSetHSV(float h, float s, float v ) {
-    	// H [0, 360] S and V [0.0, 1.0].
-    	int i = (int)floor(h/60.0f) % 6;
-    	float f = h/60.0f - floor(h/60.0f);
-    	float p = v * (1.f - s);
-    	float q = v * (1.f - s * f);
-    	float t = v * (1.f - (1.f - f) * s);
-
-    	switch (i) {
-    		case 0: return sf::Glsl::Vec3(v, t, p);
-    		break;
-    		case 1: return sf::Glsl::Vec3(q, v, p);
-    		break;
-    		case 2: return sf::Glsl::Vec3(p, v, t);
-    		break;
-    		case 3: return sf::Glsl::Vec3(p, q, v);
-    		break;
-    		case 4: return sf::Glsl::Vec3(t, p, v);
-    		break;
-    		case 5: return sf::Glsl::Vec3(v, p, q);
-    	}
-        return sf::Glsl::Vec3(0.2f, 0.2f, 0.2f);
-    }
-
-void RenderWithShader(sf::RenderWindow& window, const sf::RenderTexture& renderTexture) {
-	sf::RenderStates states;
-
-	nightLight->setUniform("texture", sf::Shader::CurrentTexture);
-	nightLight->setUniform("dayTime", (clockDay.getElapsedTime().asSeconds())/60);
-	nightLight->setUniform("day_color", sf::Glsl::Vec3(1,1,1));
-	nightLight->setUniform("sun_set_color", sf::Glsl::Vec3(1,0.5f,0));
-	nightLight->setUniform("night_color", sf::Glsl::Vec3(0.2f,0,1));
-
-	states.shader = nightLight;
-	states.texture = &renderTexture.getTexture();
-	window.draw(quad, states);
-}
-
 //	3hola qye ts c-dcD
 //		hola mamonn bbbbastant er
+
 
 int main()
 {
@@ -731,14 +724,14 @@ int main()
 	sf::View ui_view(sf::FloatRect(0.0f, 0.f, RES_X, RES_Y));
 
 	cam.zoom(0.4f);
-	
+
 
 
 	DayManager dayManager;
 	dayManager.InitNightShader(window);
 
-	sf::Font font;
-	font.loadFromFile("8bitwonder.ttf");
+	font = new sf::Font();
+	font->loadFromFile("8bitwonder.ttf");
 
 	player_texture = new sf::Texture();
 	player_texture->loadFromFile("desertman_sheet.png");
@@ -768,9 +761,9 @@ int main()
 	groar2 = new sf::Sound(bgroar2);
 	sf::SoundBuffer bgrills; bgrills.loadFromFile("grills.ogg");
 	grills = new sf::Sound(bgrills);
-	bchopwood = new sf::SoundBuffer(); 
+	bchopwood = new sf::SoundBuffer();
 	bchopwood->loadFromFile("chopwood.ogg"); //chainsaw?
-	
+
 	sf::SoundBuffer bshot; bshot.loadFromFile("shot.ogg");
 	shot = new sf::Sound(bshot);
 	sf::SoundBuffer bmussol; bmussol.loadFromFile("mussol.ogg");
@@ -790,16 +783,10 @@ int main()
 	obj_manager.Spawn(GameObjectType::WATER, RES_X/2, RES_Y / 2);
 
 
-	//obj_manager.Spawn(GameObjectType::TREE, 50, 50);
-
-	//enemies.push_back(new Enemy(600, 400));
-
 	auto p = GetCasillaFromCam(cam);
 	current_casilla_x = p.first;
 	current_casilla_y = p.second;
-
 	cout << "first chunks " << current_casilla_x << "," << current_casilla_y << endl;
-
 	for (int i = -1; i <= 1; i++)
 	{
 		for (int j = -1; j <= 1; j++)
@@ -833,18 +820,18 @@ int main()
 
 		//Spawn chunks
 		auto p = GetCasillaFromCam(cam);
-		if (p.first != current_casilla_x || 
-			p.second != current_casilla_y) 
+		if (p.first != current_casilla_x ||
+			p.second != current_casilla_y)
 		{
-			
+
 			current_casilla_x = p.first;
 			current_casilla_y = p.second;
 
 			cout << "entering " << current_casilla_x << "," << current_casilla_y << endl;
 
-			for (int i = -1; i <= 1; i++) 
+			for (int i = -1; i <= 1; i++)
 			{
-				for (int j = -1; j <= 1; j++) 
+				for (int j = -1; j <= 1; j++)
 				{
 					SpawnCosasEnChunk(current_casilla_x + i, current_casilla_y + j);
 				}
@@ -853,7 +840,7 @@ int main()
 
 
 		//UPDATE
-		for (int i = 0; i < NUM_PLAYERS; i++) 
+		for (int i = 0; i < NUM_PLAYERS; i++)
 		{
 			UpdatePlayer(dt_time.asSeconds(), i, cam);
 		}
@@ -862,13 +849,13 @@ int main()
 		for (int i = 0; i < enemies.size();)
 		{
 			bool cale_destruir = enemies[i]->Update(dt_time.asSeconds());
-			
-			if (cale_destruir) 
+
+			if (cale_destruir)
 			{
 				delete enemies[i];
 				enemies.erase(enemies.begin() + i);
 			}
-			else 
+			else
 			{
 				i++;
 			}
@@ -913,11 +900,11 @@ int main()
 
 		}
 
-		
+
 		ImGui::Begin("finester");
 		ImGui::Text("Pos: %f, %f", players[0]->x, players[0]->y);
 		ImGui::End();
-		
+
 
 		renderTexture.setView(cam);
 
@@ -957,28 +944,27 @@ int main()
 			int frame = static_cast<int>(enemies[i]->anim_timer / 0.2f) % 2;
 
 			sf::Sprite * sprite = enemies[i]->sprite;
-			
+
 			sprite->setPosition(enemies[i]->x, enemies[i]->y);
 			sprite->setTextureRect(sf::IntRect((1 + frame + ((enemies[i]->vel_x > 0) ? 2 : 0)) * TILE_SIZE, 1*TILE_SIZE, 16, 16));
 
 			toDraw.push_back(*sprite);
 		}
 		//Bulletitas
-		for (int i = 0; i < bullets.size(); i++) 
+		for (int i = 0; i < bullets.size(); i++)
 		{
 			spr_bullet.setPosition(bullets[i]->x, bullets[i]->y);
 			spr_bullet.setColor(playerColors[bullets[i]->player]);
 			toDraw.push_back(spr_bullet);
 		}
 		//Ordering madafaca
-		sort(toDraw.begin(), toDraw.end(), [](sf::Sprite& a, sf::Sprite& b) {
-			return a.getPosition().y + a.getTextureRect().height/2 < b.getPosition().y + b.getTextureRect().height / 2;
+		sf::IntRect rectWater = SelectSprite(GameObjectType::WATER);;
+		sort(toDraw.begin(), toDraw.end(), [rectWater](sf::Sprite& a, sf::Sprite& b) {
+			return a.getPosition().y + a.getTextureRect().height / 2 < b.getPosition().y + b.getTextureRect().height / 2;
 		});
 		//Dale draw de verdad
-		for (sf::Sprite& d : toDraw) 
+		for (sf::Sprite& d : toDraw)
 		{
-
-
 
 			renderTexture.draw(d);
 		}
@@ -995,6 +981,21 @@ int main()
 			players[i]->DrawUI(renderTexture);
 		}
 
+
+
+		/*
+		static std::vector<GameObject*> objs_near;
+		objs_near.clear();
+		obj_manager.getObjects(objs_near, cam);
+
+		for (GameObject* go : objs_near) {
+			sf::RectangleShape rs;
+			sf::FloatRect bb = getBoundBox(go);
+			rs.setPosition(bb.left, bb.top);
+			rs.setSize(sf::Vector2f(bb.width, bb.height));
+			renderTexture.draw(rs);
+		}
+		*/
 		renderTexture.display();
 
 
@@ -1005,7 +1006,7 @@ int main()
 		ImGui::SFML::Render(window);
 
 		sf::Text txt_money;
-		txt_money.setFont(font);
+		txt_money.setFont(*font);
 		sf::String str = std::to_string(madera);
 		txt_money.setString(str);
 		txt_money.setFillColor(sf::Color::White);
@@ -1018,6 +1019,8 @@ int main()
 		window.draw(txt_money);
 		spr_madera.setPosition(40, 40);
 		window.draw(spr_madera);
+
+		dayManager.RenderGui(window);
 
 		window.display();
 
