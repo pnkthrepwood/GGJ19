@@ -19,7 +19,7 @@ sf::IntRect SelectSprite(GameObjectType type)
 	case GameObjectType::CASA:
 		return sf::IntRect(0, 0, 16, 16);
 	case GameObjectType::TREE:
-		return sf::IntRect(0, 7 * 16, 2*16, 4*16);
+		return sf::IntRect(0, 7 * 16 + 10, 2*16, 4*16 -10);
 	case GameObjectType::WATER:
 		return sf::IntRect(0 * 16, 4 * 16, 5*16, 3*16);
 	default:
@@ -41,7 +41,14 @@ sf::Vector2f getObjSize(GameObjectType type)
 		{
 			return sf::Vector2f(16, 16);
 		} break;
+
+		case GameObjectType::TREE:
+		{
+			return sf::Vector2f(29, 54);
+		} break;
 	}
+
+	std::cout << "FALTAN CASES DEL GETOBJSIZE (EN EL OBJMANAGER.CPP)" << std::endl;
 
 	return sf::Vector2f(-1, -1);
 }
