@@ -672,7 +672,11 @@ int main()
 
 	InitPlayers();
 
-	//obj_manager.Spawn(GameObjectType::CASA, 0, 0);
+
+
+	obj_manager.Spawn(GameObjectType::WATER, RES_X/2, RES_Y / 2);
+
+
 	//obj_manager.Spawn(GameObjectType::TREE, 50, 50);
 
 	//enemies.push_back(new Enemy(600, 400));
@@ -779,9 +783,9 @@ int main()
 		}
 
 
-//		ImGui::Begin("finester");
-//		ImGui::Text("Joy: %f, %f", cam.getCenter().x, cam.getCenter().y);
-//		ImGui::End();
+		ImGui::Begin("finester");
+		ImGui::Text("Pos: %f, %f", players[0]->x, players[0]->y);
+		ImGui::End();
 
 		renderTexture.setView(cam);
 
