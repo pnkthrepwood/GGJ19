@@ -9,6 +9,20 @@ extern float RES_X;
 
 namespace {
   const int WOOD_FOR_HAIMA = 1;
+
+  void DrawText(sf::RenderWindow& window, const std::string& str, sf::Vector2f pos) {
+    sf::Text txt_day;
+    txt_day.setFont(*font);
+    txt_day.setString(str);
+    txt_day.setFillColor(sf::Color::White);
+    txt_day.setOutlineColor(sf::Color::Black);
+    txt_day.setOutlineThickness(2);
+    txt_day.setCharacterSize(32);
+    sf::FloatRect textRect = txt_day.getLocalBounds();
+    txt_day.setPosition(pos.x, pos.y - textRect.height);
+    txt_day.setOrigin(textRect.width/2, 0);
+    window.draw(txt_day);
+  }
 }
 
 GameState::GameState(DayManager& dayManager)
@@ -64,18 +78,9 @@ void GameState::Render(sf::RenderWindow& window) {
     switch (mState) {
       case EState::PLAYING:
       {
-        sf::Text txt_day;
-        txt_day.setFont(*font);
         sf::String str = "Day " + std::to_string(int(mDayManager.GetElapsedDays()));
-        txt_day.setString(str);
-        txt_day.setFillColor(sf::Color::White);
-        txt_day.setOutlineColor(sf::Color::Black);
-        txt_day.setOutlineThickness(2);
-        txt_day.setCharacterSize(32);
-        sf::FloatRect textRect = txt_day.getLocalBounds();
-        txt_day.setPosition(RES_X / 2, RES_Y - textRect.height - 10);
-        txt_day.setOrigin(textRect.width/2, 0);
-        window.draw(txt_day);
+        sf::Vector2f pos(RES_X / 2, RES_Y - 10);
+        DrawText(window, str, pos);
       } break;
       case EState::NEXT_DAY_ING:
       {
