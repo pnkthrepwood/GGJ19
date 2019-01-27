@@ -33,8 +33,8 @@ const float PLAYER_SPEED = 300;
 
 const float BULLET_SPEED = 700;
 const float ENEMY_TRIGGER_DISTANCE = 400;
-const float ENEMY_ACCEL = 2000;
-const float ENEMY_MAX_SPEED = 700;
+const float ENEMY_ACCEL = 1000;
+const float ENEMY_MAX_SPEED = 350;
 const float BULLET_COOLDOWN = 0.3; //seconds
 const float MADERA_GATHER_TIME = 3; //seconds
 
@@ -89,6 +89,7 @@ enum PlayerState
 	IDLE,
 	WALKING,
 	GATHERING,
+	SHOOTING,
 };
 
 struct Player
@@ -100,6 +101,7 @@ struct Player
 	float bullet_cooldown;
 	float madera_progress;
 	int num_player;
+	bool will_shot = false;
 
 	//Anim stuff
 	FacingDirection facing;
@@ -415,6 +417,12 @@ void UpdatePlayer(float dt, int num_player, sf::View& cam)
 		p->state = PlayerState::IDLE;
 		p->anim_timer = 0;
 	}
+	else if (p->bullet_cooldown > 0)
+	{
+		stick_L = sf::Vector2f(0, 0);
+		p->state = PlayerState::SHOOTING;
+		p->anim_timer += dt;
+	}
 	else if (p->madera_progress > 0) //gathering -> quieto
 	{
 		stick_L = sf::Vector2f(0, 0);
@@ -441,15 +449,18 @@ void UpdatePlayer(float dt, int num_player, sf::View& cam)
 	p->y = Mates::Clamp(p->y, cam.getCenter().y - cam.getSize().y / 2 + 50, cam.getCenter().y + cam.getSize().y / 2 - 50);
 
 	// Update facing vector
+	sf::Vector2f facing_vector(0, 0);
 	if (length_R > 30)
 	{
-		p->facing_vector = stick_R;
+		facing_vector = stick_R;
 	}
 	else if (length_L > 30)
 	{
-		p->facing_vector = stick_L;
+		facing_vector = stick_L;
 	}
-	p->facing_vector = Mates::Normalize(sf::Vector2f(p->facing_vector.x, p->facing_vector.y));
+	if (Mates::Length(facing_vector) > 0.01f) {
+		p->facing_vector = Mates::Normalize(facing_vector);
+	}
 
 	float angle = 180+Mates::RadsToDegs(atan2(p->facing_vector.y, p->facing_vector.x));
 	if (angle > 270+45) {
@@ -463,11 +474,17 @@ void UpdatePlayer(float dt, int num_player, sf::View& cam)
 	}
 
 	//Shot
+	if (p->will_shot) {
+		bullets.push_back(new Bullet(p->x, p->y, p->facing_vector, num_player));
+		p->will_shot = false;
+	}
 	if (p->bullet_cooldown > 0) {
 		p->bullet_cooldown -= dt;
+		if (p->bullet_cooldown < 0) {
+			p->will_shot = true;
+		}
 	}
 	if (GamePad::Trigger::Right.IsJustPressed(num_player) && p->bullet_cooldown <= 0 && p->madera_progress <= 0) {
-		bullets.push_back(new Bullet(p->x, p->y, p->facing_vector, num_player));
 		p->bullet_cooldown = BULLET_COOLDOWN;
 	}
 
@@ -480,9 +497,11 @@ void UpdatePlayer(float dt, int num_player, sf::View& cam)
 	GameObject* touching_arbol = NULL;
 	for (GameObject* obj : objs_near)
 	{
-		if (getBoundBox(obj).intersects(p->boundBox()))
-		{
-			touching_arbol = obj;
+		if (obj->type == GameObjectType::TREE) {
+			if (getBoundBox(obj).intersects(p->boundBox()))
+			{
+				touching_arbol = obj;
+			}
 		}
 	}
 
@@ -598,18 +617,9 @@ void SpawnAndUnspawnEnemies(sf::Time dt_time, sf::View& cam)
 
 void SpawnOasis(int x, int y)
 {
-
-	for (int i = 0; i < 5; ++i)
-	{
-		for (int j = 0; j < 5; ++j)
-		{
-			obj_manager.Spawn(GameObjectType::WATER, x + i*16, y + j*16);
-		}
-	}
-		
-
-
+	obj_manager.Spawn(GameObjectType::WATER, x, y);
 }
+
 int main()
 {
 	srand(time(NULL));
@@ -667,7 +677,7 @@ int main()
 	obj_manager.Spawn(GameObjectType::CASA, 0, 0);
 	obj_manager.Spawn(GameObjectType::TREE, 50, 50);
 
-	enemies.push_back(new Enemy(600, 400));
+	//enemies.push_back(new Enemy(600, 400));
 
 	SpawnCosasScenario();
 
