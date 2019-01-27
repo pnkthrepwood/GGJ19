@@ -46,6 +46,18 @@ sf::Texture* player_texture;
 sf::Texture* madera_texture;
 sf::Texture* bullet_texture;
 
+sf::Sound* groar1; //done
+sf::Sound* groar2; //done
+sf::Sound* grills;
+sf::Sound* chopwood;
+sf::Sound* chainsaw;
+sf::Sound* shot; //Done
+sf::Sound* mussol;
+sf::Sound* hammer;
+
+sf::Music* music; //Done
+sf::Music* musicdanger;
+
 sf::Shader* nightLight;
 sf::VertexArray quad(sf::Quads, 4);
 sf::Clock clockDay;
@@ -319,24 +331,25 @@ struct Enemy
 		}
 		if (closestDist < ENEMY_TRIGGER_DISTANCE) 
 		{
-			state = WALKING;
-			anim_timer += dt;;
-			sf::Vector2f dir(closestPlayer->x - x, closestPlayer->y - y);
-			sf::Vector2f dir_bona = Mates::Normalize(dir);
-			
-			vel_x += dir_bona.x * ENEMY_ACCEL * dt;
-			vel_y += dir_bona.y * ENEMY_ACCEL * dt;
-			
-			float lenght = Mates::Length(sf::Vector2f(vel_x, vel_y));
-			if (lenght > ENEMY_MAX_SPEED) 
-			{
+			anim_timer += dt;
+			if (state == IDLE) {
+				if (std::rand() % 2) {
+					groar2->play();
+				}
+				else {
+					groar1->play();
+				}
+
+				state = WALKING;
+				sf::Vector2f dir(closestPlayer->x - x, closestPlayer->y - y);
+				sf::Vector2f dir_bona = Mates::Normalize(dir);
+				
 				vel_x = dir_bona.x * ENEMY_MAX_SPEED;
 				vel_y = dir_bona.y * ENEMY_MAX_SPEED;
-			}
 
+			}
 			x += vel_x * dt;
 			y += vel_y * dt;
-
 		}
 		else 
 		{
@@ -346,6 +359,7 @@ struct Enemy
 			vel_y = 0;
 		}
 
+		//cout << x << "A" << y << endl;
 		sprite.setPosition(x, y);
 
 		return (hp <= 0);
@@ -356,7 +370,7 @@ std::vector<Enemy*> enemies;
 
 bool chunksSpawned[4000][4000] = { 0 };
 
-void SpawnCosasEnChunk(int casilla_x, int casilla_y)
+void SpawnCosasEnChunk(int casilla_x, int casilla_y, bool first_tile = false)
 {
 	if (chunksSpawned[casilla_x][casilla_y]) 
 	{
@@ -383,21 +397,25 @@ void SpawnCosasEnChunk(int casilla_x, int casilla_y)
 		obj_manager.Spawn(GameObjectType::TREE, x, y);
 	}
 
-	//Enemies
-	for (int i = 0; i < 2; ++i)
-	{
-		int x = std::rand() % (area_right - area_left) + area_left;
-		int y = std::rand() % (area_bottom - area_top) + area_top;
+	if (!first_tile) {
 
-		enemies.push_back(new Enemy(x, y));
-	}
+		//Enemies
+		for (int i = 0; i < 4; ++i)
+		{
+			int x = std::rand() % (area_right - area_left) + area_left;
+			int y = std::rand() % (area_bottom - area_top) + area_top;
 
-	//Water
-	{
-		int x = std::rand() % (area_right - area_left) + area_left;
-		int y = std::rand() % (area_bottom - area_top) + area_top;
+			enemies.push_back(new Enemy(x, y));
+		}
 
-		obj_manager.Spawn(GameObjectType::WATER, x, y);
+		//Water
+		if (std::rand()%2) {
+			int x = std::rand() % (area_right - area_left) + area_left;
+			int y = std::rand() % (area_bottom - area_top) + area_top;
+
+			obj_manager.Spawn(GameObjectType::WATER, x, y);
+		}
+
 	}
 }
 
@@ -437,6 +455,7 @@ bool UpdateBullet(Bullet *b, float dt, sf::View& cam)
 	for (Enemy* e : enemies) {
 		if (bounding.intersects(getBoundBoxSprite(&(e->sprite)))) {
 			e->hp -= 50;
+			shot->play();
 			return true;
 		}
 	}
@@ -470,6 +489,9 @@ void UpdatePlayer(float dt, int num_player, sf::View& cam)
 	else if (p->madera_progress > 0) //gathering -> quieto
 	{
 		stick_L = sf::Vector2f(0, 0);
+		if (p->state != PlayerState::GATHERING) {
+			chainsaw->play();
+		}
 		p->state = PlayerState::GATHERING;
 		p->anim_timer += dt;
 	}
@@ -552,6 +574,7 @@ void UpdatePlayer(float dt, int num_player, sf::View& cam)
 
 	if (GamePad::IsButtonJustReleased(num_player, GamePad::Button::B)) {
 		p->madera_progress = 0;
+		chainsaw->stop();
 	}
 	if (touching_arbol && GamePad::IsButtonPressed(num_player, GamePad::Button::B)) {
 		p->madera_progress += dt;
@@ -651,6 +674,7 @@ int main()
 	cam.zoom(0.4f);
 	
 
+
 	DayManager dayManager;
 	dayManager.InitNightShader(window);
 
@@ -680,7 +704,29 @@ int main()
 
 	InitPlayers();
 
+	sf::SoundBuffer b_groar1; b_groar1.loadFromFile("groar1.ogg");
+	groar1 = new sf::Sound(b_groar1);
+	sf::SoundBuffer bgroar2; bgroar2.loadFromFile("groar2.ogg");
+	groar2 = new sf::Sound(bgroar2);
+	sf::SoundBuffer bgrills; bgrills.loadFromFile("grills.ogg");
+	grills = new sf::Sound(bgrills);
+	sf::SoundBuffer bchopwood; bchopwood.loadFromFile("chopwood.ogg");
+	chopwood = new sf::Sound(bchopwood);
+	sf::SoundBuffer bchainsaw; bchainsaw.loadFromFile("chainsaw.ogg");
+	chainsaw = new sf::Sound(bchainsaw);
+	sf::SoundBuffer bshot; bshot.loadFromFile("shot.ogg");
+	shot = new sf::Sound(bshot);
+	sf::SoundBuffer bmussol; bmussol.loadFromFile("mussol.ogg");
+	mussol = new sf::Sound(bmussol);
+	sf::SoundBuffer bhammer; bhammer.loadFromFile("hammer.ogg");
+	hammer = new sf::Sound(bhammer);
 
+	music = new sf::Music();
+	music->openFromFile("theme.ogg");
+	musicdanger = new sf::Music();
+	musicdanger->openFromFile("dangerhyena.ogg");
+
+	music->play();
 
 	obj_manager.Spawn(GameObjectType::WATER, RES_X/2, RES_Y / 2);
 
@@ -688,6 +734,20 @@ int main()
 	//obj_manager.Spawn(GameObjectType::TREE, 50, 50);
 
 	//enemies.push_back(new Enemy(600, 400));
+
+	auto p = GetCasillaFromCam(cam);
+	current_casilla_x = p.first;
+	current_casilla_y = p.second;
+
+	cout << "first chunks " << current_casilla_x << "," << current_casilla_y << endl;
+
+	for (int i = -1; i <= 1; i++)
+	{
+		for (int j = -1; j <= 1; j++)
+		{
+			SpawnCosasEnChunk(current_casilla_x + i, current_casilla_y + j, (i == 0 && j == 1));
+		}
+	}
 
 
 	sf::Clock clk_running;
@@ -842,6 +902,7 @@ int main()
 
 			enemies[i]->sprite.setTextureRect(sf::IntRect((1 + frame + ((enemies[i]->vel_x > 0) ? 2 : 0)) * TILE_SIZE, 1*TILE_SIZE, 16, 16));
 
+			//cout << i << " " << enemies[i]->sprite.getPosition().x << endl;
 
 			toDraw.push_back(enemies[i]->sprite);
 		}
