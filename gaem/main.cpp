@@ -44,7 +44,6 @@ int madera;
 sf::Texture* tex_spritesheet;
 sf::Texture* player_texture;
 sf::Texture* madera_texture;
-sf::Texture* enemy_texture;
 sf::Texture* bullet_texture;
 
 sf::Shader* nightLight;
@@ -55,7 +54,7 @@ sf::Color playerColors[4];
 
 void SpriteCenterOrigin(sf::Sprite& spr)
 {
-	spr.setOrigin(spr.getTexture()->getSize().x / 2.f, spr.getTexture()->getSize().y / 2.f);
+	spr.setOrigin(spr.getTextureRect().width / 2.f, spr.getTextureRect().height / 2.f);
 }
 
 struct ProgressShape : public sf::CircleShape
@@ -123,7 +122,7 @@ struct Player
 		, facing_vector(1, 0)
 	{
 		sprite.setTexture(*player_texture);
-		sprite.setOrigin(16, 32);
+		sprite.setOrigin(5, 8);
 		//sprite.setColor(playerColors[n_player]);
 
 		progress.setFillColor(sf::Color::Transparent);
@@ -299,22 +298,27 @@ struct Enemy
 
 	sf::Sprite sprite;
 
-	Enemy(float px, float py) : x(px), y(py), vel_x(0), vel_y(0), state(IDLE), anim_timer(0.f) {
-		sprite.setTexture(*enemy_texture);
-		//TODO: CENTER texture rect and stuff
+	Enemy(float px, float py) : x(px), y(py), vel_x(0), vel_y(0), state(IDLE), anim_timer(0.f) 
+	{
+		sprite.setTexture(*tex_spritesheet);
+		sprite.setOrigin(8, 8);
 	}
 
-	bool Update(float dt) {
+	bool Update(float dt) 
+	{
 		Player* closestPlayer = nullptr;
 		float closestDist = 9999999999.f;
-		for (Player *p : players) {
+		for (Player *p : players) 
+		{
 			float d = Mates::Distance(sf::Vector2f(p->x, p->y), sf::Vector2f(x, y));
-			if (d < closestDist) {
+			if (d < closestDist) 
+			{
 				closestDist = d;
 				closestPlayer = p;
 			}
 		}
-		if (closestDist < ENEMY_TRIGGER_DISTANCE) {
+		if (closestDist < ENEMY_TRIGGER_DISTANCE) 
+		{
 			state = WALKING;
 			anim_timer += dt;;
 			sf::Vector2f dir(closestPlayer->x - x, closestPlayer->y - y);
@@ -324,7 +328,8 @@ struct Enemy
 			vel_y += dir_bona.y * ENEMY_ACCEL * dt;
 			
 			float lenght = Mates::Length(sf::Vector2f(vel_x, vel_y));
-			if (lenght > ENEMY_MAX_SPEED) {
+			if (lenght > ENEMY_MAX_SPEED) 
+			{
 				vel_x = dir_bona.x * ENEMY_MAX_SPEED;
 				vel_y = dir_bona.y * ENEMY_MAX_SPEED;
 			}
@@ -332,14 +337,17 @@ struct Enemy
 			x += vel_x * dt;
 			y += vel_y * dt;
 
-			sprite.setPosition(x, y);
 		}
-		else {
+		else 
+		{
 			state = IDLE;
 			anim_timer = 0;
 			vel_x = 0;
 			vel_y = 0;
 		}
+
+		sprite.setPosition(x, y);
+
 		return (hp <= 0);
 	}
 };
@@ -350,7 +358,8 @@ bool chunksSpawned[4000][4000] = { 0 };
 
 void SpawnCosasEnChunk(int casilla_x, int casilla_y)
 {
-	if (chunksSpawned[casilla_x][casilla_y]) {
+	if (chunksSpawned[casilla_x][casilla_y]) 
+	{
 		return;
 	}
 
@@ -532,7 +541,8 @@ void UpdatePlayer(float dt, int num_player, sf::View& cam)
 	GameObject* touching_arbol = NULL;
 	for (GameObject* obj : objs_near)
 	{
-		if (obj->type == GameObjectType::TREE) {
+		if (obj->type == GameObjectType::TREE) 
+		{
 			if (getBoundBox(obj).intersects(p->boundBox()))
 			{
 				touching_arbol = obj;
@@ -639,6 +649,7 @@ int main()
 	sf::View ui_view(sf::FloatRect(0.0f, 0.f, RES_X, RES_Y));
 
 	cam.zoom(0.4f);
+	
 
 	DayManager dayManager;
 	dayManager.InitNightShader(window);
@@ -660,9 +671,6 @@ int main()
 	sf::Sprite spr_madera;
 	spr_madera.setTexture(*madera_texture);
 	SpriteCenterOrigin(spr_madera);
-
-	enemy_texture = new sf::Texture();
-	enemy_texture->loadFromFile("madera.png");
 
 	tex_spritesheet = new sf::Texture();
 	tex_spritesheet->loadFromFile("sprite_sheet.png");
@@ -707,15 +715,18 @@ int main()
 		//Spawn chunks
 		auto p = GetCasillaFromCam(cam);
 		if (p.first != current_casilla_x || 
-			p.second != current_casilla_y) {
+			p.second != current_casilla_y) 
+		{
 			
 			current_casilla_x = p.first;
 			current_casilla_y = p.second;
 
 			cout << "entering " << current_casilla_x << "," << current_casilla_y << endl;
 
-			for (int i = -1; i <= 1; i++) {
-				for (int j = -1; j <= 1; j++) {
+			for (int i = -1; i <= 1; i++) 
+			{
+				for (int j = -1; j <= 1; j++) 
+				{
 					SpawnCosasEnChunk(current_casilla_x + i, current_casilla_y + j);
 				}
 			}
@@ -723,9 +734,11 @@ int main()
 
 
 		//UPDATE
-		for (int i = 0; i < NUM_PLAYERS; i++) {
+		for (int i = 0; i < NUM_PLAYERS; i++) 
+		{
 			UpdatePlayer(dt_time.asSeconds(), i, cam);
 		}
+
 		//Enemies
 		for (int i = 0; i < enemies.size(); i++)
 		{
@@ -767,7 +780,7 @@ int main()
 
 
 		//DRAW
-		renderTexture.clear(sf::Color(255, 216, 0)); //Hack to hide black lines between tiles
+		//renderTexture.clear(sf::Color(255, 216, 0)); //Hack to hide black lines between tiles
 
 		{ // UpdateCamera(cam);
 			sf::Vector2f centroid;
@@ -782,10 +795,11 @@ int main()
 
 		}
 
-
+		
 		ImGui::Begin("finester");
 		ImGui::Text("Pos: %f, %f", players[0]->x, players[0]->y);
 		ImGui::End();
+		
 
 		renderTexture.setView(cam);
 
@@ -822,10 +836,18 @@ int main()
 		//Enemies
 		for (int i = 0; i < enemies.size(); i++)
 		{
+			int frame = static_cast<int>(enemies[i]->anim_timer / 0.2f) % 2;
+
+			
+
+			enemies[i]->sprite.setTextureRect(sf::IntRect((1 + frame + ((enemies[i]->vel_x > 0) ? 2 : 0)) * TILE_SIZE, 1*TILE_SIZE, 16, 16));
+
+
 			toDraw.push_back(enemies[i]->sprite);
 		}
 		//Bulletitas
-		for (int i = 0; i < bullets.size(); i++) {
+		for (int i = 0; i < bullets.size(); i++) 
+		{
 			spr_bullet.setPosition(bullets[i]->x, bullets[i]->y);
 			spr_bullet.setColor(playerColors[bullets[i]->player]);
 			toDraw.push_back(spr_bullet);
