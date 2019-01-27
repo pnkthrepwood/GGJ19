@@ -1065,8 +1065,10 @@ int main()
 		}
 		//Ordering madafaca
 		sf::IntRect rectWater = SelectSprite(GameObjectType::WATER);;
-		sort(toDraw.begin(), toDraw.end(), [rectWater](sf::Sprite& a, sf::Sprite& b) {
-			return a.getPosition().y + a.getTextureRect().height / 2 < b.getPosition().y + b.getTextureRect().height / 2;
+		sort(toDraw.begin(), toDraw.end(), [rectWater](const sf::Sprite& a, const sf::Sprite& b) {
+			const sf::Vector2f& pos = a.getPosition();
+			const sf::IntRect& rect = a.getTextureRect();
+			return pos.y + rect.height / 2 < pos.y + rect.height / 2;
 		});
 		//Dale draw de verdad
 		for (sf::Sprite& d : toDraw)
