@@ -2,6 +2,7 @@
 
 #include "ObjectManager.h"
 #include "DayManager.h"
+#include <SFML/Audio.hpp>
 
 extern sf::Font* font;
 extern float RES_Y;
@@ -34,18 +35,26 @@ GameState::GameState(DayManager& dayManager, ObjManager& obj_manager)
 {
 
 }
-
-
+#include <iostream>
+extern sf::Sound* mussol;
+extern sf::Sound* grills;
 void GameState::Update(float dt, std::function<bool()> AreAllPlayersInHaima) {
+	std::cout << mDayManager.GetDayTime() << std::endl;
+  if (mDayManager.GetDayTime() > 0.72f && mDayManager.GetDayTime() < 0.77f && grills->getStatus() != sf::Sound::Status::Playing) {
+	  grills->play();
+  }
+
   switch (mState) {
     case EState::PLAYING:
     {
       if (AreAllPlayersInHaima()) {
         mState = EState::NEXT_DAY_ING;
+		mussol->play();
         mDayManager.FastForwardUntilNextMorning();
       }
       else if (mDayManager.GetDayTime() < 0.1f) {
         mState = EState::DEAD;
+		mussol->play();
       }
     } break;
     case EState::NEXT_DAY_ING:
@@ -72,6 +81,7 @@ void GameState::Update(float dt, std::function<bool()> AreAllPlayersInHaima) {
 
 }
 
+extern sf::Sound* hammer;
 void GameState::PlaceHaimaIfPosible(sf::Vector2f pos, int& woodAmount, GameObject* oasis) 
 {
     if (woodAmount >= WOOD_FOR_HAIMA && !mHaima) 
@@ -79,7 +89,7 @@ void GameState::PlaceHaimaIfPosible(sf::Vector2f pos, int& woodAmount, GameObjec
       woodAmount -= WOOD_FOR_HAIMA;
       mHaima = mObjManager.Spawn(GameObjectType::HAIMA, pos.x, pos.y);
       oasis->type = GameObjectType::WATER_BROKEN;
-
+	  hammer->play();
 	  WOOD_FOR_HAIMA += 1;
     }
 }

@@ -49,10 +49,10 @@ sf::Texture* bullet_texture;
 
 sf::Sound* groar1; //done
 sf::Sound* groar2; //done
-sf::Sound* grills;
+sf::Sound* grills; //done
 sf::Sound* shot; //Done
-sf::Sound* mussol;
-sf::Sound* hammer;
+sf::Sound* mussol; //Done
+sf::Sound* hammer; // Done
 sf::SoundBuffer* bchopwood; //done
 
 sf::Font* font;
@@ -753,7 +753,7 @@ int main()
 
 	sf::ContextSettings settings;
 
-	sf::RenderWindow window(sf::VideoMode(RES_X, RES_Y), "SFML works!", sf::Style::Default, settings);
+	sf::RenderWindow window(sf::VideoMode(RES_X, RES_Y), "Desert Nomads", sf::Style::Default, settings);
 
 	/*
 	sf::VideoMode desktop_mode = sf::VideoMode::getDesktopMode();
@@ -854,8 +854,6 @@ int main()
 			SpawnCosasEnChunk(current_casilla_x + i, current_casilla_y + j, (i == 0 && j == 0));
 		}
 	}
-
-	PerlinNoise perlin(1, .1, 1, 1);
 
 	sf::Clock clk_running;
 	sf::Clock clk_delta;
