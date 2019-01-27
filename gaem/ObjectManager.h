@@ -3,9 +3,9 @@
 #include <set>
 #include <SFML/Graphics.hpp>
 
-#define MAX_OBJ_IN_QTREE 200
+#define MAX_OBJ_IN_QTREE 500
 
-const int MAX_OBJ_SIZE = 4096;
+const int MAX_OBJ_SIZE = 5000;
 
 
 
@@ -27,7 +27,7 @@ struct GameObject
 
 sf::IntRect SelectSprite(GameObjectType type);
 
-extern GameObject go_collection[4096];
+extern GameObject go_collection[MAX_OBJ_SIZE];
 sf::Vector2f getObjSize(GameObjectType type);
 sf::FloatRect getBoundBox(GameObject* obj);
 
