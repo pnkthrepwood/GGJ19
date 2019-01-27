@@ -772,6 +772,10 @@ int main()
 			}
 			centroid = centroid / static_cast<float>(NUM_PLAYERS);
 			cam.setCenter(centroid);
+
+			sf::Vector2f camcenter = cam.getCenter();
+			cam.setCenter(static_cast<int>(camcenter.x) + 0.01f, static_cast<int>(camcenter.y) + 0.01f);
+
 		}
 
 
