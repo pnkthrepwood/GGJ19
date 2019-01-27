@@ -754,7 +754,7 @@ int main()
 	sf::ContextSettings settings;
 
 	//sf::RenderWindow window(sf::VideoMode(RES_X, RES_Y), "SFML works!", sf::Style::Default, settings);
-	sf::RenderWindow window(sf::VideoMode(RES_X, RES_Y), "SFML works!", sf::Style::Fullscreen, settings);
+	sf::RenderWindow window(sf::VideoMode(RES_X, RES_Y), "SFML works!", sf::Style::Default, settings);
 	sf::RenderTexture renderTexture;
 	renderTexture.create(RES_X, RES_Y);
 
