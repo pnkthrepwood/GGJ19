@@ -759,7 +759,7 @@ int main()
 	{
 		for (int j = -1; j <= 1; j++)
 		{
-			SpawnCosasEnChunk(current_casilla_x + i, current_casilla_y + j, (i == 0 && j == 1));
+			SpawnCosasEnChunk(current_casilla_x + i, current_casilla_y + j, (i == 0 && j == 0));
 		}
 	}
 
