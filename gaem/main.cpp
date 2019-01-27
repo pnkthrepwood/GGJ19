@@ -459,28 +459,28 @@ void SpawnCosasEnChunk(int casilla_x, int casilla_y, bool first_tile = false)
 		int x = std::rand() % (area_right - area_left) + area_left;
 		int y = std::rand() % (area_bottom - area_top) + area_top;
 
-		obj_manager.Spawn(GameObjectType::DECOR_1, x, y);
+		obj_manager.Spawn(GameObjectType::DECOR_CACTUS, x, y);
 	}
 	for (int i = 0; i < 8; ++i)
 	{
 		int x = std::rand() % (area_right - area_left) + area_left;
 		int y = std::rand() % (area_bottom - area_top) + area_top;
 
-		obj_manager.Spawn(GameObjectType::DECOR_2, x, y);
+		obj_manager.Spawn(GameObjectType::DECOR_SKELETON, x, y);
 	}
 	for (int i = 0; i < 8; ++i)
 	{
 		int x = std::rand() % (area_right - area_left) + area_left;
 		int y = std::rand() % (area_bottom - area_top) + area_top;
 
-		obj_manager.Spawn(GameObjectType::DECOR_3, x, y);
+		obj_manager.Spawn(GameObjectType::DECOR_ONE_ROCK, x, y);
 	}
 	for (int i = 0; i < 8; ++i)
 	{
 		int x = std::rand() % (area_right - area_left) + area_left;
 		int y = std::rand() % (area_bottom - area_top) + area_top;
 
-		obj_manager.Spawn(GameObjectType::DECOR_4, x, y);
+		obj_manager.Spawn(GameObjectType::DECOR_TWO_ROCKS, x, y);
 	}
 
 	if (!first_tile) {
@@ -976,10 +976,11 @@ int main()
 		}
 
 
+#if _DEBUG
 		ImGui::Begin("finester");
 		ImGui::Text("Pos: %f, %f", players[0]->x, players[0]->y);
 		ImGui::End();
-
+#endif
 
 		renderTexture.setView(cam);
 
