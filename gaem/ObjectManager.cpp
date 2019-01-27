@@ -21,7 +21,7 @@ sf::IntRect SelectSprite(GameObjectType type)
 	case GameObjectType::TREE:
 		return sf::IntRect(0, 2 * 16, 16, 16);
 	case GameObjectType::WATER:
-		return sf::IntRect(3 * 16, 0 * 16, 16, 16);
+		return sf::IntRect(0 * 16, 4 * 16, 5*16, 3*16);
 	default:
 		std::cout << "Sprite type not handled madafaca" << std::endl;
 		return sf::IntRect(0, 0, 0, 0);
