@@ -33,7 +33,7 @@ const float PLAYER_SPEED = 200;
 
 const float BULLET_SPEED = 700;
 const float ENEMY_TRIGGER_DISTANCE = 180;
-const float ENEMY_MAX_SPEED = 200;
+const float ENEMY_MAX_SPEED = 250;
 const float BULLET_COOLDOWN = 0.2f; //seconds
 const float MADERA_GATHER_TIME = 3; //seconds
 
@@ -407,7 +407,7 @@ void SpawnCosasEnChunk(int casilla_x, int casilla_y, bool first_tile = false)
 	if (!first_tile) {
 
 		//Enemies
-		for (int i = 0; i < 4; ++i)
+		for (int i = 0; i < 5; ++i)
 		{
 			int x = std::rand() % (area_right - area_left) + area_left;
 			int y = std::rand() % (area_bottom - area_top) + area_top;
