@@ -66,9 +66,11 @@ sf::Vector2f getObjSize(GameObjectType type)
 		{
 			return sf::Vector2f(64, 44);
 		} break;
+        default:
+            std::cout << "FALTAN CASES DEL GETOBJSIZE (EN EL OBJMANAGER.CPP)" << std::endl;
 	}
 
-	std::cout << "FALTAN CASES DEL GETOBJSIZE (EN EL OBJMANAGER.CPP)" << std::endl;
+
 
 	return sf::Vector2f(-1, -1);
 }
@@ -310,7 +312,7 @@ void ObjManager::Draw(const sf::View& Camera, std::vector<sf::Sprite>& toDraw, s
 	size_y = Camera.getSize().y*0.5f;
 	sf::Vector2f center = Camera.getCenter();
 
-	
+
 	std::vector<quadNode*> visited;
 
 	camDraw(toDraw, center + sf::Vector2f(-size_x*0.5f*2.f, -size_y*0.5f*2.f), spr, visited);
@@ -318,16 +320,16 @@ void ObjManager::Draw(const sf::View& Camera, std::vector<sf::Sprite>& toDraw, s
 	camDraw(toDraw, center + sf::Vector2f(+size_x*0.5f*2.f, -size_y*0.5f*2.f), spr, visited);
 
 	camDraw(toDraw, center + sf::Vector2f(-size_x*0.5f*2.f, 0), spr, visited);
-	
+
 
 	camDraw(toDraw, center, spr, visited);
-	
+
 	camDraw(toDraw, center + sf::Vector2f(+size_x*0.5f*2.f, 0), spr, visited);
 
 	camDraw(toDraw, center + sf::Vector2f(-size_x*0.5f*2.f, +size_y*0.5f*2.f), spr, visited);
 	camDraw(toDraw, center + sf::Vector2f(0, +size_y*0.5f*1.5f), spr, visited);
 	camDraw(toDraw, center + sf::Vector2f(+size_x*0.5f*2.f, +size_y*0.5f*2.f), spr, visited);
-	
+
 }
 
 sf::Clock clk_global;
@@ -336,7 +338,7 @@ void ObjManager::camDraw(std::vector<sf::Sprite>& toDraw, const sf::Vector2f& Po
 {
 	quadNode* node = searchLeaf(Position);
 
-	for (int i = 0; i < visited.size(); ++i)
+	for (unsigned int i = 0; i < visited.size(); ++i)
 	{
 		if (visited[i] == node)
 		{

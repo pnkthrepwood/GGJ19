@@ -74,7 +74,7 @@ void SpriteCenterOrigin(sf::Sprite& spr)
 
 struct ProgressShape : public sf::CircleShape
 {
-	int progress;
+	std::size_t progress;
 
 	ProgressShape() : sf::CircleShape(46, 120) { };
 	sf::Vector2f getPoint(std::size_t index) const
@@ -110,15 +110,14 @@ enum PlayerState
 
 struct Player
 {
+	int num_player;
 	float x, y;
 	float vel_x, vel_y;
 	int hp;
 	sf::Vector2f facing_vector;
 	float bullet_cooldown;
 	float madera_progress;
-	int num_player;
 	bool will_shot = false;
-	sf::Sound chopwood;
 	float inmune;
 
 	//Anim stuff
@@ -130,17 +129,19 @@ struct Player
 	ProgressShape progress;
 	sf::RectangleShape lifeBar;
 
+	sf::Sound chopwood;
+
 	Player(int n_player)
-		: num_player(n_player)
-		, hp(100)
+        : num_player(n_player)
 		, vel_x(0)
 		, vel_y(0)
-		, madera_progress(0)
-		, bullet_cooldown(0)
-		, anim_timer(0.f)
+		, hp(100)
 		, facing_vector(1, 0)
-		, chopwood(*bchopwood)
+		, bullet_cooldown(0)
+		, madera_progress(0)
 		, inmune(-1)
+		, anim_timer(0.f)
+		, chopwood(*bchopwood)
 	{
 		sprite.setTexture(*player_texture);
 		sprite.setOrigin(5, 8);
@@ -485,7 +486,7 @@ void SpawnCosasEnChunk(int casilla_x, int casilla_y, bool first_tile = false)
 		obj_manager.Spawn(GameObjectType::DECOR_TWO_ROCKS, x, y);
 	}
 
-	if (!first_tile) 
+	if (!first_tile)
 	{
 
 		//Enemies
@@ -942,7 +943,7 @@ int main()
 
 			//Enemies
 			bool in_danger = false;
-			for (int i = 0; i < enemies.size();)
+			for (unsigned int i = 0; i < enemies.size();)
 			{
 				bool cale_destruir = enemies[i]->UpdateEnemy(dt_time.asSeconds());
 				if (enemies[i]->state == PlayerState::WALKING) in_danger = true;
@@ -958,7 +959,7 @@ int main()
 					delete enemies[i];
 					enemies.erase(enemies.begin() + i);
 
-					
+
 				}
 				else
 				{
@@ -972,7 +973,7 @@ int main()
 				musicdanger->setVolume(0);
 			}
 			//Bullets
-			for (int i = 0; i < bullets.size();) {
+			for (unsigned int i = 0; i < bullets.size();) {
 				bool cale_destruir = UpdateBullet(bullets[i], dt_time.asSeconds(), cam);
 				if (cale_destruir) {
 					delete bullets[i];
@@ -988,7 +989,7 @@ int main()
 		}
 
 		//Particles
-		for (int i = 0; i < particles.size();) {
+		for (unsigned int i = 0; i < particles.size();) {
 			bool cale_destruir = particles[i]->Update(dt_time.asSeconds());
 			if (cale_destruir) {
 				delete particles[i];
@@ -1056,7 +1057,7 @@ int main()
 			players[i]->Draw(toDraw);
 		}
 		//Enemies hyenas hyaenas lobos llops
-		for (int i = 0; i < enemies.size(); i++)
+		for (unsigned int i = 0; i < enemies.size(); i++)
 		{
 			int frame = static_cast<int>(enemies[i]->anim_timer / 0.1f) % 2;
 
@@ -1077,7 +1078,7 @@ int main()
 			toDraw.push_back(*sprite);
 		}
 		//Bulletitas
-		for (int i = 0; i < bullets.size(); i++)
+		for (unsigned int i = 0; i < bullets.size(); i++)
 		{
 
 			spr_bullet.setPosition(bullets[i]->x, bullets[i]->y);
@@ -1090,11 +1091,8 @@ int main()
 			toDraw.push_back(spr_bullet);
 		}
 		//Ordering madafaca
-		sf::IntRect rectWater = SelectSprite(GameObjectType::WATER);;
-		sort(toDraw.begin(), toDraw.end(), [rectWater](const sf::Sprite& a, const sf::Sprite& b) {
-			const sf::Vector2f& pos = a.getPosition();
-			const sf::IntRect& rect = a.getTextureRect();
-			return pos.y + rect.height / 2 < pos.y + rect.height / 2;
+		sort(toDraw.begin(), toDraw.end(), [](const sf::Sprite& a, const sf::Sprite& b) {
+			return a.getPosition().y + a.getTextureRect().height / 2 < b.getPosition().y + b.getTextureRect().height / 2;
 		});
 
 

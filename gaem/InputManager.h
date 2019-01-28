@@ -59,7 +59,7 @@ public:
 			KeyStates state[JoystickCountMax];
 		};
 		struct LeftTrigger : public TriggerBase {
-			const float get(int player) const { //Pos between 0 and 100
+			float get(int player) const { //Pos between 0 and 100
 				int joystick = player_to_joystick[player];
 				if (joystick < 0) return 0;
 				float a = sf::Joystick::getAxisPosition(joystick, sf::Joystick::Axis::Z);
@@ -67,7 +67,7 @@ public:
 			}
 		};
 		struct RightTrigger : public TriggerBase {
-			const float get(int player) const { //Pos between 0 and 100
+			float get(int player) const { //Pos between 0 and 100
 				int joystick = player_to_joystick[player];
 				if (joystick < 0) return 0;
 				float a = -sf::Joystick::getAxisPosition(joystick, sf::Joystick::Axis::Z);
@@ -81,7 +81,7 @@ public:
 	struct AnalogStick {
 		const static AnalogStick Left;
 		const static AnalogStick Right;
-		const sf::Vector2f get(int player, float dead_area = 0) const { //Pos between -100 and 100
+		sf::Vector2f get(int player, float dead_area = 0) const { //Pos between -100 and 100
 			int joystick = player_to_joystick[player];
 			if (joystick < 0) return sf::Vector2f();
 			float a = sf::Joystick::getAxisPosition(joystick, x);
@@ -119,7 +119,7 @@ public:
 
 	static void UpdateInputState__XboxNormal(int joy, int player)
 	{
-		for (int i = 0; i < sf::Joystick::ButtonCount; i++) 
+		for (int i = 0; i < sf::Joystick::ButtonCount; i++)
 		{
 			bool pressed = (sf::Joystick::isButtonPressed(joy, i));
 			button_states[player][i] = calculateJustPressed(pressed, button_states[player][i]);
@@ -137,9 +137,9 @@ public:
 	static void UpdateInputState()
 	{
 		int player = 0;
-		for (int joystick = 0; joystick < JoystickCountMax; ++joystick) 
+		for (int joystick = 0; joystick < JoystickCountMax; ++joystick)
 		{
-			if (!sf::Joystick::isConnected(joystick)) 
+			if (!sf::Joystick::isConnected(joystick))
 			{
 				continue;
 			}
@@ -166,10 +166,10 @@ public:
 
 		}
 
-		while (player < JoystickCountMax) 
+		while (player < JoystickCountMax)
 		{
 			player_to_joystick[player] = -1;
-			for (int i = 0; i < sf::Joystick::ButtonCount; i++) 
+			for (int i = 0; i < sf::Joystick::ButtonCount; i++)
 			{
 				button_states[player][i] = calculateJustPressed(false, button_states[player][i]);
 			}
