@@ -1,6 +1,7 @@
 #include "DayManager.h"
 
 #include "imgui.h"
+#include "math.h"
 #include "imgui-SFML.h"
 
 namespace {
