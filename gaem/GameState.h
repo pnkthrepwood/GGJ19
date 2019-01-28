@@ -5,7 +5,7 @@
 
 class DayManager;
 class ObjManager;
-class GameObject;
+struct GameObject;
 class ObjManager;
 
 class GameState {

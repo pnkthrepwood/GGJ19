@@ -12,7 +12,7 @@ namespace
 {
   int WOOD_FOR_HAIMA = 1;
 
-  void DrawText(sf::RenderWindow& window, const std::string& str, sf::Vector2f pos, float size) {
+  void DrawText(sf::RenderWindow& window, const std::string& str, sf::Vector2f pos, int size) {
     sf::Text txt_day;
     txt_day.setFont(*font);
     txt_day.setString(str);

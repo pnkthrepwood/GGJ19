@@ -25,8 +25,8 @@ enum class GameObjectType
 };
 struct GameObject
 {
-	int x;
-	int y;
+	float x;
+	float y;
 	GameObjectType type;
 };
 
@@ -88,5 +88,5 @@ public:
 
 	int nObjects;
 
-	GameObject* Spawn(GameObjectType type, int x, int y);
+	GameObject* Spawn(GameObjectType type, float x, float y);
 };

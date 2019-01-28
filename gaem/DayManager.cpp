@@ -1,5 +1,7 @@
 #include "DayManager.h"
 
+#pragma warning( disable : 4244 )
+
 #include "imgui.h"
 #include "math.h"
 #include "imgui-SFML.h"
@@ -57,7 +59,7 @@ sf::Glsl::Vec3 DayManager::pSetHSV(float h, float s, float v ) {
     break;
     case 5: return sf::Glsl::Vec3(v, p, q);
   }
-    return sf::Glsl::Vec3(0.2, 0.2, 0.2);
+    return sf::Glsl::Vec3(0.2f, 0.2f, 0.2f);
 }
 
 void DayManager::Update(float dt) {
@@ -74,8 +76,8 @@ void DayManager::RenderWithShader(sf::RenderWindow& window, const sf::RenderText
   mNightLight->setUniform("texture", sf::Shader::CurrentTexture);
   mNightLight->setUniform("dayTime", GetDayFactor());
   mNightLight->setUniform("day_color", sf::Glsl::Vec3(1,1,1));
-  mNightLight->setUniform("sun_set_color", sf::Glsl::Vec3(1,0.5,0));
-  mNightLight->setUniform("night_color", sf::Glsl::Vec3(0.2,0,1));
+  mNightLight->setUniform("sun_set_color", sf::Glsl::Vec3(1,0.5f,0));
+  mNightLight->setUniform("night_color", sf::Glsl::Vec3(0.2f,0,1));
 
   states.shader = mNightLight.get();
   states.texture = &renderTexture.getTexture();

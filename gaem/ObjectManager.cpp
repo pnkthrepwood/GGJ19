@@ -768,7 +768,7 @@ void ObjManager::getObjects(std::vector<GameObject*>& vec, const sf::View& camer
 }
 
 
-GameObject* ObjManager::Spawn(GameObjectType type, int x, int y)
+GameObject* ObjManager::Spawn(GameObjectType type, float x, float y)
 {
 	for (int i = 0; i < MAX_OBJ_SIZE; ++i)
 	{
