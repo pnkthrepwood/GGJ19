@@ -616,8 +616,9 @@ void UpdatePlayer(float dt, int num_player, sf::View& cam, GameState& gameState)
 	p->y = p->y + p->vel_y * dt;
 
 	// Keep inside view
-	p->x = Mates::Clamp(p->x, cam.getCenter().x - cam.getSize().x / 2 + 50, cam.getCenter().x + cam.getSize().x / 2 - 50);
-	p->y = Mates::Clamp(p->y, cam.getCenter().y - cam.getSize().y / 2 + 50, cam.getCenter().y + cam.getSize().y / 2 - 50);
+	const float cam_border = 10;
+	p->x = Mates::Clamp(p->x, cam.getCenter().x - cam.getSize().x / 2 + cam_border, cam.getCenter().x + cam.getSize().x / 2 - cam_border);
+	p->y = Mates::Clamp(p->y, cam.getCenter().y - cam.getSize().y / 2 + cam_border, cam.getCenter().y + cam.getSize().y / 2 - cam_border);
 
 	// Update facing vector
 	sf::Vector2f facing_vector(0, 0);
